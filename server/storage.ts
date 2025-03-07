@@ -54,6 +54,37 @@ export class MemStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
+
+    // Ajout de projets de test
+    this.createProject({
+      userId: 1,
+      title: "Développement Application Mobile",
+      description: "Création d'une application mobile innovante dans le secteur de la santé",
+      category: "Informatique et technologie",
+      duration: "medium",
+      requiredSkills: ["React Native", "TypeScript", "API REST"],
+      location: {
+        latitude: 48.8566,
+        longitude: 2.3522,
+        city: "Paris",
+        department: "Île-de-France"
+      }
+    });
+
+    this.createProject({
+      userId: 1,
+      title: "Refonte Site E-commerce",
+      description: "Modernisation complète d'une plateforme de vente en ligne",
+      category: "Marketing et Publicité",
+      duration: "long",
+      requiredSkills: ["React", "Node.js", "UX Design"],
+      location: {
+        latitude: 45.7578,
+        longitude: 4.8320,
+        city: "Lyon",
+        department: "Rhône"
+      }
+    });
   }
 
   async getUser(id: number): Promise<User | undefined> {
