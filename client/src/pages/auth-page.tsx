@@ -25,7 +25,7 @@ export default function AuthPage() {
           <div className="text-center md:text-left">
             <h1 className="text-4xl font-bold text-gray-900">Mymate</h1>
             <p className="mt-2 text-lg text-gray-600">
-              Trouvez les meilleurs collaborateurs pour vos projets
+              La plateforme de référence pour les projets professionnels
             </p>
           </div>
 
@@ -49,11 +49,11 @@ export default function AuthPage() {
           <div className="h-full flex items-center justify-center">
             <div className="text-center space-y-6">
               <h2 className="text-3xl font-bold text-gray-900">
-                Lancez votre prochain projet
+                Développez votre réseau professionnel
               </h2>
               <p className="text-lg text-gray-600">
-                Que vous ayez un projet à réaliser ou des compétences à partager,
-                nous vous aidons à trouver les bonnes personnes.
+                Rejoignez une communauté de professionnels qualifiés et
+                trouvez les meilleures opportunités de collaboration.
               </p>
             </div>
           </div>
@@ -76,7 +76,7 @@ function LoginForm() {
     <Card>
       <CardHeader>
         <CardTitle>Bon retour parmi nous</CardTitle>
-        <CardDescription>Connectez-vous à votre compte</CardDescription>
+        <CardDescription>Connectez-vous à votre compte professionnel</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -86,7 +86,7 @@ function LoginForm() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom d'utilisateur</FormLabel>
+                  <FormLabel>Identifiant</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -122,10 +122,10 @@ function RegisterForm() {
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
+      fullName: "",
+      email: "",
       username: "",
       password: "",
-      email: "",
-      fullName: "",
       bio: "",
       skills: [],
       location: null,
@@ -135,20 +135,46 @@ function RegisterForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Créer un compte</CardTitle>
-        <CardDescription>Rejoignez notre communauté de créateurs</CardDescription>
+        <CardTitle>Créer un compte professionnel</CardTitle>
+        <CardDescription>Rejoignez le réseau des experts</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4">
             <FormField
               control={form.control}
+              name="fullName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nom complet</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Ex: Jean Dupont" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email professionnel</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} placeholder="vous@entreprise.fr" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Nom d'utilisateur</FormLabel>
+                  <FormLabel>Identifiant</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Votre identifiant unique" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -161,40 +187,14 @@ function RegisterForm() {
                 <FormItem>
                   <FormLabel>Mot de passe</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="fullName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nom complet</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
+                    <Input type="password" {...field} placeholder="8 caractères minimum" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-              S'inscrire
+              Créer mon compte
             </Button>
           </form>
         </Form>
