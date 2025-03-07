@@ -70,16 +70,16 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
           <div className="space-y-2">
             <Label>Catégorie</Label>
             <Select
-              value={filters.category}
+              value={filters.category || "all"}
               onValueChange={(value) =>
-                onFiltersChange({ ...filters, category: value })
+                onFiltersChange({ ...filters, category: value === "all" ? "" : value })
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez une catégorie" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les catégories</SelectItem>
+                <SelectItem value="all">Toutes les catégories</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
@@ -107,16 +107,16 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
           <div className="space-y-2">
             <Label>Durée du projet</Label>
             <Select
-              value={filters.duration}
+              value={filters.duration || "all"}
               onValueChange={(value) =>
-                onFiltersChange({ ...filters, duration: value })
+                onFiltersChange({ ...filters, duration: value === "all" ? "" : value })
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez une durée" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les durées</SelectItem>
+                <SelectItem value="all">Toutes les durées</SelectItem>
                 {durations.map((duration) => (
                   <SelectItem key={duration.value} value={duration.value}>
                     {duration.label}
