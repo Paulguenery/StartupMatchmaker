@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { io, Socket } from "socket.io-client";
-import { Video, VideoOff, Mic, MicOff, PhoneOff } from "lucide-react";
+import { Video, VideoOff, Mic, MicOff, PhoneOff, Play } from "lucide-react";
 
 interface VideoChatProps {
   projectId: number;
@@ -14,6 +14,7 @@ export function VideoChat({ projectId, userId, onClose }: VideoChatProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
+  const [isTestMode, setIsTestMode] = useState(false);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const socketRef = useRef<Socket>();
@@ -30,23 +31,61 @@ export function VideoChat({ projectId, userId, onClose }: VideoChatProps) {
     // Initialisation de la connexion WebRTC
     peerConnectionRef.current = new RTCPeerConnection(configuration);
 
-    // Connexion au serveur de signalisation
-    socketRef.current = io(window.location.origin);
+    // Connexion au serveur de signalisation en mode production
+    if (!isTestMode) {
+      socketRef.current = io(window.location.origin);
 
-    // Gestion des événements de signalisation
-    socketRef.current.on('connect', () => {
-      console.log('Connected to signaling server');
-      socketRef.current?.emit('join-room', { projectId, userId });
-    });
+      socketRef.current.on('connect', () => {
+        console.log('Connected to signaling server');
+        socketRef.current?.emit('join-room', { projectId, userId });
+      });
+
+      // Configuration des événements de signalisation
+      setupSignaling();
+    }
+
+    // Gestion des flux médias
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        if (localVideoRef.current) {
+          localVideoRef.current.srcObject = stream;
+        }
+
+        // En mode test, on duplique le flux local vers le flux distant
+        if (isTestMode && remoteVideoRef.current) {
+          remoteVideoRef.current.srcObject = stream.clone();
+        } else {
+          stream.getTracks().forEach(track => {
+            peerConnectionRef.current?.addTrack(track, stream);
+          });
+        }
+      })
+      .catch((error) => {
+        console.error('Erreur d\'accès aux périphériques média:', error);
+      });
+
+    return () => {
+      // Nettoyage
+      if (!isTestMode) {
+        socketRef.current?.disconnect();
+      }
+      peerConnectionRef.current?.close();
+      if (localVideoRef.current?.srcObject) {
+        (localVideoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [projectId, userId, isTestMode]);
+
+  const setupSignaling = () => {
+    if (!socketRef.current) return;
 
     socketRef.current.on('user-connected', async (data) => {
-      console.log('User connected to room:', data);
       try {
         const offer = await peerConnectionRef.current?.createOffer();
         await peerConnectionRef.current?.setLocalDescription(offer);
         socketRef.current?.emit('offer', { offer, to: data.userId });
       } catch (error) {
-        console.error('Error creating offer:', error);
+        console.error('Erreur lors de la création de l\'offre:', error);
       }
     });
 
@@ -57,7 +96,7 @@ export function VideoChat({ projectId, userId, onClose }: VideoChatProps) {
         await peerConnectionRef.current?.setLocalDescription(answer);
         socketRef.current?.emit('answer', { answer, to: data.from });
       } catch (error) {
-        console.error('Error handling offer:', error);
+        console.error('Erreur lors du traitement de l\'offre:', error);
       }
     });
 
@@ -65,7 +104,7 @@ export function VideoChat({ projectId, userId, onClose }: VideoChatProps) {
       try {
         await peerConnectionRef.current?.setRemoteDescription(new RTCSessionDescription(data.answer));
       } catch (error) {
-        console.error('Error handling answer:', error);
+        console.error('Erreur lors du traitement de la réponse:', error);
       }
     });
 
@@ -73,48 +112,10 @@ export function VideoChat({ projectId, userId, onClose }: VideoChatProps) {
       try {
         await peerConnectionRef.current?.addIceCandidate(new RTCIceCandidate(data.candidate));
       } catch (error) {
-        console.error('Error adding ice candidate:', error);
+        console.error('Erreur lors de l\'ajout du candidat ICE:', error);
       }
     });
-
-    // Gestion des flux médias
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-      .then((stream) => {
-        if (localVideoRef.current) {
-          localVideoRef.current.srcObject = stream;
-        }
-
-        stream.getTracks().forEach(track => {
-          peerConnectionRef.current?.addTrack(track, stream);
-        });
-      })
-      .catch((error) => {
-        console.error('Error accessing media devices:', error);
-      });
-
-    // Gestion des tracks reçus
-    peerConnectionRef.current.ontrack = (event) => {
-      if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = event.streams[0];
-      }
-    };
-
-    // Gestion des candidats ICE
-    peerConnectionRef.current.onicecandidate = (event) => {
-      if (event.candidate) {
-        socketRef.current?.emit('ice-candidate', { candidate: event.candidate });
-      }
-    };
-
-    return () => {
-      // Nettoyage
-      socketRef.current?.disconnect();
-      peerConnectionRef.current?.close();
-      if (localVideoRef.current?.srcObject) {
-        (localVideoRef.current.srcObject as MediaStream).getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [projectId, userId]);
+  };
 
   const toggleVideo = () => {
     if (localVideoRef.current?.srcObject) {
@@ -161,12 +162,12 @@ export function VideoChat({ projectId, userId, onClose }: VideoChatProps) {
             />
             <div className="absolute bottom-4 left-4">
               <p className="text-sm text-white bg-black/50 px-2 py-1 rounded">
-                Interlocuteur
+                {isTestMode ? "Aperçu du test" : "Interlocuteur"}
               </p>
             </div>
           </div>
         </div>
-        
+
         <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex items-center gap-4">
           <Button
             variant="outline"
@@ -183,6 +184,15 @@ export function VideoChat({ projectId, userId, onClose }: VideoChatProps) {
             className={!isAudioEnabled ? "bg-destructive text-destructive-foreground" : ""}
           >
             {isAudioEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsTestMode(!isTestMode)}
+            className={isTestMode ? "bg-amber-500 text-white" : ""}
+            title={isTestMode ? "Désactiver le mode test" : "Activer le mode test"}
+          >
+            <Play className="h-4 w-4" />
           </Button>
           <Button
             variant="destructive"
