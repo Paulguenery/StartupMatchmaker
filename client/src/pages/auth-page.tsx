@@ -67,7 +67,7 @@ function LoginForm() {
   const { loginMutation } = useAuth();
   const form = useForm({
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -83,12 +83,12 @@ function LoginForm() {
           <form onSubmit={form.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
             <FormField
               control={form.control}
-              name="username"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Identifiant</FormLabel>
+                  <FormLabel>Email professionnel</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input type="email" {...field} placeholder="vous@entreprise.fr" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -101,7 +101,7 @@ function LoginForm() {
                 <FormItem>
                   <FormLabel>Mot de passe</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} />
+                    <Input type="password" {...field} placeholder="8 caractères minimum" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -124,7 +124,6 @@ function RegisterForm() {
     defaultValues: {
       fullName: "",
       email: "",
-      username: "",
       password: "",
       bio: "",
       skills: [],
@@ -162,19 +161,6 @@ function RegisterForm() {
                   <FormLabel>Email professionnel</FormLabel>
                   <FormControl>
                     <Input type="email" {...field} placeholder="vous@entreprise.fr" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Identifiant</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Votre identifiant unique" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
