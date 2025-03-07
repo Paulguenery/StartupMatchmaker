@@ -2,8 +2,8 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
-import { insertProjectSchema, insertMatchSchema } from "@shared/schema";
-import { insertRatingSchema } from "@shared/schema";
+import { setupWebSocket } from "./websocket";
+import { insertProjectSchema, insertMatchSchema, insertRatingSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -94,5 +94,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  setupWebSocket(httpServer);
+
   return httpServer;
 }
