@@ -6,7 +6,7 @@ import { FiltersDialog } from "@/components/filters-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { ThumbsUp, ThumbsDown, SlidersHorizontal } from "lucide-react";
+import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
@@ -29,20 +29,20 @@ export default function SwipePage() {
         projectId,
         status,
       });
-      
+
       queryClient.invalidateQueries({ queryKey: ["/api/matches"] });
       setCurrentIndex(prev => prev + 1);
-      
+
       if (status === "accepted") {
         toast({
-          title: "It's a match!",
-          description: "You've matched with this project.",
+          title: "C'est un match !",
+          description: "Vous avez matché avec ce projet.",
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to process your response.",
+        title: "Erreur",
+        description: "Impossible de traiter votre réponse.",
         variant: "destructive",
       });
     }
@@ -55,8 +55,8 @@ export default function SwipePage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Find Projects</h1>
-            <p className="text-gray-600">Swipe right on projects you're interested in</p>
+            <h1 className="text-3xl font-bold text-gray-900">Trouver des projets</h1>
+            <p className="text-gray-600">Swipez à droite sur les projets qui vous intéressent</p>
           </div>
           <FiltersDialog filters={filters} onFiltersChange={setFilters} />
         </div>
@@ -95,7 +95,7 @@ export default function SwipePage() {
           </div>
         ) : (
           <Card className="p-6 text-center">
-            <p className="text-gray-600">No more projects to show. Check back later!</p>
+            <p className="text-gray-600">Plus de projets à afficher. Revenez plus tard !</p>
           </Card>
         )}
       </div>

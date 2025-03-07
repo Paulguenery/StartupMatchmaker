@@ -37,8 +37,8 @@ export default function ProfilePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
-        title: "Profile verified",
-        description: "Your profile has been verified successfully.",
+        title: "Profil vérifié",
+        description: "Votre profil a été vérifié avec succès.",
       });
     },
   });
@@ -51,8 +51,8 @@ export default function ProfilePage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
-        title: "Subscription activated",
-        description: "You are now a premium member!",
+        title: "Abonnement activé",
+        description: "Vous êtes maintenant membre premium !",
       });
     },
   });
@@ -62,17 +62,17 @@ export default function ProfilePage() {
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
-            <p className="text-gray-600">Manage your profile and subscription</p>
+            <h1 className="text-3xl font-bold text-gray-900">Profil</h1>
+            <p className="text-gray-600">Gérez votre profil et votre abonnement</p>
           </div>
           <div className="flex gap-2">
             {user?.isVerified ? (
               <Badge variant="default" className="gap-1">
-                <Shield className="h-4 w-4" /> Verified
+                <Shield className="h-4 w-4" /> Vérifié
               </Badge>
             ) : (
               <Button onClick={() => verifyMutation.mutate()} disabled={verifyMutation.isPending}>
-                Verify Profile
+                Vérifier le profil
               </Button>
             )}
             {user?.isPremium ? (
@@ -81,7 +81,7 @@ export default function ProfilePage() {
               </Badge>
             ) : (
               <Button onClick={() => subscribeMutation.mutate()} disabled={subscribeMutation.isPending}>
-                Upgrade to Premium
+                Passer en Premium
               </Button>
             )}
           </div>
@@ -89,7 +89,7 @@ export default function ProfilePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
+            <CardTitle>Informations personnelles</CardTitle>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -99,7 +99,7 @@ export default function ProfilePage() {
                   name="fullName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Full Name</FormLabel>
+                      <FormLabel>Nom complet</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -133,7 +133,7 @@ export default function ProfilePage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit">Save Changes</Button>
+                <Button type="submit">Enregistrer les modifications</Button>
               </form>
             </Form>
           </CardContent>

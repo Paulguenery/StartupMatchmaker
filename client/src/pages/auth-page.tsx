@@ -25,14 +25,14 @@ export default function AuthPage() {
           <div className="text-center md:text-left">
             <h1 className="text-4xl font-bold text-gray-900">Project Match</h1>
             <p className="mt-2 text-lg text-gray-600">
-              Connect with project creators and collaborators in your field
+              Trouvez les meilleurs collaborateurs pour vos projets
             </p>
           </div>
-          
+
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
+              <TabsTrigger value="login">Connexion</TabsTrigger>
+              <TabsTrigger value="register">Inscription</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -49,11 +49,11 @@ export default function AuthPage() {
           <div className="h-full flex items-center justify-center">
             <div className="text-center space-y-6">
               <h2 className="text-3xl font-bold text-gray-900">
-                Find Your Next Project
+                Lancez votre prochain projet
               </h2>
               <p className="text-lg text-gray-600">
-                Whether you're a project creator or looking to join exciting ventures,
-                we help you make the right connections.
+                Que vous ayez un projet à réaliser ou des compétences à partager,
+                nous vous aidons à trouver les bonnes personnes.
               </p>
             </div>
           </div>
@@ -75,8 +75,8 @@ function LoginForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Welcome back</CardTitle>
-        <CardDescription>Login to your account</CardDescription>
+        <CardTitle>Bon retour parmi nous</CardTitle>
+        <CardDescription>Connectez-vous à votre compte</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -86,7 +86,7 @@ function LoginForm() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Nom d'utilisateur</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -99,7 +99,7 @@ function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Mot de passe</FormLabel>
                   <FormControl>
                     <Input type="password" {...field} />
                   </FormControl>
@@ -108,7 +108,7 @@ function LoginForm() {
               )}
             />
             <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-              Login
+              Se connecter
             </Button>
           </form>
         </Form>
@@ -135,8 +135,8 @@ function RegisterForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create an account</CardTitle>
-        <CardDescription>Join our community of creators</CardDescription>
+        <CardTitle>Créer un compte</CardTitle>
+        <CardDescription>Rejoignez notre communauté de créateurs</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -146,7 +146,7 @@ function RegisterForm() {
               name="username"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Nom d'utilisateur</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -159,7 +159,7 @@ function RegisterForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Mot de passe</FormLabel>
                   <FormControl>
                     <Input type="password" {...field} />
                   </FormControl>
@@ -185,7 +185,7 @@ function RegisterForm() {
               name="fullName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel>Nom complet</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -194,7 +194,7 @@ function RegisterForm() {
               )}
             />
             <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-              Register
+              S'inscrire
             </Button>
           </form>
         </Form>

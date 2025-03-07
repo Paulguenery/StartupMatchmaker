@@ -13,12 +13,15 @@ export function ProjectCard({ project }: ProjectCardProps) {
       <CardHeader className="space-y-2">
         <div className="flex items-start justify-between">
           <CardTitle className="text-xl">{project.title}</CardTitle>
-          <Badge>{project.duration}</Badge>
+          <Badge>
+            {project.duration === "short" ? "Court terme" : 
+             project.duration === "medium" ? "Moyen terme" : "Long terme"}
+          </Badge>
         </div>
         <div className="flex gap-2 text-sm text-gray-500">
           <div className="flex items-center gap-1">
             <MapPin className="h-4 w-4" />
-            <span>{project.location.city}</span>
+            <span>{project.location?.city || "Non spécifié"}</span>
           </div>
           <div className="flex items-center gap-1">
             <Briefcase className="h-4 w-4" />
@@ -28,13 +31,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-gray-600">{project.description}</p>
-        
+
         <div>
-          <h4 className="font-semibold mb-2">Required Skills</h4>
+          <h4 className="font-semibold mb-2">Compétences requises</h4>
           <div className="flex flex-wrap gap-2">
-            {project.requiredSkills.map((skill, index) => (
+            {project.requiredSkills?.map((skill, index) => (
               <Badge key={index} variant="secondary">{skill}</Badge>
-            ))}
+            )) || <span className="text-gray-500">Aucune compétence spécifiée</span>}
           </div>
         </div>
       </CardContent>

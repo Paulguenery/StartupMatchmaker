@@ -9,7 +9,7 @@ import { UserCircle, SearchCode, Briefcase, Star } from "lucide-react";
 
 export default function HomePage() {
   const { user } = useAuth();
-  
+
   const { data: matches } = useQuery<Match[]>({
     queryKey: ["/api/matches"],
   });
@@ -27,15 +27,15 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Welcome, {user?.fullName}</h1>
-            <p className="text-gray-600">Find and connect with exciting projects</p>
+            <h1 className="text-3xl font-bold text-gray-900">Bienvenue, {user?.fullName}</h1>
+            <p className="text-gray-600">Trouvez et connectez-vous avec des projets passionnants</p>
           </div>
           <div className="flex gap-4">
             <Button asChild>
-              <Link href="/swipe">Start Matching</Link>
+              <Link href="/swipe">Commencer à matcher</Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link href="/profile">View Profile</Link>
+              <Link href="/profile">Voir le profil</Link>
             </Button>
           </div>
         </div>
@@ -43,7 +43,7 @@ export default function HomePage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Matches</CardTitle>
+              <CardTitle className="text-sm font-medium">Matchs totaux</CardTitle>
               <Star className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -52,16 +52,16 @@ export default function HomePage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Profile Status</CardTitle>
+              <CardTitle className="text-sm font-medium">Statut du profil</CardTitle>
               <UserCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{user?.isVerified ? "Verified" : "Unverified"}</div>
+              <div className="text-2xl font-bold">{user?.isVerified ? "Vérifié" : "Non vérifié"}</div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Account Type</CardTitle>
+              <CardTitle className="text-sm font-medium">Type de compte</CardTitle>
               <SearchCode className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -70,7 +70,7 @@ export default function HomePage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
+              <CardTitle className="text-sm font-medium">Projets actifs</CardTitle>
               <Briefcase className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -80,13 +80,13 @@ export default function HomePage() {
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-900">Your Matched Projects</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Vos projets matchés</h2>
           {matchedProjects?.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center text-gray-600">
-                <p>No matched projects yet. Start swiping to find your next opportunity!</p>
+                <p>Pas encore de projets matchés. Commencez à swiper pour trouver votre prochaine opportunité !</p>
                 <Button className="mt-4" asChild>
-                  <Link href="/swipe">Go to Swipe</Link>
+                  <Link href="/swipe">Aller au swipe</Link>
                 </Button>
               </CardContent>
             </Card>

@@ -31,13 +31,26 @@ const categories = [
   "Marketing et Publicité",
   "Design et Création",
   "Ressources humaines",
-  // Add more categories as needed
+  "Finance et Comptabilité",
+  "Vente et Développement Commercial",
+  "Santé",
+  "Ingénierie",
+  "Éducation",
+  "Droit",
+  "Entrepreneuriat",
+  "Architecture",
+  "Médias et Communication",
+  "Logistique et Transport",
+  "Recherche et développement",
+  "Gestion de projet",
+  "Industrie et Production",
+  "Services Financiers"
 ];
 
 const durations = [
-  { value: "short", label: "Short Term (< 3 months)" },
-  { value: "medium", label: "Medium Term (3-6 months)" },
-  { value: "long", label: "Long Term (> 6 months)" },
+  { value: "short", label: "Court terme (< 3 mois)" },
+  { value: "medium", label: "Moyen terme (3-6 mois)" },
+  { value: "long", label: "Long terme (> 6 mois)" },
 ];
 
 export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) {
@@ -46,16 +59,16 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <SlidersHorizontal className="h-4 w-4" />
-          Filters
+          Filtres
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Filter Projects</DialogTitle>
+          <DialogTitle>Filtrer les projets</DialogTitle>
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="space-y-2">
-            <Label>Category</Label>
+            <Label>Catégorie</Label>
             <Select
               value={filters.category}
               onValueChange={(value) =>
@@ -63,10 +76,10 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a category" />
+                <SelectValue placeholder="Sélectionnez une catégorie" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="">Toutes les catégories</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
@@ -77,7 +90,7 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
           </div>
 
           <div className="space-y-2">
-            <Label>Maximum Distance (km)</Label>
+            <Label>Distance maximale (km)</Label>
             <div className="pt-2">
               <Slider
                 value={[filters.distance]}
@@ -92,7 +105,7 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
           </div>
 
           <div className="space-y-2">
-            <Label>Project Duration</Label>
+            <Label>Durée du projet</Label>
             <Select
               value={filters.duration}
               onValueChange={(value) =>
@@ -100,10 +113,10 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select duration" />
+                <SelectValue placeholder="Sélectionnez une durée" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Any Duration</SelectItem>
+                <SelectItem value="">Toutes les durées</SelectItem>
                 {durations.map((duration) => (
                   <SelectItem key={duration.value} value={duration.value}>
                     {duration.label}
