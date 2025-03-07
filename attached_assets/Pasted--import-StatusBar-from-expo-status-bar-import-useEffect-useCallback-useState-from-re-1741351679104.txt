@@ -1,0 +1,215 @@
+
+import { StatusBar } from 'expo-status-bar';
+import { useEffect, useCallback, useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import * as SplashScreen from 'expo-splash-screen';
+import AppLoading from 'expo-app-loading'; // Ajouté pour l'écran de chargement pendant le chargement des polices
+import { Picker } from '@react-native-picker/picker'; // Picker pour la sélection des catégories
+
+// Screens
+import AuthScreen from './screens/AuthScreen';
+import HomeScreen from './screens/HomeScreen';
+import SearchScreen from './screens/SearchScreen';
+import MessagesScreen from './screens/MessagesScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import ProjectDetailsScreen from './screens/ProjectDetailsScreen';
+import CommunityScreen from './screens/CommunityScreen';
+import SubscriptionScreen from './screens/SubscriptionScreen';
+import SwipeScreen from './screens/SwipeScreen';
+import ReferralScreen from './screens/ReferralScreen';
+import PaymentScreen from './screens/PaymentScreen';
+
+// Context Providers
+import { AuthProvider } from './context/AuthContext';
+import { ProjectsProvider } from './context/ProjectsContext';
+import { MessagingProvider } from './context/MessagingContext';
+import { SubscriptionProvider } from './context/SubscriptionContext';
+import { PaymentProvider } from './context/PaymentContext';
+
+// Fonts
+import { useFonts } from 'expo-font';
+import {
+  Roboto_400Regular,
+  Roboto_700Bold,
+} from '@expo-google-fonts/roboto';
+import {
+  OpenSans_400Regular,
+  OpenSans_700Bold,
+} from '@expo-google-fonts/open-sans';
+
+// Liste des catégories
+const categories = [
+  'Informatique et technologie',
+  'Marketing et Publicité',
+  'Design et Création',
+  'Ressources humaines',
+  'Finance et Comptabilité',
+  'Vente et Développement Commercial',
+  'Santé',
+  'Ingénierie',
+  'Éducation',
+  'Droit',
+  'Entrepreneuriat',
+  'Architecture',
+  'Médias et Communication',
+  'Logistique et Transport',
+  'Recherche et développement',
+  'Gestion de Projet',
+  'Industrie et Production',
+  'Services Financiers',
+  'Conseil',
+  'Hôtellerie et Tourisme',
+  'Agriculture et Agroalimentaire',
+  'Énergie et environnement',
+  'Immobilier',
+  'Art et Culture',
+  'Sciences Sociales',
+  'Télécommunications',
+  'Sécurité et Défense',
+  'Administration publique',
+  'Relations Publiques',
+  'Informatique Cloud et Big Data',
+  'Biotechnologie et Pharmaceutique',
+  'Sports et Loisirs',
+  'Événementiel',
+  'Transports et Mobilité',
+  'Médical et paramédical',
+  'Systèmes d\'information',
+  'Commerce de détail',
+  'Restauration',
+  'Mode et Textile',
+  'Commerce international',
+  'Haute technologie',
+  'Intelligence Artificielle et Machine Learning',
+  'Blockchain et Cryptomonnaies',
+  'Commerce électronique',
+  'Jeux vidéo et eSports',
+  'Réseaux Sociaux et Influenceurs',
+  'Robotique',
+  'Aéronautique et Spatiale',
+];
+
+// Données à filtrer (exemple)
+const data = [
+  { id: '1', title: 'Développement Mobile', category: 'Informatique et technologie' },
+  { id: '2', title: 'Publicité Digital', category: 'Marketing et Publicité' },
+  { id: '3', title: 'Web Design', category: 'Design et Création' },
+  { id: '4', title: 'Conseil RH', category: 'Ressources humaines' },
+  // Ajouter d'autres données pour le filtrage...
+];
+
+const Stack = createNativeStackNavigator();
+
+export default function App() {
+  const [fontsLoaded] = useFonts({
+    Roboto_400Regular,
+    Roboto_700Bold,
+    OpenSans_400Regular,
+    OpenSans_700Bold,
+  });
+
+  const [appReady, setAppReady] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(''); // État de la catégorie sélectionnée
+  const [filteredData, setFilteredData] = useState(data); // État des données filtrées
+
+  useEffect(() => {
+    const initialize = async () => {
+      try {
+        await SplashScreen.preventAutoHideAsync();
+        setTimeout(() => {
+          setAppReady(true);
+        }, 2000); // 2 secondes supplémentaires avant de cacher l'écran de démarrage
+      } catch (e) {
+        console.error('SplashScreen initialization failed', e);
+      }
+    };
+    initialize();
+  }, []);
+
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded && appReady) {
+      try {
+        await SplashScreen.hideAsync();
+      } catch (error) {
+        console.warn('Error hiding splash screen:', error);
+      }
+    }
+  }, [fontsLoaded, appReady]);
+
+  const filterData = (category) => {
+    if (category === '') {
+      setFilteredData(data); // Si aucune catégorie sélectionnée, afficher toutes les données
+    } else {
+      const filtered = data.filter(item => item.category === category);
+      setFilteredData(filtered); // Met à jour les données filtrées
+    }
+  };
+
+  // Afficher un écran de chargement ou une erreur en cas de problème
+  if (!fontsLoaded || !appReady) {
+    return <AppLoading />; // Utilisation de AppLoading pendant le chargement des ressources
+  }
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
+      <AuthProvider>
+        <ProjectsProvider>
+          <MessagingProvider>
+            <SubscriptionProvider>
+              <PaymentProvider>
+                <NavigationContainer>
+                  <Stack.Navigator screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="Auth" component={AuthScreen} />
+                    <Stack.Screen name="Home" component={HomeScreen} />
+                    <Stack.Screen name="Search" component={SearchScreen} />
+                    <Stack.Screen name="Messages" component={MessagesScreen} />
+                    <Stack.Screen name="Profile" component={ProfileScreen} />
+                    <Stack.Screen name="ProjectDetails" component={ProjectDetailsScreen} />
+                    <Stack.Screen name="Community" component={CommunityScreen} />
+                    <Stack.Screen name="Subscription" component={SubscriptionScreen} />
+                    <Stack.Screen name="Swipe" component={SwipeScreen} />
+                    <Stack.Screen name="Referral" component={ReferralScreen} />
+                    <Stack.Screen name="Payment" component={PaymentScreen} />
+                  </Stack.Navigator>
+                </NavigationContainer>
+              </PaymentProvider>
+            </SubscriptionProvider>
+          </MessagingProvider>
+        </ProjectsProvider>
+      </AuthProvider>
+
+      {/* Sélecteur de catégorie */}
+      <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' }}>Sélectionner une catégorie</Text>
+      <Picker
+        selectedValue={selectedCategory}
+        style={{ height: 50, width: '100%', marginBottom: 20 }}
+        onValueChange={(itemValue) => {
+          setSelectedCategory(itemValue);
+          filterData(itemValue); // Filtre les données dès qu'une catégorie est sélectionnée
+        }}
+      >
+        <Picker.Item label="Toutes les catégories" value="" />
+        {categories.map((category, index) => (
+          <Picker.Item key={index} label={category} value={category} />
+        ))}
+      </Picker>
+
+      {/* Liste des données filtrées */}
+      <FlatList
+        data={filteredData}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={{ padding: 10, marginBottom: 10, backgroundColor: '#f0f0f0', borderRadius: 5 }}>
+            <Text>{item.title}</Text>
+            <Text>{item.category}</Text>
+          </TouchableOpacity>
+        )}
+        keyExtractor={item => item.id}
+      />
+
+      <StatusBar style="auto" />
+    </GestureHandlerRootView>
+  );
+}
+
