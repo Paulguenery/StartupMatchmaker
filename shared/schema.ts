@@ -70,6 +70,7 @@ export const insertProjectSchema = createInsertSchema(projects).omit({
 
 export const insertMatchSchema = createInsertSchema(matches).omit({
   id: true,
+  userId: true,
   createdAt: true,
 });
 

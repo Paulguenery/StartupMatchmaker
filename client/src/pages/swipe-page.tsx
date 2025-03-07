@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Project } from "@shared/schema";
 import { ProjectCard } from "@/components/project-card";
 import { FiltersDialog } from "@/components/filters-dialog";
@@ -21,16 +21,40 @@ export default function SwipePage() {
 
   const { data: projects = [] } = useQuery<Project[]>({
     queryKey: ["/api/projects", filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters.category) params.append("category", filters.category);
+      if (filters.distance) params.append("distance", filters.distance.toString());
+      if (filters.duration) params.append("duration", filters.duration);
+
+      const res = await fetch(`/api/projects?${params.toString()}`);
+      if (!res.ok) throw new Error("Erreur lors du chargement des projets");
+      return res.json();
+    },
   });
 
-  const handleSwipe = async (projectId: number, status: "accepted" | "rejected") => {
-    try {
+  const matchMutation = useMutation({
+    mutationFn: async ({ projectId, status }: { projectId: number, status: "accepted" | "rejected" }) => {
       await apiRequest("POST", "/api/matches", {
         projectId,
         status,
       });
-
+    },
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/matches"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Erreur",
+        description: "Impossible de traiter votre réponse.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSwipe = async (projectId: number, status: "accepted" | "rejected") => {
+    try {
+      await matchMutation.mutateAsync({ projectId, status });
       setCurrentIndex(prev => prev + 1);
 
       if (status === "accepted") {
@@ -40,11 +64,7 @@ export default function SwipePage() {
         });
       }
     } catch (error) {
-      toast({
-        title: "Erreur",
-        description: "Impossible de traiter votre réponse.",
-        variant: "destructive",
-      });
+      console.error("Erreur lors du swipe:", error);
     }
   };
 

@@ -11,7 +11,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Projects
   app.get("/api/projects", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const projects = await storage.getProjects();
+
+    const { category, distance, duration } = req.query;
+    let projects = await storage.getProjects();
+
+    // Appliquer les filtres
+    if (category) {
+      projects = projects.filter(p => p.category === category);
+    }
+
+    if (duration) {
+      projects = projects.filter(p => p.duration === duration);
+    }
+
+    if (distance && req.user?.location) {
+      const maxDistance = parseInt(distance as string);
+      projects = projects.filter(p => {
+        if (!p.location || !req.user?.location) return false;
+
+        // Calcul de la distance (en km) entre deux points
+        const R = 6371; // Rayon de la Terre en km
+        const lat1 = req.user.location.latitude * Math.PI / 180;
+        const lat2 = p.location.latitude * Math.PI / 180;
+        const dLat = (p.location.latitude - req.user.location.latitude) * Math.PI / 180;
+        const dLon = (p.location.longitude - req.user.location.longitude) * Math.PI / 180;
+
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                 Math.cos(lat1) * Math.cos(lat2) *
+                 Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+
+        return distance <= maxDistance;
+      });
+    }
+
     res.json(projects);
   });
 
@@ -77,7 +111,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const recommendedProjects = await storage.getRecommendedProjects(req.user!.id);
     res.json(recommendedProjects);
   });
-
 
   // User verification
   app.post("/api/verify", async (req, res) => {
