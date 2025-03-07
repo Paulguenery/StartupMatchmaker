@@ -1,6 +1,7 @@
 import { users, projects, matches, type User, type Project, type Match, type InsertUser, type InsertProject, type InsertMatch } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { ratings, type Rating, type InsertRating } from "@shared/schema";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -21,6 +22,11 @@ export interface IStorage {
   createMatch(match: InsertMatch): Promise<Match>;
   getMatchesByUserId(userId: number): Promise<Match[]>;
   
+  // Rating operations
+  createRating(rating: InsertRating): Promise<Rating>;
+  getProjectRatings(projectId: number): Promise<Rating[]>;
+  getRecommendedProjects(userId: number): Promise<Project[]>;
+  
   sessionStore: session.SessionStore;
 }
 
@@ -28,18 +34,22 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private projects: Map<number, Project>;
   private matches: Map<number, Match>;
+  private ratings: Map<number, Rating>;
   private currentUserId: number;
   private currentProjectId: number;
   private currentMatchId: number;
+  private currentRatingId: number;
   sessionStore: session.SessionStore;
 
   constructor() {
     this.users = new Map();
     this.projects = new Map();
     this.matches = new Map();
+    this.ratings = new Map();
     this.currentUserId = 1;
     this.currentProjectId = 1;
     this.currentMatchId = 1;
+    this.currentRatingId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -106,6 +116,45 @@ export class MemStorage implements IStorage {
     return Array.from(this.matches.values()).filter(
       (match) => match.userId === userId
     );
+  }
+
+  async createRating(insertRating: InsertRating): Promise<Rating> {
+    const id = this.currentRatingId++;
+    const rating: Rating = { ...insertRating, id, createdAt: new Date() };
+    this.ratings.set(id, rating);
+    return rating;
+  }
+
+  async getProjectRatings(projectId: number): Promise<Rating[]> {
+    return Array.from(this.ratings.values()).filter(
+      (rating) => rating.projectId === projectId
+    );
+  }
+
+  async getRecommendedProjects(userId: number): Promise<Project[]> {
+    // Récupérer les projets notés par l'utilisateur
+    const userRatings = Array.from(this.ratings.values()).filter(
+      (rating) => rating.userId === userId
+    );
+
+    // Récupérer tous les projets
+    const allProjects = await this.getProjects();
+
+    // Exclure les projets déjà notés par l'utilisateur
+    const ratedProjectIds = new Set(userRatings.map(r => r.projectId));
+    const unratedProjects = allProjects.filter(p => !ratedProjectIds.has(p.id));
+
+    // Trier les projets en fonction des compétences correspondantes de l'utilisateur
+    const user = await this.getUser(userId);
+    if (!user || !user.skills) return unratedProjects;
+
+    const userSkillSet = new Set(user.skills);
+
+    return unratedProjects.sort((a, b) => {
+      const aMatches = a.requiredSkills?.filter(skill => userSkillSet.has(skill)).length || 0;
+      const bMatches = b.requiredSkills?.filter(skill => userSkillSet.has(skill)).length || 0;
+      return bMatches - aMatches;
+    });
   }
 }
 

@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { insertProjectSchema, insertMatchSchema } from "@shared/schema";
+import { insertRatingSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -46,6 +47,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const matches = await storage.getMatchesByUserId(req.user!.id);
     res.json(matches);
   });
+
+  // Ratings
+  app.post("/api/projects/:projectId/rate", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const validation = insertRatingSchema.safeParse({
+      ...req.body,
+      userId: req.user!.id,
+      projectId: parseInt(req.params.projectId),
+    });
+
+    if (!validation.success) {
+      return res.status(400).json(validation.error);
+    }
+
+    const rating = await storage.createRating(validation.data);
+    res.status(201).json(rating);
+  });
+
+  app.get("/api/projects/:projectId/ratings", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const ratings = await storage.getProjectRatings(parseInt(req.params.projectId));
+    res.json(ratings);
+  });
+
+  app.get("/api/projects/recommended", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const recommendedProjects = await storage.getRecommendedProjects(req.user!.id);
+    res.json(recommendedProjects);
+  });
+
 
   // User verification
   app.post("/api/verify", async (req, res) => {

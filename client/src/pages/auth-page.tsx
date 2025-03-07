@@ -23,7 +23,7 @@ export default function AuthPage() {
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
         <div className="space-y-6">
           <div className="text-center md:text-left">
-            <h1 className="text-4xl font-bold text-gray-900">Project Match</h1>
+            <h1 className="text-4xl font-bold text-gray-900">Mymate</h1>
             <p className="mt-2 text-lg text-gray-600">
               Trouvez les meilleurs collaborateurs pour vos projets
             </p>

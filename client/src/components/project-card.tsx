@@ -2,20 +2,22 @@ import { Project } from "@shared/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, Briefcase } from "lucide-react";
+import { ProjectRating } from "./project-rating";
 
 interface ProjectCardProps {
   project: Project;
+  showRating?: boolean;
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
+export function ProjectCard({ project, showRating = false }: ProjectCardProps) {
   return (
     <Card className="overflow-hidden">
       <CardHeader className="space-y-2">
         <div className="flex items-start justify-between">
           <CardTitle className="text-xl">{project.title}</CardTitle>
           <Badge>
-            {project.duration === "short" ? "Court terme" : 
-             project.duration === "medium" ? "Moyen terme" : "Long terme"}
+            {project.duration === "short" ? "Court terme" :
+              project.duration === "medium" ? "Moyen terme" : "Long terme"}
           </Badge>
         </div>
         <div className="flex gap-2 text-sm text-gray-500">
@@ -40,6 +42,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
             )) || <span className="text-gray-500">Aucune compétence spécifiée</span>}
           </div>
         </div>
+
+        {showRating && (
+          <div className="mt-6 pt-6 border-t">
+            <h4 className="font-semibold mb-4">Évaluations</h4>
+            <ProjectRating projectId={project.id} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );
