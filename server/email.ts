@@ -2,12 +2,12 @@ import nodemailer from 'nodemailer';
 
 // Créer le transporteur avec les options de débogage
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465, // Corrected port for Gmail with SSL/TLS
-  secure: true, // Corrected secure setting for port 465
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT), // Convert port to number
+  secure: true, // Use SSL/TLS
   auth: {
-    user: "jecontactmymate@gmail.com",
-    pass: "pymt lhgd onbb agee",
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
   debug: true,
   logger: true
@@ -40,7 +40,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
     const mailOptions = {
       from: {
         name: 'Mymate Support',
-        address: "jecontactmymate@gmail.com"
+        address: process.env.SMTP_USER
       },
       to: email,
       subject: 'Réinitialisation de votre mot de passe Mymate',
