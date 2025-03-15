@@ -53,7 +53,7 @@ export default function MessagesPage() {
 
         <div className="space-y-4">
           {acceptedMatches.map(match => {
-            const project = projects.find(p => p.projectId === match.projectId);
+            const project = projects.find(p => p.id === match.projectId);
             if (!project) return null;
 
             return (
@@ -61,7 +61,7 @@ export default function MessagesPage() {
                 <ChatInterface
                   match={match}
                   project={project}
-                  otherUser={project.userId === user?.id ? user : project.userId}
+                  otherUser={project.userId === user?.id ? user : { id: project.userId } as User}
                 />
               </Card>
             );

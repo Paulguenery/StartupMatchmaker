@@ -85,6 +85,13 @@ export class MemStorage implements IStorage {
         department: "Rhône"
       }
     });
+
+    // Ajout d'un match de test
+    this.createMatch({
+      projectId: 1,
+      userId: 1,
+      status: "accepted"
+    });
   }
 
   async getUser(id: number): Promise<User | undefined> {
