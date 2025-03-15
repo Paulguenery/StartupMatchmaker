@@ -141,9 +141,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
+    if (!process.env.STRIPE_PRICE_ID) {
+      console.error('ID de prix Stripe manquant');
+      return res.status(400).json({ 
+        error: { message: "Configuration de l'abonnement incomplète" }
+      });
+    }
+
     try {
       // Créer un client Stripe s'il n'existe pas déjà
       let user = req.user;
+
+      console.log('Création du client Stripe avec ID de prix:', process.env.STRIPE_PRICE_ID);
 
       const customer = await stripe.customers.create({
         email: user.email,
@@ -154,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const subscription = await stripe.subscriptions.create({
         customer: customer.id,
         items: [{
-          price: process.env.STRIPE_PRICE_ID!, // Utiliser l'ID de prix configuré
+          price: process.env.STRIPE_PRICE_ID.trim(), // Utiliser l'ID de prix configuré et supprimer les espaces
         }],
         payment_behavior: 'default_incomplete',
         expand: ['latest_invoice.payment_intent'],
