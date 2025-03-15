@@ -2,8 +2,7 @@ import { users, projects, matches, type User, type Project, type Match, type Ins
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { ratings, type Rating, type InsertRating } from "@shared/schema";
-import { suggestions, type Suggestion, type InsertSuggestion } from "@shared/schema"; // Added import for suggestions
-
+import { suggestions, type Suggestion, type InsertSuggestion } from "@shared/schema";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -13,6 +12,7 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
+  deleteUserByEmail(email: string): Promise<void>;
   verifyUser(userId: number): Promise<User>;
   upgradeToPremium(userId: number): Promise<User>;
 
@@ -43,13 +43,13 @@ export class MemStorage implements IStorage {
   private projects: Map<number, Project>;
   private matches: Map<number, Match>;
   private ratings: Map<number, Rating>;
-  private suggestions: Map<number, Suggestion>; // Added suggestions map
+  private suggestions: Map<number, Suggestion>;
   private currentUserId: number;
   private currentProjectId: number;
   private currentMatchId: number;
   private currentRatingId: number;
-  private currentSuggestionId: number; // Added currentSuggestionId
-  private suggestionVotes: Map<string, boolean>; // userId_suggestionId -> true
+  private currentSuggestionId: number;
+  private suggestionVotes: Map<string, boolean>;
   sessionStore: session.Store;
 
   constructor() {
@@ -57,16 +57,23 @@ export class MemStorage implements IStorage {
     this.projects = new Map();
     this.matches = new Map();
     this.ratings = new Map();
-    this.suggestions = new Map(); // Initialize suggestions map
+    this.suggestions = new Map();
     this.currentUserId = 1;
     this.currentProjectId = 1;
     this.currentMatchId = 1;
     this.currentRatingId = 1;
-    this.currentSuggestionId = 1; // Initialize currentSuggestionId
+    this.currentSuggestionId = 1;
     this.suggestionVotes = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
+  }
+
+  async deleteUserByEmail(email: string): Promise<void> {
+    const userToDelete = Array.from(this.users.values()).find(user => user.email === email);
+    if (userToDelete) {
+      this.users.delete(userToDelete.id);
+    }
   }
 
   async getUsers(): Promise<User[]> {

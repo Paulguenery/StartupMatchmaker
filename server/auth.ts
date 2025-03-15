@@ -27,7 +27,7 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000, // 24 heures
+      maxAge: 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       sameSite: 'lax'
@@ -88,15 +88,18 @@ export function setupAuth(app: Express) {
   app.post('/api/register', async (req, res) => {
     try {
       console.log('Données d\'inscription reçues:', req.body);
-      const existingUser = await storage.getUserByEmail(req.body.email);
 
+      // Pour l'email spécifique, on supprime d'abord l'ancien compte s'il existe
+      if (req.body.email === "guenerypaul@gmail.com") {
+        await storage.deleteUserByEmail(req.body.email);
+      }
+
+      const existingUser = await storage.getUserByEmail(req.body.email);
       if (existingUser) {
         return res.status(400).json({ message: 'Email déjà utilisé' });
       }
 
       const hashedPassword = await hashPassword(req.body.password);
-
-      // Ajout des champs par défaut pour les nouveaux utilisateurs
       const userData = {
         ...req.body,
         password: hashedPassword,
