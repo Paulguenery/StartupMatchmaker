@@ -218,6 +218,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Ajouter cette nouvelle route pour la recherche de profils
+  app.get("/api/users/search", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const {
+      skills,
+      distance,
+      experienceLevel,
+      availability,
+      collaborationType,
+      isVerified
+    } = req.query;
+
+    let users = await storage.getUsers();
+
+    // Appliquer les filtres
+    if (skills) {
+      const requiredSkills = (skills as string).split(',');
+      users = users.filter(user => 
+        user.skills?.some(skill => 
+          requiredSkills.includes(skill.toLowerCase())
+        )
+      );
+    }
+
+    if (experienceLevel) {
+      users = users.filter(user => user.experienceLevel === experienceLevel);
+    }
+
+    if (availability) {
+      users = users.filter(user => user.availability === availability);
+    }
+
+    if (collaborationType) {
+      users = users.filter(user => user.collaborationType === collaborationType);
+    }
+
+    if (isVerified === 'true') {
+      users = users.filter(user => user.isVerified);
+    }
+
+    if (distance && req.user?.location) {
+      const maxDistance = parseInt(distance as string);
+      users = users.filter(user => {
+        if (!user.location || !req.user?.location) return false;
+
+        // Calcul de la distance (en km) entre deux points
+        const R = 6371; // Rayon de la Terre en km
+        const lat1 = req.user.location.latitude * Math.PI / 180;
+        const lat2 = user.location.latitude * Math.PI / 180;
+        const dLat = (user.location.latitude - req.user.location.latitude) * Math.PI / 180;
+        const dLon = (user.location.longitude - req.user.location.longitude) * Math.PI / 180;
+
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                 Math.cos(lat1) * Math.cos(lat2) *
+                 Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+
+        return distance <= maxDistance;
+      });
+    }
+
+    res.json(users);
+  });
+
   const httpServer = createServer(app);
   setupWebSocket(httpServer);
 
