@@ -24,37 +24,36 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-// Fonction pour générer un code de parrainage unique
-function generateReferralCode() {
-  return nanoid(8).toUpperCase(); // Génère un code de 8 caractères en majuscules
-}
-
-interface User {
-  id: number;
-  email: string;
-  password?: string;
-  fullName?: string;
-  role?: string;
-  accountStatus?: string;
-  documents?: { type: string; verified: boolean }[];
-  resetToken?: string;
-  resetTokenExpiry?: string;
-  lastLoginAttempt?: Date;
-  bio?: string;
-  skills?: string[];
-  location?: string | null;
-  collaborationType?: string;
-  experienceLevel?: string;
-  availability?: string;
-  isVerified?: boolean;
-  isPremium?: boolean;
-  premiumDiscount?: number;
-  freeConversationCredits?: number;
-  referralCode?: string;
-  isAdult?: boolean;
-}
+// Admin account credentials
+const ADMIN_EMAIL = 'admin@mymate.com';
+const ADMIN_PASSWORD = 'admin123!'; // À changer en production
 
 export function setupAuth(app: Express) {
+  // Créer le compte admin s'il n'existe pas
+  async function createAdminAccount() {
+    try {
+      const existingAdmin = await storage.getUserByEmail(ADMIN_EMAIL);
+      if (!existingAdmin) {
+        const hashedPassword = await hashPassword(ADMIN_PASSWORD);
+        await storage.createUser({
+          email: ADMIN_EMAIL,
+          password: hashedPassword,
+          fullName: 'Admin',
+          role: 'admin',
+          isVerified: true,
+          accountStatus: 'active',
+          documents: []
+        });
+        console.log('Compte admin créé avec succès');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la création du compte admin:', error);
+    }
+  }
+
+  // Créer le compte admin au démarrage
+  createAdminAccount();
+
   app.use(session({
     secret: 'mymate_secret_key_2024',
     resave: false,
@@ -75,6 +74,11 @@ export function setupAuth(app: Express) {
   async function checkLoginRestrictions(user: User): Promise<{ allowed: boolean; message?: string }> {
     console.log('Vérification des restrictions pour:', user.email);
 
+    // Les admins contournent toutes les restrictions
+    if (user.role === 'admin') {
+      return { allowed: true };
+    }
+
     // Vérifier le statut du compte
     if (user.accountStatus === "suspended") {
       return { allowed: false, message: "Votre compte est suspendu. Contactez le support." };
@@ -83,7 +87,7 @@ export function setupAuth(app: Express) {
       return { allowed: false, message: "Votre compte n'a pas été approuvé." };
     }
 
-    // Vérifier la pièce d'identité pour tous les utilisateurs
+    // Vérifier la pièce d'identité pour les utilisateurs non-admin
     const userDocs = user.documents || [];
     const hasIdCard = userDocs.some(doc => doc.type === "id_card");
     if (!hasIdCard) {
@@ -189,12 +193,14 @@ export function setupAuth(app: Express) {
         });
       }
 
-      // Vérifier la pièce d'identité pour tous les utilisateurs
-      const hasIdCard = req.body.documents?.some(doc => doc.type === "id_card");
-      if (!hasIdCard) {
-        return res.status(400).json({
-          message: 'La pièce d\'identité est obligatoire'
-        });
+      // Vérifier la pièce d'identité sauf pour les admins
+      if (role !== 'admin') {
+        const hasIdCard = req.body.documents?.some(doc => doc.type === "id_card");
+        if (!hasIdCard) {
+          return res.status(400).json({
+            message: 'La pièce d\'identité est obligatoire'
+          });
+        }
       }
 
       // Génération du code de parrainage
@@ -213,7 +219,7 @@ export function setupAuth(app: Express) {
         ...req.body,
         password: hashedPassword,
         referralCode,
-        accountStatus: "pending", // Tous les comptes commencent en attente de vérification
+        accountStatus: "pending",
         documents: req.body.documents.map(doc => ({
           ...doc,
           verified: false
@@ -395,4 +401,34 @@ export function setupAuth(app: Express) {
       res.status(500).json({ message: 'Erreur serveur' });
     }
   });
+}
+
+interface User {
+  id: number;
+  email: string;
+  password?: string;
+  fullName?: string;
+  role?: string;
+  accountStatus?: string;
+  documents?: { type: string; verified: boolean }[];
+  resetToken?: string;
+  resetTokenExpiry?: string;
+  lastLoginAttempt?: Date;
+  bio?: string;
+  skills?: string[];
+  location?: string | null;
+  collaborationType?: string;
+  experienceLevel?: string;
+  availability?: string;
+  isVerified?: boolean;
+  isPremium?: boolean;
+  premiumDiscount?: number;
+  freeConversationCredits?: number;
+  referralCode?: string;
+  isAdult?: boolean;
+}
+
+// Fonction pour générer un code de parrainage unique
+function generateReferralCode() {
+  return nanoid(8).toUpperCase(); // Génère un code de 8 caractères en majuscules
 }
