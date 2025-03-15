@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -5,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -54,8 +56,16 @@ const durations = [
 ];
 
 export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [tempFilters, setTempFilters] = useState(filters);
+
+  const handleApplyFilters = () => {
+    onFiltersChange(tempFilters);
+    setIsOpen(false);
+  };
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <SlidersHorizontal className="h-4 w-4" />
@@ -70,9 +80,12 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
           <div className="space-y-2">
             <Label>Catégorie</Label>
             <Select
-              value={filters.category || "all"}
+              value={tempFilters.category || "all"}
               onValueChange={(value) =>
-                onFiltersChange({ ...filters, category: value === "all" ? "" : value })
+                setTempFilters({
+                  ...tempFilters,
+                  category: value === "all" ? "" : value,
+                })
               }
             >
               <SelectTrigger>
@@ -93,23 +106,26 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
             <Label>Distance maximale (km)</Label>
             <div className="pt-2">
               <Slider
-                value={[filters.distance]}
+                value={[tempFilters.distance]}
                 onValueChange={(value) =>
-                  onFiltersChange({ ...filters, distance: value[0] })
+                  setTempFilters({ ...tempFilters, distance: value[0] })
                 }
                 max={100}
                 step={5}
               />
-              <div className="mt-1 text-sm text-gray-500">{filters.distance} km</div>
+              <div className="mt-1 text-sm text-gray-500">{tempFilters.distance} km</div>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Durée du projet</Label>
             <Select
-              value={filters.duration || "all"}
+              value={tempFilters.duration || "all"}
               onValueChange={(value) =>
-                onFiltersChange({ ...filters, duration: value === "all" ? "" : value })
+                setTempFilters({
+                  ...tempFilters,
+                  duration: value === "all" ? "" : value,
+                })
               }
             >
               <SelectTrigger>
@@ -126,6 +142,14 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
             </Select>
           </div>
         </div>
+        <DialogFooter>
+          <Button
+            className="w-full"
+            onClick={handleApplyFilters}
+          >
+            Appliquer les filtres
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
