@@ -11,11 +11,11 @@ import { AdvancedProfileFilters } from "@/components/advanced-profile-filters";
 export default function HomePage() {
   const { user } = useAuth();
 
-  const { data: matches } = useQuery<Match[]>({
+  const { data: matches = [], isLoading: isLoadingMatches } = useQuery<Match[]>({
     queryKey: ["/api/matches"],
   });
 
-  const { data: projects } = useQuery<Project[]>({
+  const { data: projects = [], isLoading: isLoadingProjects } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
 
@@ -38,12 +38,6 @@ export default function HomePage() {
               <p className="text-gray-600">Trouvez les meilleurs talents pour vos projets</p>
             </div>
             <div className="flex gap-4">
-              <Button variant="outline" asChild>
-                <Link href="/my-projects">Voir mes annonces</Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="/messages">Messages</Link>
-              </Button>
               {!user?.isPremium && (
                 <Button variant="outline" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700" asChild>
                   <Link href="/subscribe">Devenir Premium</Link>
@@ -52,7 +46,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <AdvancedProfileFilters onFilterChange={() => {}} isPremium={user.isPremium} />
+          <AdvancedProfileFilters onFilterChange={() => {}} isPremium={user.isPremium || false} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
@@ -91,24 +85,6 @@ export default function HomePage() {
                 <div className="text-2xl font-bold">{profiles?.length || 0}</div>
               </CardContent>
             </Card>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900">Profils recommandés</h2>
-            {!profiles?.length ? (
-              <Card>
-                <CardContent className="p-6 text-center text-gray-600">
-                  <p>Aucun profil ne correspond à vos critères pour le moment.</p>
-                  <Button className="mt-4" asChild>
-                    <Link href="/my-projects">Gérer mes annonces</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* TODO: Créer un composant ProfileCard pour afficher les profils */}
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -32,51 +32,59 @@ export function Header() {
             )}
           </div>
 
-          {/* Menu hamburger à droite */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
+          <div className="flex items-center gap-4">
+            {user.role === 'project_seeker' && (
+              <Button asChild>
+                <Link href="/swipe">Commencer à matcher</Link>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href="/profile" className="flex items-center">
-                  <User className="h-4 w-4 mr-2" />
-                  Mon profil
-                </Link>
-              </DropdownMenuItem>
-              {user.role === 'project_owner' ? (
-                <>
-                  <DropdownMenuItem asChild>
-                    <Link href="/my-projects" className="flex items-center">
-                      <List className="h-4 w-4 mr-2" />
-                      Mes annonces
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/new-project" className="flex items-center">
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Nouvelle annonce
-                    </Link>
-                  </DropdownMenuItem>
-                </>
-              ) : (
+            )}
+
+            {/* Menu hamburger à droite */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem asChild>
-                  <Link href="/messages" className="flex items-center">
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Messages
+                  <Link href="/profile" className="flex items-center">
+                    <User className="h-4 w-4 mr-2" />
+                    Mon profil
                   </Link>
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuItem asChild>
-                <Link href="/suggestions" className="flex items-center">
-                  <Lightbulb className="h-4 w-4 mr-2" />
-                  Suggestions
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                {user.role === 'project_owner' ? (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/my-projects" className="flex items-center">
+                        <List className="h-4 w-4 mr-2" />
+                        Mes annonces
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/new-project" className="flex items-center">
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Nouvelle annonce
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                ) : (
+                  <DropdownMenuItem asChild>
+                    <Link href="/messages" className="flex items-center">
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Messages
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem asChild>
+                  <Link href="/suggestions" className="flex items-center">
+                    <Lightbulb className="h-4 w-4 mr-2" />
+                    Suggestions
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     </header>
