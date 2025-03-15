@@ -4,9 +4,8 @@ import { z } from "zod";
 // Types de documents acceptés pour la vérification
 export const documentTypes = {
   PROJECT_OWNER: [
-    "business_registration",
-    "company_id",
-    "professional_license"
+    "id_card",  // Pièce d'identité obligatoire
+    "business_registration" // Immatriculation optionnelle
   ],
   PROJECT_SEEKER: [
     "id_card",

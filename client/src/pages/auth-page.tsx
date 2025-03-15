@@ -299,14 +299,15 @@ function RegisterForm() {
       password: "",
       role: "project_owner",
       referredBy: "",
-      documents: []
+      documents: [],
+      isAdult: false 
     },
   });
 
   // Obtenir les documents requis en fonction du rôle
   const requiredDocuments = selectedRole === "project_owner" 
     ? documentTypes.PROJECT_OWNER 
-    : documentTypes.PROJECT_SEEKER;
+    : [];
 
   const handleFileUpload = async (type: string, file: File) => {
     // TODO: Implémenter le téléchargement réel des fichiers
@@ -403,6 +404,7 @@ function RegisterForm() {
                     onValueChange={(value) => {
                       field.onChange(value);
                       setSelectedRole(value);
+                      form.setValue("documents", []);
                     }} 
                     defaultValue={field.value}
                   >
@@ -421,32 +423,63 @@ function RegisterForm() {
               )}
             />
 
-            <div className="space-y-4">
-              <Label>Documents requis *</Label>
-              {requiredDocuments.map((docType) => (
-                <div key={docType} className="flex items-center gap-4">
+            {selectedRole === "project_owner" && (
+              <div className="space-y-4">
+                <Label>Documents</Label>
+                <div className="flex items-center gap-4">
                   <Input
                     type="file"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
-                        handleFileUpload(docType, file);
+                        handleFileUpload("id_card", file);
                       }
                     }}
                     accept=".pdf,.jpg,.jpeg,.png"
                   />
                   <p className="text-sm text-muted-foreground">
-                    {docType === "business_registration" && "Immatriculation entreprise"}
-                    {docType === "company_id" && "Identité de l'entreprise"}
-                    {docType === "professional_license" && "Licence professionnelle"}
-                    {docType === "id_card" && "Pièce d'identité"}
-                    {docType === "resume" && "CV"}
-                    {docType === "portfolio" && "Portfolio"}
-                    {docType === "professional_certifications" && "Certifications professionnelles"}
+                    Pièce d'identité *
                   </p>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileUpload("business_registration", file);
+                      }
+                    }}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Immatriculation entreprise (optionnel)
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {selectedRole === "project_seeker" && (
+              <FormField
+                control={form.control}
+                name="isAdult"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Je certifie sur l'honneur être majeur et avoir plus de 18 ans *
+                      </FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            )}
 
             <FormField
               control={form.control}

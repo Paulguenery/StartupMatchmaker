@@ -51,6 +51,7 @@ interface User {
   premiumDiscount?: number;
   freeConversationCredits?: number;
   referralCode?: string;
+  isAdult?: boolean; // Added isAdult field
 }
 
 export function setupAuth(app: Express) {
@@ -80,18 +81,22 @@ export function setupAuth(app: Express) {
     }
 
     // Restrictions spécifiques pour les freelances (project_seeker)
-    if (user.role === "project_seeker") {
-      // Vérifier si les documents nécessaires sont fournis et vérifiés
-      const requiredDocs = documentTypes.PROJECT_SEEKER;
-      const userDocs = user.documents || [];
-      const hasAllRequiredDocs = requiredDocs.every(docType =>
-        userDocs.some(doc => doc.type === docType && doc.verified)
-      );
+    if (user.role === "project_seeker" && !user.isAdult) {
+      return {
+        allowed: false,
+        message: "Vous devez certifier être majeur pour accéder à la plateforme."
+      };
+    }
 
-      if (!hasAllRequiredDocs) {
+    // Pour les porteurs de projet, vérifier uniquement la pièce d'identité
+    if (user.role === "project_owner") {
+      const userDocs = user.documents || [];
+      const hasIdCard = userDocs.some(doc => doc.type === "id_card");
+
+      if (!hasIdCard) {
         return {
           allowed: false,
-          message: "Vous devez fournir et faire vérifier tous les documents requis pour accéder à la plateforme."
+          message: "Vous devez fournir une pièce d'identité valide pour accéder à la plateforme."
         };
       }
     }
@@ -163,29 +168,23 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: 'Email déjà utilisé' });
       }
 
-      // Vérifier les documents requis selon le rôle
+      // Vérifications selon le rôle
       const role = req.body.role;
-      const requiredDocs = role === "project_owner" ?
-        documentTypes.PROJECT_OWNER :
-        documentTypes.PROJECT_SEEKER;
-
-      if (!req.body.documents || !Array.isArray(req.body.documents)) {
+      if (role === "project_seeker" && !req.body.isAdult) {
         return res.status(400).json({
-          message: 'Documents requis manquants',
-          requiredDocuments: requiredDocs
+          message: 'Vous devez certifier être majeur pour vous inscrire'
         });
       }
 
-      const hasAllRequiredDocs = requiredDocs.every(docType =>
-        req.body.documents.some(doc => doc.type === docType)
-      );
-
-      if (!hasAllRequiredDocs) {
-        return res.status(400).json({
-          message: 'Tous les documents requis doivent être fournis',
-          requiredDocuments: requiredDocs
-        });
+      if (role === "project_owner") {
+        const hasIdCard = req.body.documents?.some(doc => doc.type === "id_card");
+        if (!hasIdCard) {
+          return res.status(400).json({
+            message: 'La pièce d\'identité est obligatoire pour les porteurs de projet'
+          });
+        }
       }
+
 
       // Génération du code de parrainage
       const referralCode = generateReferralCode();
