@@ -5,13 +5,6 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
-
-declare global {
-  namespace Express {
-    interface User extends SelectUser {}
-  }
-}
 
 const scryptAsync = promisify(scrypt);
 
@@ -29,14 +22,13 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  // Session configuration basique
   app.use(session({
     secret: 'mymate_secret_key_2024',
-    resave: true,
+    resave: false,
     saveUninitialized: true,
-    store: storage.sessionStore,
     cookie: {
       secure: false,
-      httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000
     }
   }));
@@ -44,22 +36,27 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Configuration Passport simple
   passport.use(new LocalStrategy(
     { usernameField: 'email' },
     async (email, password, done) => {
       try {
         const user = await storage.getUserByEmail(email);
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false);
+        if (!user) {
+          return done(null, false, { message: 'Email inconnu' });
+        }
+        const isValid = await comparePasswords(password, user.password);
+        if (!isValid) {
+          return done(null, false, { message: 'Mot de passe incorrect' });
         }
         return done(null, user);
-      } catch (error) {
-        return done(error);
+      } catch (err) {
+        return done(err);
       }
     }
   ));
 
-  passport.serializeUser((user, done) => {
+  passport.serializeUser((user: Express.User, done) => {
     done(null, user.id);
   });
 
@@ -67,54 +64,69 @@ export function setupAuth(app: Express) {
     try {
       const user = await storage.getUser(id);
       done(null, user);
-    } catch (error) {
-      done(error);
+    } catch (err) {
+      done(err);
     }
   });
 
-  app.post("/api/register", async (req, res, next) => {
+  // Routes d'authentification simplifiées
+  app.post('/api/register', async (req, res) => {
     try {
-      const existingUser = await storage.getUserByEmail(req.body.email);
+      const { email, password, ...rest } = req.body;
+      const existingUser = await storage.getUserByEmail(email);
+
       if (existingUser) {
-        return res.status(400).json({ message: "Cette adresse email est déjà utilisée" });
+        return res.status(400).json({ message: 'Cet email est déjà utilisé' });
       }
 
+      const hashedPassword = await hashPassword(password);
       const user = await storage.createUser({
-        ...req.body,
-        password: await hashPassword(req.body.password),
+        email,
+        password: hashedPassword,
+        ...rest
       });
 
       req.login(user, (err) => {
-        if (err) return next(err);
-        res.status(201).json(user);
+        if (err) {
+          return res.status(500).json({ message: 'Erreur lors de la connexion automatique' });
+        }
+        res.json(user);
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({ message: 'Erreur lors de l\'inscription' });
     }
   });
 
-  app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
-      if (err) return next(err);
+  app.post('/api/login', (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+      if (err) {
+        return res.status(500).json({ message: 'Erreur serveur' });
+      }
       if (!user) {
-        return res.status(401).json({ message: "Email ou mot de passe incorrect" });
+        return res.status(401).json({ message: info.message || 'Email ou mot de passe incorrect' });
       }
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          return res.status(500).json({ message: 'Erreur lors de la connexion' });
+        }
         res.json(user);
       });
     })(req, res, next);
   });
 
-  app.post("/api/logout", (req, res, next) => {
+  app.post('/api/logout', (req, res) => {
     req.logout((err) => {
-      if (err) return next(err);
+      if (err) {
+        return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
+      }
       res.sendStatus(200);
     });
   });
 
-  app.get("/api/user", (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
+  app.get('/api/user', (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Non authentifié' });
+    }
     res.json(req.user);
   });
 }
