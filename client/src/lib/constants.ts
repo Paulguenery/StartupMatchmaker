@@ -1,3 +1,5 @@
+import { z } from "zod";
+
 export const PROJECT_CATEGORIES = [
   { value: "tech", label: "Informatique et technologie" },
   { value: "mobile", label: "Application mobile" },
@@ -48,3 +50,75 @@ export const PROJECT_CATEGORIES = [
   { value: "social_media", label: "Réseaux Sociaux et Influenceurs" },
   { value: "aerospace", label: "Aéronautique et Spatiale" }
 ] as const;
+
+export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
+  tech: [
+    "Python",
+    "Java",
+    "C++",
+    "Cybersécurité",
+    "Base de données SQL",
+    "Base de données NoSQL",
+    "Linux",
+    "Windows",
+    "DevOps",
+  ],
+  mobile: [
+    "React Native",
+    "Flutter",
+    "iOS (Swift)",
+    "Android (Kotlin)",
+    "UI/UX Mobile",
+    "Tests Mobile",
+    "Performance Mobile",
+  ],
+  web: [
+    "HTML/CSS",
+    "JavaScript",
+    "React.js",
+    "Node.js",
+    "TypeScript",
+    "Vue.js",
+    "Angular",
+    "PHP",
+    "WordPress",
+  ],
+  design: [
+    "UX/UI Design",
+    "Photoshop",
+    "Illustrator",
+    "Figma",
+    "Motion Design",
+    "Typographie",
+    "Modélisation 3D",
+  ],
+  ai: [
+    "Machine Learning",
+    "Deep Learning",
+    "TensorFlow",
+    "PyTorch",
+    "NLP",
+    "Computer Vision",
+    "Data Science",
+  ],
+  marketing: [
+    "SEO",
+    "SEA",
+    "Marketing Digital",
+    "Social Media",
+    "Content Marketing",
+    "Google Ads",
+    "Analytics",
+  ],
+  // Ajout d'autres catégories selon le fichier
+};
+
+// Schema pour la validation des projets
+export const projectSchema = z.object({
+  title: z.string().min(1, "Le titre est requis"),
+  description: z.string().min(1, "La description est requise"),
+  category: z.string().min(1, "La catégorie est requise"),
+  duration: z.string().min(1, "La durée est requise"),
+  requiredSkills: z.array(z.string()),
+  collaborationType: z.string().min(1, "Le type de collaboration est requis"),
+});

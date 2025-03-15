@@ -33,7 +33,7 @@ export interface IStorage {
   // Suggestion operations
   createSuggestion(suggestion: InsertSuggestion): Promise<Suggestion>;
   getSuggestions(): Promise<Suggestion[]>;
-  voteSuggestion(suggestionId: number): Promise<Suggestion>;
+  voteSuggestion(suggestionId: number, userId: number): Promise<Suggestion>;
 
   sessionStore: session.Store;
 }
@@ -49,6 +49,7 @@ export class MemStorage implements IStorage {
   private currentMatchId: number;
   private currentRatingId: number;
   private currentSuggestionId: number; // Added currentSuggestionId
+  private suggestionVotes: Map<string, boolean>; // userId_suggestionId -> true
   sessionStore: session.Store;
 
   constructor() {
@@ -62,6 +63,7 @@ export class MemStorage implements IStorage {
     this.currentMatchId = 1;
     this.currentRatingId = 1;
     this.currentSuggestionId = 1; // Initialize currentSuggestionId
+    this.suggestionVotes = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -183,15 +185,21 @@ export class MemStorage implements IStorage {
     return Array.from(this.suggestions.values());
   }
 
-  async voteSuggestion(suggestionId: number): Promise<Suggestion> {
+  async voteSuggestion(suggestionId: number, userId: number): Promise<Suggestion> {
     const suggestion = this.suggestions.get(suggestionId);
     if (!suggestion) throw new Error("Suggestion not found");
 
+    const voteKey = `${userId}_${suggestionId}`;
+    if (this.suggestionVotes.has(voteKey)) {
+      throw new Error("Vous avez déjà voté pour cette suggestion");
+    }
+
     const updatedSuggestion = {
       ...suggestion,
-      votes: suggestion.votes + 1,
+      votes: (suggestion.votes || 0) + 1,
     };
     this.suggestions.set(suggestionId, updatedSuggestion);
+    this.suggestionVotes.set(voteKey, true);
     return updatedSuggestion;
   }
 }

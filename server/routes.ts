@@ -306,8 +306,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/suggestions/:id/vote", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const suggestion = await storage.voteSuggestion(parseInt(req.params.id));
-    res.json(suggestion);
+    try {
+      const suggestion = await storage.voteSuggestion(parseInt(req.params.id), req.user!.id);
+      res.json(suggestion);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
   });
 
 

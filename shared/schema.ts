@@ -68,6 +68,13 @@ export const suggestions = pgTable("suggestions", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const suggestionVotes = pgTable("suggestion_votes", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  suggestionId: integer("suggestion_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   password: true,
@@ -114,3 +121,4 @@ export type Project = typeof projects.$inferSelect;
 export type Match = typeof matches.$inferSelect;
 export type Rating = typeof ratings.$inferSelect;
 export type Suggestion = typeof suggestions.$inferSelect;
+export type SuggestionVote = typeof suggestionVotes.$inferSelect;

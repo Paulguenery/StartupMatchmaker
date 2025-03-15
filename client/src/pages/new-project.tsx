@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { PROJECT_CATEGORIES } from "@/lib/constants";
+import { PROJECT_CATEGORIES, SKILLS_BY_CATEGORY } from "@/lib/constants";
 
 export default function NewProjectPage() {
   const { toast } = useToast();
@@ -26,7 +26,7 @@ export default function NewProjectPage() {
       duration: "",
       requiredSkills: [],
       location: null,
-      collaborationType: "" // Added default value
+      collaborationType: ""
     },
   });
 
@@ -55,6 +55,8 @@ export default function NewProjectPage() {
   const onSubmit = (data: any) => {
     createProjectMutation.mutate(data);
   };
+
+  const categorySkills = form.watch("category") ? SKILLS_BY_CATEGORY[form.watch("category")] || [] : [];
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -126,6 +128,34 @@ export default function NewProjectPage() {
 
                 <FormField
                   control={form.control}
+                  name="requiredSkills"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Compétences requises</FormLabel>
+                      <Select
+                        onValueChange={(value) => field.onChange(value.split(','))}
+                        defaultValue={field.value?.join(',')}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez les compétences requises" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categorySkills.map((skill) => (
+                            <SelectItem key={skill} value={skill}>
+                              {skill}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="duration"
                   render={({ field }) => (
                     <FormItem>
@@ -169,26 +199,8 @@ export default function NewProjectPage() {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="requiredSkills"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Compétences requises</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          placeholder="Ex: React, Node.js, UX Design (séparés par des virgules)"
-                          onChange={(e) => field.onChange(e.target.value.split(',').map(s => s.trim()))}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
                 <Button type="submit" className="w-full" disabled={createProjectMutation.isPending}>
-                  Publier l'annonce
+                  {createProjectMutation.isPending ? "Publication en cours..." : "Publier l'annonce"}
                 </Button>
               </form>
             </Form>
