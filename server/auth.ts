@@ -28,6 +28,37 @@ function generateReferralCode() {
   return nanoid(8).toUpperCase(); // Génère un code de 8 caractères en majuscules
 }
 
+// Define document types - This needs to be defined elsewhere and imported
+const documentTypes = {
+  PROJECT_OWNER: ["identity_proof", "address_proof"],
+  PROJECT_SEEKER: ["identity_proof", "skills_proof", "experience_proof"]
+};
+
+
+interface User {
+  id: number;
+  email: string;
+  password?: string;
+  fullName?: string;
+  role?: string;
+  accountStatus?: string;
+  documents?: { type: string; verified: boolean }[];
+  resetToken?: string;
+  resetTokenExpiry?: string;
+  lastLoginAttempt?: Date;
+  bio?: string;
+  skills?: string[];
+  location?: string | null;
+  collaborationType?: string;
+  experienceLevel?: string;
+  availability?: string;
+  isVerified?: boolean;
+  isPremium?: boolean;
+  premiumDiscount?: number;
+  freeConversationCredits?: number;
+  referralCode?: string;
+}
+
 export function setupAuth(app: Express) {
   app.use(session({
     secret: 'mymate_secret_key_2024',
@@ -45,6 +76,37 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // Fonction pour vérifier les restrictions de connexion
+  async function checkLoginRestrictions(user: User): Promise<{ allowed: boolean; message?: string }> {
+    // Vérifier le statut du compte
+    if (user.accountStatus === "suspended") {
+      return { allowed: false, message: "Votre compte est suspendu. Contactez le support." };
+    }
+    if (user.accountStatus === "rejected") {
+      return { allowed: false, message: "Votre compte n'a pas été approuvé." };
+    }
+
+    // Restrictions spécifiques pour les freelances (project_seeker)
+    if (user.role === "project_seeker") {
+      // Vérifier si les documents nécessaires sont fournis et vérifiés
+      const requiredDocs = documentTypes.PROJECT_SEEKER;
+      const userDocs = user.documents || [];
+      const hasAllRequiredDocs = requiredDocs.every(docType =>
+        userDocs.some(doc => doc.type === docType && doc.verified)
+      );
+
+      if (!hasAllRequiredDocs) {
+        return {
+          allowed: false,
+          message: "Vous devez fournir et faire vérifier tous les documents requis pour accéder à la plateforme."
+        };
+      }
+    }
+
+    return { allowed: true };
+  }
+
+  // Mise à jour de la stratégie de connexion
   passport.use(new LocalStrategy(
     { usernameField: 'email', passReqToCallback: true },
     async (req, email, password, done) => {
@@ -53,23 +115,24 @@ export function setupAuth(app: Express) {
         const user = await storage.getUserByEmail(email);
 
         if (!user) {
-          console.log('Utilisateur non trouvé:', email);
           return done(null, false, { message: 'Email ou mot de passe incorrect' });
         }
 
-        const isValid = await comparePasswords(password, user.password);
-        console.log('Mot de passe valide:', isValid);
+        // Vérifier les restrictions de connexion
+        const loginCheck = await checkLoginRestrictions(user);
+        if (!loginCheck.allowed) {
+          return done(null, false, { message: loginCheck.message });
+        }
 
+        const isValid = await comparePasswords(password, user.password);
         if (!isValid) {
           return done(null, false, { message: 'Email ou mot de passe incorrect' });
         }
 
-        // Si Remember Me est activé, on prolonge la session
-        if (req.body.rememberMe) {
-          req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 jours
-        } else {
-          req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 24 heures
-        }
+        // Mettre à jour la dernière tentative de connexion
+        await storage.updateUser(user.id, {
+          lastLoginAttempt: new Date()
+        });
 
         return done(null, user);
       } catch (err) {
@@ -108,10 +171,32 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: 'Email déjà utilisé' });
       }
 
-      // Génération du code de parrainage unique
-      const referralCode = generateReferralCode();
+      // Vérifier les documents requis selon le rôle
+      const role = req.body.role;
+      const requiredDocs = role === "project_owner" ?
+        documentTypes.PROJECT_OWNER :
+        documentTypes.PROJECT_SEEKER;
 
-      // Vérification du code de parrainage si fourni
+      if (!req.body.documents || !Array.isArray(req.body.documents)) {
+        return res.status(400).json({
+          message: 'Documents requis manquants',
+          requiredDocuments: requiredDocs
+        });
+      }
+
+      const hasAllRequiredDocs = requiredDocs.every(docType =>
+        req.body.documents.some(doc => doc.type === docType)
+      );
+
+      if (!hasAllRequiredDocs) {
+        return res.status(400).json({
+          message: 'Tous les documents requis doivent être fournis',
+          requiredDocuments: requiredDocs
+        });
+      }
+
+      // Génération du code de parrainage et traitement du parrainage comme avant
+      const referralCode = generateReferralCode();
       let referrerId = null;
       if (req.body.referredBy) {
         const referrer = await storage.getUserByReferralCode(req.body.referredBy);
@@ -125,20 +210,17 @@ export function setupAuth(app: Express) {
       const userData = {
         ...req.body,
         password: hashedPassword,
-        bio: req.body.bio || "",
-        skills: req.body.skills || [],
-        location: req.body.location || null,
-        collaborationType: req.body.collaborationType || "full_time",
-        experienceLevel: req.body.experienceLevel || "junior",
-        availability: req.body.availability || "immediate",
-        isVerified: false,
-        isPremium: false,
-        referralCode, // Ajout du code de parrainage
+        referralCode,
+        accountStatus: "pending", // Tous les comptes commencent en attente de vérification
+        documents: req.body.documents.map(doc => ({
+          ...doc,
+          verified: false
+        }))
       };
 
       const user = await storage.createUser(userData);
 
-      // Création de la relation de parrainage si un code valide a été utilisé
+      // Création de la relation de parrainage si applicable
       if (referrerId) {
         await storage.createReferral({
           referrerId,
@@ -147,12 +229,21 @@ export function setupAuth(app: Express) {
         });
       }
 
-      req.login(user, (err) => {
-        if (err) {
-          console.error('Erreur lors de la connexion après inscription:', err);
-          return res.status(500).json({ message: 'Erreur lors de la connexion' });
+      // Pour les porteurs de projet, on peut automatiser certaines vérifications
+      if (role === "project_owner") {
+        // TODO: Implémenter la vérification automatique des documents
+        // Pour l'instant, marquer comme en attente de vérification manuelle
+      }
+
+      res.json({
+        message: 'Inscription réussie. Votre compte est en attente de vérification.',
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.fullName,
+          role: user.role,
+          accountStatus: user.accountStatus
         }
-        res.json(user);
       });
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
@@ -221,8 +312,8 @@ export function setupAuth(app: Express) {
       const user = await storage.getUserByEmail(email);
       if (!user) {
         // Pour des raisons de sécurité, on renvoie toujours un succès
-        return res.json({ 
-          message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.' 
+        return res.json({
+          message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.'
         });
       }
 

@@ -1,6 +1,22 @@
 import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
 import { z } from "zod";
 
+// Types de documents acceptés pour la vérification
+export const documentTypes = {
+  PROJECT_OWNER: [
+    "business_registration",
+    "company_id",
+    "professional_license"
+  ],
+  PROJECT_SEEKER: [
+    "id_card",
+    "resume",
+    "portfolio",
+    "professional_certifications"
+  ]
+} as const;
+
+// Ajout des champs pour gérer les récompenses de parrainage
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
@@ -22,20 +38,41 @@ export const users = pgTable("users", {
   }>(),
   referralCode: text("referral_code").unique(), // Code de parrainage unique de l'utilisateur
   referredBy: text("referred_by"), // Code de parrainage utilisé lors de l'inscription
+  freeConversationCredits: integer("free_conversation_credits").default(0), // Nombre de conversations gratuites
+  premiumDiscount: integer("premium_discount").default(0), // Pourcentage de réduction sur l'abonnement premium
+  documents: json("documents").$type<{
+    type: keyof typeof documentTypes;
+    url: string;
+    verified: boolean;
+    verifiedAt?: Date;
+  }[]>(),
+  accountStatus: text("account_status").default("pending"), // 'pending', 'active', 'suspended', 'rejected'
+  verificationNotes: text("verification_notes"), // Notes sur la vérification des documents
+  lastLoginAttempt: timestamp("last_login_attempt"), // Pour limiter les tentatives de connexion
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Nouvelle table pour les relations de parrainage
+// Mise à jour du schéma des relations de parrainage pour inclure plus de détails
 export const referrals = pgTable("referrals", {
   id: serial("id").primaryKey(),
   referrerId: integer("referrer_id").notNull(), // ID du parrain
   referredId: integer("referred_id").notNull(), // ID du filleul
-  status: text("status").notNull(), // 'pending', 'completed'
+  status: text("status").notNull(), // 'pending', 'active', 'completed'
+  rewardClaimed: boolean("reward_claimed").default(false), // Si la récompense a été réclamée
   createdAt: timestamp("created_at").defaultNow(),
+  activatedAt: timestamp("activated_at"), // Date à laquelle le filleul devient actif
   completedAt: timestamp("completed_at"), // Date à laquelle le filleul devient premium
 });
 
-// Mise à jour du schéma d'insertion utilisateur pour inclure les champs de parrainage
+// Schéma pour les relations de parrainage
+export const insertReferralSchema = z.object({
+  referrerId: z.number().int().min(1),
+  referredId: z.number().int().min(1),
+  status: z.enum(["pending", "active", "completed"]),
+  rewardClaimed: z.boolean().default(false),
+});
+
+// Mise à jour du schéma d'insertion avec les nouveaux champs
 export const insertUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -52,14 +89,11 @@ export const insertUserSchema = z.object({
   experienceLevel: z.enum(["motivated", "junior", "intermediate", "senior"]).optional(),
   availability: z.enum(["immediate", "one_month", "three_months"]).optional(),
   collaborationType: z.enum(["full_time", "part_time"]).optional(),
-  referredBy: z.string().optional(), // Code de parrainage optionnel lors de l'inscription
-});
-
-// Schema pour les relations de parrainage
-export const insertReferralSchema = z.object({
-  referrerId: z.number().int().min(1),
-  referredId: z.number().int().min(1),
-  status: z.enum(["pending", "completed"]),
+  referredBy: z.string().optional(),
+  documents: z.array(z.object({
+    type: z.enum(["business_registration", "company_id", "professional_license", "id_card", "resume", "portfolio", "professional_certifications"]),
+    url: z.string().url(),
+  })).optional(),
 });
 
 export const insertProjectSchema = z.object({
