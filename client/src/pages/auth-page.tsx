@@ -13,15 +13,10 @@ import { z } from "zod";
 
 const loginSchema = z.object({
   email: z.string().email("Email invalide").min(1, "L'email est requis"),
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+  password: z.string().min(1, "Le mot de passe est requis"),
 });
 
-const registerSchema = insertUserSchema.extend({
-  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
-  role: z.enum(["project_owner", "project_seeker"], {
-    required_error: "Veuillez sélectionner votre rôle",
-  }),
-});
+type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
@@ -79,13 +74,18 @@ export default function AuthPage() {
 
 function LoginForm() {
   const { loginMutation } = useAuth();
-  const form = useForm({
+  const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
     },
   });
+
+  const onSubmit = async (data: LoginFormData) => {
+    console.log("Login attempt with:", { email: data.email });
+    loginMutation.mutate(data);
+  };
 
   return (
     <Card>
@@ -95,7 +95,7 @@ function LoginForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((data) => loginMutation.mutate(data))} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="email"
@@ -116,14 +116,18 @@ function LoginForm() {
                 <FormItem>
                   <FormLabel>Mot de passe</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} placeholder="8 caractères minimum" />
+                    <Input type="password" {...field} placeholder="Votre mot de passe" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-              Se connecter
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={loginMutation.isPending}
+            >
+              {loginMutation.isPending ? "Connexion en cours..." : "Se connecter"}
             </Button>
           </form>
         </Form>
@@ -135,7 +139,7 @@ function LoginForm() {
 function RegisterForm() {
   const { registerMutation } = useAuth();
   const form = useForm({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(insertUserSchema),
     defaultValues: {
       fullName: "",
       email: "",
@@ -201,7 +205,7 @@ function RegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Votre rôle</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez votre rôle" />
@@ -216,8 +220,12 @@ function RegisterForm() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-              Créer mon compte
+            <Button 
+              type="submit" 
+              className="w-full" 
+              disabled={registerMutation.isPending}
+            >
+              {registerMutation.isPending ? "Création en cours..." : "Créer mon compte"}
             </Button>
           </form>
         </Form>
