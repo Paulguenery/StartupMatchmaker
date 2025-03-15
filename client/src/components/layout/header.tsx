@@ -32,6 +32,22 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-4">
+            {user.role === 'project_owner' && (
+              <>
+                <Button variant="outline" asChild>
+                  <Link href="/new-project" className="flex items-center gap-2">
+                    <PlusCircle className="h-4 w-4" />
+                    Nouvelle annonce
+                  </Link>
+                </Button>
+                {!user.isPremium && (
+                  <Button variant="outline" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700" asChild>
+                    <Link href="/subscribe">Devenir Premium</Link>
+                  </Button>
+                )}
+              </>
+            )}
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -60,28 +76,14 @@ export function Header() {
                         Mes annonces
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/new-project" className="flex items-center">
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        Nouvelle annonce
-                      </Link>
-                    </DropdownMenuItem>
                   </>
                 ) : (
-                  <>
-                    <DropdownMenuItem asChild>
-                      <Link href="/swipe" className="flex items-center">
-                        <List className="h-4 w-4 mr-2" />
-                        Commencer à matcher
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/messages" className="flex items-center">
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Messages
-                      </Link>
-                    </DropdownMenuItem>
-                  </>
+                  <DropdownMenuItem asChild>
+                    <Link href="/messages" className="flex items-center">
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      Messages
+                    </Link>
+                  </DropdownMenuItem>
                 )}
 
                 <DropdownMenuItem asChild>
