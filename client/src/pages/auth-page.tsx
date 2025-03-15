@@ -156,7 +156,7 @@ function RegisterForm() {
       fullName: "",
       email: "",
       password: "",
-      role: undefined,
+      role: "project_owner",
       bio: "",
       skills: [],
       location: null,
@@ -166,6 +166,15 @@ function RegisterForm() {
     },
   });
 
+  const onSubmit = async (data: any) => {
+    console.log("Données du formulaire:", data);
+    try {
+      await registerMutation.mutateAsync(data);
+    } catch (error) {
+      console.error("Erreur lors de l'inscription:", error);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -174,7 +183,7 @@ function RegisterForm() {
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((data) => registerMutation.mutate(data))} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="fullName"
@@ -223,7 +232,7 @@ function RegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Votre rôle *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez votre rôle" />
