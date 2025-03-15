@@ -32,12 +32,6 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            {user.role === 'project_seeker' && (
-              <Button asChild>
-                <Link href="/swipe">Commencer à matcher</Link>
-              </Button>
-            )}
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -74,12 +68,20 @@ export function Header() {
                     </DropdownMenuItem>
                   </>
                 ) : (
-                  <DropdownMenuItem asChild>
-                    <Link href="/messages" className="flex items-center">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Messages
-                    </Link>
-                  </DropdownMenuItem>
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/swipe" className="flex items-center">
+                        <List className="h-4 w-4 mr-2" />
+                        Commencer à matcher
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/messages" className="flex items-center">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Messages
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
                 )}
 
                 <DropdownMenuItem asChild>
