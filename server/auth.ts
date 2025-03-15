@@ -6,6 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { sendPasswordResetEmail } from './email';
+import { nanoid } from 'nanoid';
 
 const scryptAsync = promisify(scrypt);
 
@@ -20,6 +21,11 @@ async function comparePasswords(supplied: string, stored: string) {
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+
+// Fonction pour générer un code de parrainage unique
+function generateReferralCode() {
+  return nanoid(8).toUpperCase(); // Génère un code de 8 caractères en majuscules
 }
 
 export function setupAuth(app: Express) {
@@ -97,14 +103,22 @@ export function setupAuth(app: Express) {
     try {
       console.log('Données d\'inscription reçues:', req.body);
 
-      // Pour l'email spécifique, on supprime d'abord l'ancien compte s'il existe
-      if (req.body.email === "guenerypaul@gmail.com") {
-        await storage.deleteUserByEmail(req.body.email);
-      }
-
       const existingUser = await storage.getUserByEmail(req.body.email);
       if (existingUser) {
         return res.status(400).json({ message: 'Email déjà utilisé' });
+      }
+
+      // Génération du code de parrainage unique
+      const referralCode = generateReferralCode();
+
+      // Vérification du code de parrainage si fourni
+      let referrerId = null;
+      if (req.body.referredBy) {
+        const referrer = await storage.getUserByReferralCode(req.body.referredBy);
+        if (!referrer) {
+          return res.status(400).json({ message: 'Code de parrainage invalide' });
+        }
+        referrerId = referrer.id;
       }
 
       const hashedPassword = await hashPassword(req.body.password);
@@ -118,10 +132,20 @@ export function setupAuth(app: Express) {
         experienceLevel: req.body.experienceLevel || "junior",
         availability: req.body.availability || "immediate",
         isVerified: false,
-        isPremium: false
+        isPremium: false,
+        referralCode, // Ajout du code de parrainage
       };
 
       const user = await storage.createUser(userData);
+
+      // Création de la relation de parrainage si un code valide a été utilisé
+      if (referrerId) {
+        await storage.createReferral({
+          referrerId,
+          referredId: user.id,
+          status: "pending"
+        });
+      }
 
       req.login(user, (err) => {
         if (err) {
@@ -259,6 +283,21 @@ export function setupAuth(app: Express) {
       res.status(500).json({
         message: 'Une erreur est survenue lors de la réinitialisation du mot de passe'
       });
+    }
+  });
+
+  // Nouvelle route pour récupérer les informations de parrainage
+  app.get('/api/referrals', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Non authentifié' });
+    }
+
+    try {
+      const referrals = await storage.getUserReferrals(req.user.id);
+      res.json(referrals);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des parrainages:', error);
+      res.status(500).json({ message: 'Erreur serveur' });
     }
   });
 }

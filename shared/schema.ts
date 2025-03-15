@@ -20,38 +20,22 @@ export const users = pgTable("users", {
     city: string;
     department: string;
   }>(),
+  referralCode: text("referral_code").unique(), // Code de parrainage unique de l'utilisateur
+  referredBy: text("referred_by"), // Code de parrainage utilisé lors de l'inscription
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const projects = pgTable("projects", {
+// Nouvelle table pour les relations de parrainage
+export const referrals = pgTable("referrals", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  category: text("category").notNull(),
-  location: json("location").$type<{
-    latitude: number;
-    longitude: number;
-    city: string;
-    department: string;
-  }>(),
-  requiredSkills: text("required_skills").array(),
-  collaborationType: text("collaboration_type").notNull(), // 'full_time', 'part_time'
+  referrerId: integer("referrer_id").notNull(), // ID du parrain
+  referredId: integer("referred_id").notNull(), // ID du filleul
+  status: text("status").notNull(), // 'pending', 'completed'
   createdAt: timestamp("created_at").defaultNow(),
+  completedAt: timestamp("completed_at"), // Date à laquelle le filleul devient premium
 });
 
-// Simplifier le schéma d'insertion avec des validations plus strictes
-export const insertProjectSchema = z.object({
-  title: z.string().min(1, "Le titre est requis"),
-  description: z.string().min(10, "La description doit contenir au moins 10 caractères"),
-  category: z.string().min(1, "La catégorie est requise"),
-  requiredSkills: z.array(z.string()).min(1, "Au moins une compétence est requise"),
-  collaborationType: z.enum(["full_time", "part_time"], {
-    errorMap: () => ({ message: "Le type de collaboration est requis (temps plein ou temps partiel)" })
-  }),
-  location: z.null(),
-});
-
+// Mise à jour du schéma d'insertion utilisateur pour inclure les champs de parrainage
 export const insertUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
@@ -68,8 +52,26 @@ export const insertUserSchema = z.object({
   experienceLevel: z.enum(["motivated", "junior", "intermediate", "senior"]).optional(),
   availability: z.enum(["immediate", "one_month", "three_months"]).optional(),
   collaborationType: z.enum(["full_time", "part_time"]).optional(),
+  referredBy: z.string().optional(), // Code de parrainage optionnel lors de l'inscription
 });
 
+// Schema pour les relations de parrainage
+export const insertReferralSchema = z.object({
+  referrerId: z.number().int().min(1),
+  referredId: z.number().int().min(1),
+  status: z.enum(["pending", "completed"]),
+});
+
+export const insertProjectSchema = z.object({
+  title: z.string().min(1, "Le titre est requis"),
+  description: z.string().min(10, "La description doit contenir au moins 10 caractères"),
+  category: z.string().min(1, "La catégorie est requise"),
+  requiredSkills: z.array(z.string()).min(1, "Au moins une compétence est requise"),
+  collaborationType: z.enum(["full_time", "part_time"], {
+    errorMap: () => ({ message: "Le type de collaboration est requis (temps plein ou temps partiel)" })
+  }),
+  location: z.null(),
+});
 
 export const insertMatchSchema = z.object({
   projectId: z.number().int().min(1),
@@ -100,6 +102,7 @@ export type Match = typeof matches.$inferSelect;
 export type Rating = typeof ratings.$inferSelect;
 export type Suggestion = typeof suggestions.$inferSelect;
 export type SuggestionVote = typeof suggestionVotes.$inferSelect;
+export type Referral = typeof referrals.$inferSelect;
 
 export const matches = pgTable("matches", {
   id: serial("id").primaryKey(),
@@ -115,6 +118,23 @@ export const ratings = pgTable("ratings", {
   projectId: integer("project_id").notNull(),
   score: json("score").$type<{score:number}>().notNull(), // Score de 1 à 5
   comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const projects = pgTable("projects", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(),
+  location: json("location").$type<{
+    latitude: number;
+    longitude: number;
+    city: string;
+    department: string;
+  }>(),
+  requiredSkills: text("required_skills").array(),
+  collaborationType: text("collaboration_type").notNull(), // 'full_time', 'part_time'
   createdAt: timestamp("created_at").defaultNow(),
 });
 

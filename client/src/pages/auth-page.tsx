@@ -281,6 +281,7 @@ function ResetPasswordForm({ onBack }: { onBack: () => void }) {
 
 function RegisterForm() {
   const { registerMutation } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
@@ -288,6 +289,7 @@ function RegisterForm() {
       email: "",
       password: "",
       role: "project_owner",
+      referredBy: "", // Ajout du champ pour le code de parrainage
     },
   });
 
@@ -334,9 +336,28 @@ function RegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Mot de passe *</FormLabel>
-                  <FormControl>
-                    <Input type="password" {...field} placeholder="Minimum 8 caractères" />
-                  </FormControl>
+                  <div className="relative">
+                    <FormControl>
+                      <Input 
+                        type={showPassword ? "text" : "password"} 
+                        {...field} 
+                        placeholder="Minimum 8 caractères" 
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -359,6 +380,20 @@ function RegisterForm() {
                       <SelectItem value="project_seeker">Chercheur de projet</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="referredBy"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Code de parrainage (optionnel)</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Entrez votre code de parrainage" />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

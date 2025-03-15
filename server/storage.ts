@@ -3,6 +3,7 @@ import session from "express-session";
 import createMemoryStore from "memorystore";
 import { ratings, type Rating, type InsertRating } from "@shared/schema";
 import { suggestions, type Suggestion, type InsertSuggestion } from "@shared/schema";
+import { referrals, type Referral, type InsertReferral } from "@shared/schema";
 
 const MemoryStore = createMemoryStore(session);
 
@@ -10,11 +11,17 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByReferralCode(code: string): Promise<User | undefined>;
   getUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   deleteUserByEmail(email: string): Promise<void>;
   verifyUser(userId: number): Promise<User>;
   upgradeToPremium(userId: number): Promise<User>;
+  updateUser(userId: number, updates: Partial<User>): Promise<User>;
+
+  // Referral operations
+  createReferral(referral: InsertReferral): Promise<Referral>;
+  getUserReferrals(userId: number): Promise<Referral[]>;
 
   // Project operations
   createProject(project: InsertProject): Promise<Project>;
@@ -44,11 +51,13 @@ export class MemStorage implements IStorage {
   private matches: Map<number, Match>;
   private ratings: Map<number, Rating>;
   private suggestions: Map<number, Suggestion>;
+  private referrals: Map<number, Referral>;
   private currentUserId: number;
   private currentProjectId: number;
   private currentMatchId: number;
   private currentRatingId: number;
   private currentSuggestionId: number;
+  private currentReferralId: number;
   private suggestionVotes: Map<string, boolean>;
   sessionStore: session.Store;
 
@@ -58,11 +67,13 @@ export class MemStorage implements IStorage {
     this.matches = new Map();
     this.ratings = new Map();
     this.suggestions = new Map();
+    this.referrals = new Map();
     this.currentUserId = 1;
     this.currentProjectId = 1;
     this.currentMatchId = 1;
     this.currentRatingId = 1;
     this.currentSuggestionId = 1;
+    this.currentReferralId = 1;
     this.suggestionVotes = new Map();
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
@@ -90,6 +101,12 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getUserByReferralCode(code: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.referralCode === code,
+    );
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
     const user: User = {
@@ -101,6 +118,15 @@ export class MemStorage implements IStorage {
     };
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUser(userId: number, updates: Partial<User>): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) throw new Error("User not found");
+
+    const updatedUser = { ...user, ...updates };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
   }
 
   async verifyUser(userId: number): Promise<User> {
@@ -119,6 +145,24 @@ export class MemStorage implements IStorage {
     const updatedUser = { ...user, isPremium: true };
     this.users.set(userId, updatedUser);
     return updatedUser;
+  }
+
+  async createReferral(insertReferral: InsertReferral): Promise<Referral> {
+    const id = this.currentReferralId++;
+    const referral: Referral = { 
+      ...insertReferral, 
+      id, 
+      createdAt: new Date(),
+      completedAt: null
+    };
+    this.referrals.set(id, referral);
+    return referral;
+  }
+
+  async getUserReferrals(userId: number): Promise<Referral[]> {
+    return Array.from(this.referrals.values()).filter(
+      (referral) => referral.referrerId === userId
+    );
   }
 
   async createProject(insertProject: InsertProject): Promise<Project> {
