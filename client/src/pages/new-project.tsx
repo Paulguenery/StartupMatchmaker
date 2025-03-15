@@ -25,14 +25,17 @@ export default function NewProjectPage() {
       category: "",
       duration: "",
       requiredSkills: [],
-      location: null,
-      collaborationType: ""
+      collaborationType: "",
     },
   });
 
   const createProjectMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/projects", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Erreur lors de la création du projet");
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -52,10 +55,6 @@ export default function NewProjectPage() {
     },
   });
 
-  const onSubmit = (data: any) => {
-    createProjectMutation.mutate(data);
-  };
-
   const categorySkills = form.watch("category") ? SKILLS_BY_CATEGORY[form.watch("category")] || [] : [];
 
   return (
@@ -72,7 +71,7 @@ export default function NewProjectPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit((data) => createProjectMutation.mutate(data))} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="title"
@@ -133,8 +132,8 @@ export default function NewProjectPage() {
                     <FormItem>
                       <FormLabel>Compétences requises</FormLabel>
                       <Select
-                        onValueChange={(value) => field.onChange(value.split(','))}
-                        defaultValue={field.value?.join(',')}
+                        onValueChange={(value) => field.onChange([value])}
+                        value={field.value?.[0] || ""}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -142,11 +141,17 @@ export default function NewProjectPage() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categorySkills.map((skill) => (
-                            <SelectItem key={skill} value={skill}>
-                              {skill}
+                          {categorySkills.length > 0 ? (
+                            categorySkills.map((skill) => (
+                              <SelectItem key={skill} value={skill}>
+                                {skill}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="" disabled>
+                              Sélectionnez d'abord une catégorie
                             </SelectItem>
-                          ))}
+                          )}
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -199,7 +204,11 @@ export default function NewProjectPage() {
                   )}
                 />
 
-                <Button type="submit" className="w-full" disabled={createProjectMutation.isPending}>
+                <Button 
+                  type="submit" 
+                  className="w-full" 
+                  disabled={createProjectMutation.isPending || !form.formState.isValid}
+                >
                   {createProjectMutation.isPending ? "Publication en cours..." : "Publier l'annonce"}
                 </Button>
               </form>

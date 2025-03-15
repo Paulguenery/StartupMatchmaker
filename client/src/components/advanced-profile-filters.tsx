@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, X } from "lucide-react";
-import { PROJECT_CATEGORIES } from "@/lib/constants";
+import { PROJECT_CATEGORIES, SKILLS_BY_CATEGORY } from "@/lib/constants";
+import { useState, useEffect } from "react";
 
 interface FiltersProps {
   onFilterChange: (filters: any) => void;
@@ -12,6 +13,17 @@ interface FiltersProps {
 }
 
 export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersProps) {
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [availableSkills, setAvailableSkills] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      setAvailableSkills(SKILLS_BY_CATEGORY[selectedCategory] || []);
+    } else {
+      setAvailableSkills([]);
+    }
+  }, [selectedCategory]);
+
   if (!isPremium) {
     return (
       <Card className="mb-6">
@@ -34,23 +46,13 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Compétences recherchées</label>
-            <Select onValueChange={(value) => onFilterChange({ skills: value === "none" ? [] : value.split(',').map(s => s.trim()) })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez des compétences" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Sans compétence spécifique</SelectItem>
-                <SelectItem value="react,typescript">React, TypeScript</SelectItem>
-                <SelectItem value="python,django">Python, Django</SelectItem>
-                <SelectItem value="design,ui">Design, UI/UX</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
             <label className="text-sm font-medium">Spécialité</label>
-            <Select onValueChange={(value) => onFilterChange({ category: value })}>
+            <Select 
+              onValueChange={(value) => {
+                setSelectedCategory(value);
+                onFilterChange({ category: value });
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez une spécialité" />
               </SelectTrigger>
@@ -58,6 +60,23 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
                 {PROJECT_CATEGORIES.map(category => (
                   <SelectItem key={category.value} value={category.value}>
                     {category.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Compétences recherchées</label>
+            <Select onValueChange={(value) => onFilterChange({ skills: value === "none" ? [] : [value] })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez des compétences" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sans compétence spécifique</SelectItem>
+                {availableSkills.map((skill) => (
+                  <SelectItem key={skill} value={skill}>
+                    {skill}
                   </SelectItem>
                 ))}
               </SelectContent>

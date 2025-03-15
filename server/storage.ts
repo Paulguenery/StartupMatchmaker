@@ -191,16 +191,24 @@ export class MemStorage implements IStorage {
 
     const voteKey = `${userId}_${suggestionId}`;
     if (this.suggestionVotes.has(voteKey)) {
-      throw new Error("Vous avez déjà voté pour cette suggestion");
+      // Si l'utilisateur a déjà voté, on retire son vote
+      const updatedSuggestion = {
+        ...suggestion,
+        votes: Math.max(0, (suggestion.votes || 0) - 1),
+      };
+      this.suggestions.set(suggestionId, updatedSuggestion);
+      this.suggestionVotes.delete(voteKey);
+      return updatedSuggestion;
+    } else {
+      // Sinon, on ajoute son vote
+      const updatedSuggestion = {
+        ...suggestion,
+        votes: (suggestion.votes || 0) + 1,
+      };
+      this.suggestions.set(suggestionId, updatedSuggestion);
+      this.suggestionVotes.set(voteKey, true);
+      return updatedSuggestion;
     }
-
-    const updatedSuggestion = {
-      ...suggestion,
-      votes: (suggestion.votes || 0) + 1,
-    };
-    this.suggestions.set(suggestionId, updatedSuggestion);
-    this.suggestionVotes.set(voteKey, true);
-    return updatedSuggestion;
   }
 }
 
