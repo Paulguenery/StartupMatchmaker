@@ -10,22 +10,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Star } from "lucide-react";
+import { Shield, Star, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
 
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
-      username: user?.username || "",
       email: user?.email || "",
       fullName: user?.fullName || "",
       bio: user?.bio || "",
       skills: user?.skills || [],
       location: user?.location || null,
+      role: user?.role || "",
     },
   });
 
@@ -138,6 +138,18 @@ export default function ProfilePage() {
             </Form>
           </CardContent>
         </Card>
+
+        <div className="flex justify-end">
+          <Button 
+            variant="destructive" 
+            onClick={() => logoutMutation.mutate()}
+            disabled={logoutMutation.isPending}
+            className="gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Se déconnecter
+          </Button>
+        </div>
       </div>
     </div>
   );
