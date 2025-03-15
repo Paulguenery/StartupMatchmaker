@@ -21,7 +21,6 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
         <div className="flex flex-1 items-center justify-between">
-          {/* Bouton retour à gauche */}
           <div>
             {showBackButton && (
               <Button variant="ghost" size="icon" asChild>
@@ -39,7 +38,6 @@ export function Header() {
               </Button>
             )}
 
-            {/* Menu hamburger à droite */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -53,8 +51,15 @@ export function Header() {
                     Mon profil
                   </Link>
                 </DropdownMenuItem>
+
                 {user.role === 'project_owner' ? (
                   <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/messages" className="flex items-center">
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Messages
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/my-projects" className="flex items-center">
                         <List className="h-4 w-4 mr-2" />
@@ -76,6 +81,7 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                 )}
+
                 <DropdownMenuItem asChild>
                   <Link href="/suggestions" className="flex items-center">
                     <Lightbulb className="h-4 w-4 mr-2" />
