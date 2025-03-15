@@ -26,6 +26,7 @@ export default function NewProjectPage() {
       duration: "",
       requiredSkills: [],
       location: null,
+      collaborationType: "" // Added default value
     },
   });
 
@@ -51,6 +52,10 @@ export default function NewProjectPage() {
     },
   });
 
+  const onSubmit = (data: any) => {
+    createProjectMutation.mutate(data);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-3xl mx-auto space-y-6">
@@ -65,7 +70,7 @@ export default function NewProjectPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => createProjectMutation.mutate(data))} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="title"
@@ -135,6 +140,28 @@ export default function NewProjectPage() {
                           <SelectItem value="short">Court terme (moins de 3 mois)</SelectItem>
                           <SelectItem value="medium">Moyen terme (3-6 mois)</SelectItem>
                           <SelectItem value="long">Long terme (plus de 6 mois)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="collaborationType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type de collaboration</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionnez un type de collaboration" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="full_time">Temps plein</SelectItem>
+                          <SelectItem value="part_time">Temps partiel</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />

@@ -109,7 +109,6 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
               <SelectContent>
                 <SelectItem value="full_time">Temps plein</SelectItem>
                 <SelectItem value="part_time">Temps partiel</SelectItem>
-                <SelectItem value="freelance">Freelance</SelectItem>
               </SelectContent>
             </Select>
           </div>
