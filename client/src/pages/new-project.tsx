@@ -14,26 +14,29 @@ import { useLocation } from "wouter";
 import { PROJECT_CATEGORIES, SKILLS_BY_CATEGORY } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import type { z } from "zod";
+
+type FormData = z.infer<typeof insertProjectSchema>;
 
 export default function NewProjectPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const form = useForm({
+  const form = useForm<FormData>({
     resolver: zodResolver(insertProjectSchema),
     defaultValues: {
       title: "",
       description: "",
       category: "",
       requiredSkills: [],
-      collaborationType: "",
+      collaborationType: "full_time",
       location: null,
     },
   });
 
   const createProjectMutation = useMutation({
-    mutationFn: async (data: any) => {
-      console.log("Sending project data:", data);
+    mutationFn: async (data: FormData) => {
+      console.log("Envoi des données du projet:", data);
       const res = await apiRequest("POST", "/api/projects", data);
       if (!res.ok) {
         const error = await res.json();
@@ -50,6 +53,7 @@ export default function NewProjectPage() {
       setLocation("/my-projects");
     },
     onError: (error: Error) => {
+      console.error("Erreur de création du projet:", error);
       toast({
         title: "Erreur",
         description: error.message,
@@ -60,6 +64,19 @@ export default function NewProjectPage() {
 
   const categorySkills = form.watch("category") ? SKILLS_BY_CATEGORY[form.watch("category")] || [] : [];
   const selectedSkills = form.watch("requiredSkills") || [];
+
+  const onSubmit = (data: FormData) => {
+    console.log("Données du formulaire avant envoi:", data);
+    if (selectedSkills.length === 0) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner au moins une compétence requise",
+        variant: "destructive",
+      });
+      return;
+    }
+    createProjectMutation.mutate(data);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -75,7 +92,7 @@ export default function NewProjectPage() {
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit((data) => createProjectMutation.mutate(data))} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
                   control={form.control}
                   name="title"
@@ -110,13 +127,13 @@ export default function NewProjectPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Catégorie</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionnez une catégorie" />
                           </SelectTrigger>
                         </FormControl>
-                        <SelectContent className="max-h-[300px]">
+                        <SelectContent>
                           {PROJECT_CATEGORIES.map(category => (
                             <SelectItem key={category.value} value={category.value}>
                               {category.label}
@@ -191,7 +208,7 @@ export default function NewProjectPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Type de collaboration</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionnez un type de collaboration" />
