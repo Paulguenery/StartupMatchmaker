@@ -4,6 +4,15 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { setupWebSocket } from "./websocket";
 import { insertProjectSchema, insertMatchSchema, insertRatingSchema } from "@shared/schema";
+import Stripe from "stripe";
+
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Clé secrète Stripe manquante: STRIPE_SECRET_KEY');
+}
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-10-16",
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -124,6 +133,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const user = await storage.upgradeToPremium(req.user!.id);
     res.json(user);
+  });
+
+  // Stripe subscription route
+  app.post('/api/get-or-create-subscription', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      // Créer un client Stripe s'il n'existe pas déjà
+      let user = req.user;
+
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.fullName,
+      });
+
+      // Créer l'abonnement
+      const subscription = await stripe.subscriptions.create({
+        customer: customer.id,
+        items: [{
+          price: 'price_premium', // Remplacer par votre vrai ID de prix Stripe
+        }],
+        payment_behavior: 'default_incomplete',
+        expand: ['latest_invoice.payment_intent'],
+      });
+
+      // Mettre à jour l'utilisateur avec les informations Stripe
+      await storage.upgradeToPremium(user.id);
+
+      res.json({
+        subscriptionId: subscription.id,
+        clientSecret: (subscription.latest_invoice as any).payment_intent.client_secret,
+      });
+    } catch (error: any) {
+      console.error('Erreur Stripe:', error);
+      res.status(400).json({ error: { message: error.message } });
+    }
+  });
+
+  // Webhook Stripe pour gérer les événements d'abonnement
+  app.post('/api/stripe-webhook', async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+
+    try {
+      const event = stripe.webhooks.constructEvent(
+        req.body,
+        sig as string,
+        'whsec_your_webhook_secret' // Remplacer par votre vrai secret de webhook
+      );
+
+      // Gérer les différents événements
+      switch (event.type) {
+        case 'customer.subscription.created':
+          // Gérer la création d'abonnement
+          break;
+        case 'customer.subscription.deleted':
+          // Gérer la suppression d'abonnement
+          break;
+        case 'invoice.payment_failed':
+          // Gérer l'échec de paiement
+          break;
+      }
+
+      res.json({ received: true });
+    } catch (err: any) {
+      res.status(400).send(`Webhook Error: ${err.message}`);
+    }
   });
 
   const httpServer = createServer(app);

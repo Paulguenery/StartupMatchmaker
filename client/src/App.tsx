@@ -9,6 +9,7 @@ import HomePage from "@/pages/home-page";
 import ProfilePage from "@/pages/profile-page";
 import SwipePage from "@/pages/swipe-page";
 import MessagesPage from "@/pages/messages-page";
+import SubscribePage from "@/pages/subscribe-page";
 import { ProtectedRoute } from "./lib/protected-route";
 
 function Router() {
@@ -19,6 +20,7 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <ProtectedRoute path="/swipe" component={SwipePage} />
       <ProtectedRoute path="/messages" component={MessagesPage} />
+      <ProtectedRoute path="/subscribe" component={SubscribePage} />
       <Route component={NotFound} />
     </Switch>
   );
