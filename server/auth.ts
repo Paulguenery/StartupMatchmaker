@@ -7,6 +7,7 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { sendPasswordResetEmail } from './email';
 import { nanoid } from 'nanoid';
+import { documentTypes } from "@shared/schema";
 
 const scryptAsync = promisify(scrypt);
 
@@ -27,13 +28,6 @@ async function comparePasswords(supplied: string, stored: string) {
 function generateReferralCode() {
   return nanoid(8).toUpperCase(); // Génère un code de 8 caractères en majuscules
 }
-
-// Define document types - This needs to be defined elsewhere and imported
-const documentTypes = {
-  PROJECT_OWNER: ["identity_proof", "address_proof"],
-  PROJECT_SEEKER: ["identity_proof", "skills_proof", "experience_proof"]
-};
-
 
 interface User {
   id: number;
@@ -68,7 +62,6 @@ export function setupAuth(app: Express) {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       sameSite: 'lax'
-      // La durée sera définie dynamiquement lors de la connexion
     },
     name: 'mymate.sid'
   }));
@@ -106,7 +99,6 @@ export function setupAuth(app: Express) {
     return { allowed: true };
   }
 
-  // Mise à jour de la stratégie de connexion
   passport.use(new LocalStrategy(
     { usernameField: 'email', passReqToCallback: true },
     async (req, email, password, done) => {
@@ -195,7 +187,7 @@ export function setupAuth(app: Express) {
         });
       }
 
-      // Génération du code de parrainage et traitement du parrainage comme avant
+      // Génération du code de parrainage
       const referralCode = generateReferralCode();
       let referrerId = null;
       if (req.body.referredBy) {
@@ -227,12 +219,6 @@ export function setupAuth(app: Express) {
           referredId: user.id,
           status: "pending"
         });
-      }
-
-      // Pour les porteurs de projet, on peut automatiser certaines vérifications
-      if (role === "project_owner") {
-        // TODO: Implémenter la vérification automatique des documents
-        // Pour l'instant, marquer comme en attente de vérification manuelle
       }
 
       res.json({

@@ -13,6 +13,8 @@ import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import { Label } from "@/components/ui/label";
+
 
 // Schéma de validation modifié pour le login
 const loginSchema = z.object({
@@ -279,9 +281,16 @@ function ResetPasswordForm({ onBack }: { onBack: () => void }) {
   );
 }
 
+const documentTypes = {
+  PROJECT_OWNER: ["business_registration", "company_id"],
+  PROJECT_SEEKER: ["id_card", "resume", "portfolio", "professional_certifications"],
+};
+
 function RegisterForm() {
   const { registerMutation } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState("project_owner");
+
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
@@ -289,9 +298,30 @@ function RegisterForm() {
       email: "",
       password: "",
       role: "project_owner",
-      referredBy: "", // Ajout du champ pour le code de parrainage
+      referredBy: "",
+      documents: []
     },
   });
+
+  // Obtenir les documents requis en fonction du rôle
+  const requiredDocuments = selectedRole === "project_owner" 
+    ? documentTypes.PROJECT_OWNER 
+    : documentTypes.PROJECT_SEEKER;
+
+  const handleFileUpload = async (type: string, file: File) => {
+    // TODO: Implémenter le téléchargement réel des fichiers
+    // Pour l'instant, on simule juste l'URL
+    const fakeUrl = `https://storage.example.com/${file.name}`;
+    const currentDocs = form.getValues("documents") || [];
+
+    // Mettre à jour les documents
+    const updatedDocs = [
+      ...currentDocs.filter(doc => doc.type !== type),
+      { type, url: fakeUrl }
+    ];
+
+    form.setValue("documents", updatedDocs);
+  };
 
   return (
     <Card>
@@ -369,7 +399,13 @@ function RegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Votre rôle *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue="project_owner">
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setSelectedRole(value);
+                    }} 
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Sélectionnez votre rôle" />
@@ -384,6 +420,33 @@ function RegisterForm() {
                 </FormItem>
               )}
             />
+
+            <div className="space-y-4">
+              <Label>Documents requis *</Label>
+              {requiredDocuments.map((docType) => (
+                <div key={docType} className="flex items-center gap-4">
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileUpload(docType, file);
+                      }
+                    }}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {docType === "business_registration" && "Immatriculation entreprise"}
+                    {docType === "company_id" && "Identité de l'entreprise"}
+                    {docType === "professional_license" && "Licence professionnelle"}
+                    {docType === "id_card" && "Pièce d'identité"}
+                    {docType === "resume" && "CV"}
+                    {docType === "portfolio" && "Portfolio"}
+                    {docType === "professional_certifications" && "Certifications professionnelles"}
+                  </p>
+                </div>
+              ))}
+            </div>
 
             <FormField
               control={form.control}
