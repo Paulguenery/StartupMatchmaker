@@ -10,11 +10,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLocation } from "wouter";
 import { z } from "zod";
+import { Checkbox } from "@/components/ui/checkbox";
 
-// Schéma de validation simplifié pour le login
+// Schéma de validation modifié pour le login
 const loginSchema = z.object({
   email: z.string().email("Email invalide"),
   password: z.string().min(1, "Le mot de passe est requis"),
+  rememberMe: z.boolean().default(false)
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -80,6 +82,7 @@ function LoginForm() {
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: false
     },
   });
 
@@ -124,6 +127,24 @@ function LoginForm() {
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="rememberMe"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Se souvenir de moi</FormLabel>
+                  </div>
                 </FormItem>
               )}
             />

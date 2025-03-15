@@ -27,10 +27,10 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000,
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       sameSite: 'lax'
+      // La durée sera définie dynamiquement lors de la connexion
     },
     name: 'mymate.sid'
   }));
@@ -39,8 +39,8 @@ export function setupAuth(app: Express) {
   app.use(passport.session());
 
   passport.use(new LocalStrategy(
-    { usernameField: 'email' },
-    async (email, password, done) => {
+    { usernameField: 'email', passReqToCallback: true },
+    async (req, email, password, done) => {
       try {
         console.log('Tentative de connexion pour:', email);
         const user = await storage.getUserByEmail(email);
@@ -55,6 +55,13 @@ export function setupAuth(app: Express) {
 
         if (!isValid) {
           return done(null, false, { message: 'Email ou mot de passe incorrect' });
+        }
+
+        // Si Remember Me est activé, on prolonge la session
+        if (req.body.rememberMe) {
+          req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 jours
+        } else {
+          req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 24 heures
         }
 
         return done(null, user);
@@ -130,6 +137,7 @@ export function setupAuth(app: Express) {
 
   app.post('/api/login', (req, res, next) => {
     console.log('Tentative de connexion avec:', req.body);
+    console.log('Remember Me:', req.body.rememberMe);
 
     passport.authenticate('local', (err: any, user: any, info: any) => {
       if (err) {
@@ -145,6 +153,13 @@ export function setupAuth(app: Express) {
         if (err) {
           console.error('Erreur de login:', err);
           return res.status(500).json({ message: 'Erreur lors de la connexion' });
+        }
+
+        // Si Remember Me est activé, on prolonge la session
+        if (req.body.rememberMe) {
+          req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 jours
+        } else {
+          req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 24 heures
         }
 
         console.log('Connexion réussie pour:', user.email);
