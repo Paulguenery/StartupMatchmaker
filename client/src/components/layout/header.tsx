@@ -1,7 +1,13 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, User, PlusCircle, List, Lightbulb } from "lucide-react";
+import { ArrowLeft, Menu, User, PlusCircle, List, Lightbulb } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function Header() {
   const [location] = useLocation();
@@ -23,36 +29,45 @@ export function Header() {
                 </Link>
               </Button>
             )}
-            {user.role === 'project_owner' && (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link href="/my-projects">
-                    <List className="h-5 w-5 mr-2" />
-                    Mes annonces
-                  </Link>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
                 </Button>
-                <Button variant="ghost" asChild>
-                  <Link href="/new-project">
-                    <PlusCircle className="h-5 w-5 mr-2" />
-                    Nouvelle annonce
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {user.role === 'project_owner' && (
+                  <>
+                    <DropdownMenuItem asChild>
+                      <Link href="/my-projects" className="flex items-center">
+                        <List className="h-4 w-4 mr-2" />
+                        Mes annonces
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link href="/new-project" className="flex items-center">
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Nouvelle annonce
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
+                <DropdownMenuItem asChild>
+                  <Link href="/suggestions" className="flex items-center">
+                    <Lightbulb className="h-4 w-4 mr-2" />
+                    Suggestions
                   </Link>
-                </Button>
-              </>
-            )}
-            <Button variant="ghost" asChild>
-              <Link href="/suggestions">
-                <Lightbulb className="h-5 w-5 mr-2" />
-                Suggestions
-              </Link>
-            </Button>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" asChild>
-              <Link href="/profile">
-                <User className="h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
+
+          <Button variant="outline" size="icon" asChild>
+            <Link href="/profile">
+              <User className="h-5 w-5" />
+            </Link>
+          </Button>
         </div>
       </div>
     </header>

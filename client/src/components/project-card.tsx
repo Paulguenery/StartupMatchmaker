@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Briefcase } from "lucide-react";
 import { ProjectRating } from "./project-rating";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ProjectCardProps {
   project: Project;
@@ -10,6 +11,9 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project, showRating = false }: ProjectCardProps) {
+  const { user } = useAuth();
+  const canShowRating = showRating && user?.role === 'project_seeker';
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="space-y-2">
@@ -43,7 +47,7 @@ export function ProjectCard({ project, showRating = false }: ProjectCardProps) {
           </div>
         </div>
 
-        {showRating && (
+        {canShowRating && (
           <div className="mt-6 pt-6 border-t">
             <h4 className="font-semibold mb-4">Évaluations</h4>
             <ProjectRating projectId={project.id} />
