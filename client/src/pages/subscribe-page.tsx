@@ -53,27 +53,63 @@ const SubscribeForm = () => {
 
 export default function SubscribePage() {
   const [clientSecret, setClientSecret] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
+    setIsLoading(true);
     apiRequest("POST", "/api/get-or-create-subscription")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Erreur lors de la création de l'abonnement");
+        }
+        return res.json();
+      })
       .then((data) => {
+        if (data.error) {
+          throw new Error(data.error.message);
+        }
         setClientSecret(data.clientSecret);
       })
       .catch((error) => {
         toast({
           title: "Erreur",
-          description: "Impossible de démarrer le processus d'abonnement.",
+          description: error.message || "Impossible de démarrer le processus d'abonnement.",
           variant: "destructive",
         });
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
   }, [toast]);
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-600">Préparation de votre abonnement...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!clientSecret) {
     return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="max-w-4xl mx-auto">
+          <Button variant="ghost" size="icon" className="mb-6" asChild>
+            <Link href="/">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <Card className="p-6 text-center">
+            <p className="text-red-600">Une erreur est survenue lors de la préparation de l'abonnement.</p>
+            <Button className="mt-4" variant="outline" asChild>
+              <Link href="/">Retour à l'accueil</Link>
+            </Button>
+          </Card>
+        </div>
       </div>
     );
   }

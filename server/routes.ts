@@ -154,7 +154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const subscription = await stripe.subscriptions.create({
         customer: customer.id,
         items: [{
-          price: 'price_premium', // Remplacer par votre vrai ID de prix Stripe
+          price: process.env.STRIPE_PRICE_ID!, // Utiliser l'ID de prix configuré
         }],
         payment_behavior: 'default_incomplete',
         expand: ['latest_invoice.payment_intent'],
