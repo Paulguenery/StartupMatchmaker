@@ -47,6 +47,8 @@ export function setupAuth(app: Express) {
       if (!user || !(await comparePasswords(password, user.password))) {
         return done(null, false);
       } else {
+        // Activation temporaire du premium pour tous les utilisateurs
+        user.isPremium = true;
         return done(null, user);
       }
     }),
@@ -55,6 +57,10 @@ export function setupAuth(app: Express) {
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
     const user = await storage.getUser(id);
+    if (user) {
+      // Activation temporaire du premium pour tous les utilisateurs
+      user.isPremium = true;
+    }
     done(null, user);
   });
 

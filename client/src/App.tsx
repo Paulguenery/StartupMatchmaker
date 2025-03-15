@@ -11,18 +11,22 @@ import SwipePage from "@/pages/swipe-page";
 import MessagesPage from "@/pages/messages-page";
 import SubscribePage from "@/pages/subscribe-page";
 import { ProtectedRoute } from "./lib/protected-route";
+import { Header } from "./components/layout/header";
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/auth" component={AuthPage} />
-      <ProtectedRoute path="/" component={HomePage} />
-      <ProtectedRoute path="/profile" component={ProfilePage} />
-      <ProtectedRoute path="/swipe" component={SwipePage} />
-      <ProtectedRoute path="/messages" component={MessagesPage} />
-      <ProtectedRoute path="/subscribe" component={SubscribePage} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <Header />
+      <Switch>
+        <Route path="/auth" component={AuthPage} />
+        <ProtectedRoute path="/" component={HomePage} />
+        <ProtectedRoute path="/profile" component={ProfilePage} />
+        <ProtectedRoute path="/swipe" component={SwipePage} />
+        <ProtectedRoute path="/messages" component={MessagesPage} />
+        <ProtectedRoute path="/subscribe" component={SubscribePage} />
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 
