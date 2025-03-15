@@ -186,4 +186,77 @@ export function setupAuth(app: Express) {
     }
     res.json(req.user);
   });
+
+  // Nouvelle route pour la réinitialisation du mot de passe
+  app.post('/api/reset-password', async (req, res) => {
+    try {
+      const { email } = req.body;
+      console.log('Demande de réinitialisation pour:', email);
+
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // Pour des raisons de sécurité, on renvoie toujours un succès
+        return res.json({ message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.' });
+      }
+
+      // Générer un token unique
+      const resetToken = randomBytes(32).toString('hex');
+      const resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 heures
+
+      // Stocker le token dans la base de données
+      await storage.updateUser(user.id, {
+        resetToken,
+        resetTokenExpiry: resetTokenExpiry.toISOString(),
+      });
+
+      // TODO: Envoyer l'email avec le lien de réinitialisation
+      // Pour l'instant, on log le token pour le développement
+      console.log('Token de réinitialisation:', resetToken);
+
+      res.json({
+        message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.'
+      });
+    } catch (error) {
+      console.error('Erreur lors de la réinitialisation:', error);
+      res.status(500).json({
+        message: 'Une erreur est survenue lors de la réinitialisation du mot de passe'
+      });
+    }
+  });
+
+  // Route pour vérifier le token et réinitialiser le mot de passe
+  app.post('/api/reset-password/:token', async (req, res) => {
+    try {
+      const { token } = req.params;
+      const { password } = req.body;
+
+      const user = await storage.getUserByResetToken(token);
+      if (!user || !user.resetTokenExpiry) {
+        return res.status(400).json({ message: 'Token invalide ou expiré' });
+      }
+
+      // Vérifier si le token n'a pas expiré
+      const tokenExpiry = new Date(user.resetTokenExpiry);
+      if (tokenExpiry < new Date()) {
+        return res.status(400).json({ message: 'Token expiré' });
+      }
+
+      // Hasher le nouveau mot de passe
+      const hashedPassword = await hashPassword(password);
+
+      // Mettre à jour le mot de passe et supprimer le token
+      await storage.updateUser(user.id, {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpiry: null,
+      });
+
+      res.json({ message: 'Mot de passe réinitialisé avec succès' });
+    } catch (error) {
+      console.error('Erreur lors de la réinitialisation:', error);
+      res.status(500).json({
+        message: 'Une erreur est survenue lors de la réinitialisation du mot de passe'
+      });
+    }
+  });
 }

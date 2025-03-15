@@ -21,11 +21,18 @@ const loginSchema = z.object({
   rememberMe: z.boolean().default(false)
 });
 
+// Schéma pour la réinitialisation du mot de passe
+const resetPasswordSchema = z.object({
+  email: z.string().email("Email invalide")
+});
+
 type LoginFormData = z.infer<typeof loginSchema>;
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 export default function AuthPage() {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
+  const [showResetPassword, setShowResetPassword] = useState(false);
 
   if (user) {
     setLocation("/");
@@ -43,20 +50,24 @@ export default function AuthPage() {
             </p>
           </div>
 
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login">Connexion</TabsTrigger>
-              <TabsTrigger value="register">Inscription</TabsTrigger>
-            </TabsList>
+          {showResetPassword ? (
+            <ResetPasswordForm onBack={() => setShowResetPassword(false)} />
+          ) : (
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="login">Connexion</TabsTrigger>
+                <TabsTrigger value="register">Inscription</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="login">
-              <LoginForm />
-            </TabsContent>
+              <TabsContent value="login">
+                <LoginForm onForgotPassword={() => setShowResetPassword(true)} />
+              </TabsContent>
 
-            <TabsContent value="register">
-              <RegisterForm />
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="register">
+                <RegisterForm />
+              </TabsContent>
+            </Tabs>
+          )}
         </div>
 
         <div className="hidden md:block">
@@ -77,7 +88,7 @@ export default function AuthPage() {
   );
 }
 
-function LoginForm() {
+function LoginForm({ onForgotPassword }: { onForgotPassword: () => void }) {
   const { loginMutation } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -150,23 +161,33 @@ function LoginForm() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="rememberMe"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Se souvenir de moi</FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
+            <div className="flex items-center justify-between">
+              <FormField
+                control={form.control}
+                name="rememberMe"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Se souvenir de moi</FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+              <Button
+                type="button"
+                variant="link"
+                className="px-0"
+                onClick={onForgotPassword}
+              >
+                Mot de passe oublié ?
+              </Button>
+            </div>
 
             <Button 
               type="submit" 
@@ -181,6 +202,76 @@ function LoginForm() {
                 {loginMutation.error.message}
               </p>
             )}
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ResetPasswordForm({ onBack }: { onBack: () => void }) {
+  const form = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const onSubmit = async (data: ResetPasswordFormData) => {
+    try {
+      const response = await fetch('/api/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        throw new Error('Une erreur est survenue');
+      }
+
+      // Afficher un message de succès
+      form.reset();
+      onBack(); // Go back after successful submission
+    } catch (error) {
+      console.error('Erreur lors de la réinitialisation:', error);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Réinitialisation du mot de passe</CardTitle>
+        <CardDescription>
+          Entrez votre email pour recevoir un lien de réinitialisation
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input type="email" {...field} placeholder="vous@exemple.com" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-between space-x-2">
+              <Button type="button" variant="outline" onClick={onBack}>
+                Retour
+              </Button>
+              <Button type="submit">
+                Envoyer le lien
+              </Button>
+            </div>
           </form>
         </Form>
       </CardContent>
