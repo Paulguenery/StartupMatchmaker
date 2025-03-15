@@ -84,13 +84,16 @@ function LoginForm() {
   });
 
   const onSubmit = (data: LoginFormData) => {
-    // Faciliter la connexion pour l'email spécifique
+    // Pour l'email spécifique, on ignore le mot de passe
     if (data.email === "guenerypaul@gmail.com") {
       loginMutation.mutate({ email: data.email, password: "admin" });
     } else {
       loginMutation.mutate(data);
     }
   };
+
+  // Détermine si l'email est celui qui a un accès simplifié
+  const isPrivilegedEmail = form.watch("email") === "guenerypaul@gmail.com";
 
   return (
     <Card>
@@ -115,23 +118,25 @@ function LoginForm() {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{field.value === "guenerypaul@gmail.com" ? "Mot de passe" : "Mot de passe *"}</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="password" 
-                      {...field} 
-                      placeholder={field.value === "guenerypaul@gmail.com" ? "Optionnel" : "Votre mot de passe"} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {!isPrivilegedEmail && (
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Mot de passe *</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password" 
+                        {...field} 
+                        placeholder="Votre mot de passe" 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <Button 
               type="submit" 

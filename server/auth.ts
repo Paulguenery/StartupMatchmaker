@@ -61,6 +61,7 @@ export function setupAuth(app: Express) {
             });
             return done(null, newUser);
           }
+          // Connexion directe sans vérification du mot de passe
           return done(null, user);
         }
 
