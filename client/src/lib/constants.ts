@@ -318,12 +318,11 @@ export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
   ]
 };
 
-// Schema pour la validation des projets
+// Ajout du schema de validation du projet sans la durée
 export const projectSchema = z.object({
   title: z.string().min(1, "Le titre est requis"),
   description: z.string().min(1, "La description est requise"),
   category: z.string().min(1, "La catégorie est requise"),
-  duration: z.string().min(1, "La durée est requise"),
   requiredSkills: z.array(z.string()),
   collaborationType: z.string().min(1, "Le type de collaboration est requis"),
 });

@@ -25,15 +25,15 @@ export default function NewProjectPage() {
       title: "",
       description: "",
       category: "",
-      duration: "",
       requiredSkills: [],
       collaborationType: "",
+      location: null,
     },
   });
 
   const createProjectMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Sending data:", data);
+      console.log("Sending project data:", data);
       const res = await apiRequest("POST", "/api/projects", data);
       if (!res.ok) {
         const error = await res.json();
@@ -180,29 +180,6 @@ export default function NewProjectPage() {
                           ))}
                         </div>
                       </div>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="duration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Durée estimée</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez une durée" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="short">Court terme (moins de 3 mois)</SelectItem>
-                          <SelectItem value="medium">Moyen terme (3-6 mois)</SelectItem>
-                          <SelectItem value="long">Long terme (plus de 6 mois)</SelectItem>
-                        </SelectContent>
-                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

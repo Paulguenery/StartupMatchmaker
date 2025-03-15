@@ -14,7 +14,7 @@ export const users = pgTable("users", {
   role: text("role").notNull(), // 'project_owner' ou 'project_seeker'
   experienceLevel: text("experience_level"), // 'motivated', 'junior', 'intermediate', 'senior'
   availability: text("availability"), // 'immediate', 'one_month', 'three_months'
-  collaborationType: text("collaboration_type"), // 'full_time', 'part_time', 'freelance'
+  collaborationType: text("collaboration_type"), // 'full_time', 'part_time'
   location: json("location").$type<{
     latitude: number;
     longitude: number;
@@ -30,7 +30,6 @@ export const projects = pgTable("projects", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   category: text("category").notNull(),
-  duration: text("duration").notNull(), // short/medium/long term
   location: json("location").$type<{
     latitude: number;
     longitude: number;
@@ -38,6 +37,7 @@ export const projects = pgTable("projects", {
     department: string;
   }>(),
   requiredSkills: text("required_skills").array(),
+  collaborationType: text("collaboration_type").notNull(), // 'full_time', 'part_time'
   createdAt: timestamp("created_at").defaultNow(),
 });
 
