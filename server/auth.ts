@@ -57,7 +57,13 @@ export function setupAuth(app: Express) {
               password: await hashPassword("admin"),
               role: "project_owner",
               bio: "",
-              skills: []
+              skills: [],
+              location: null,
+              collaborationType: "full_time",
+              experienceLevel: "senior",
+              availability: "immediate",
+              isVerified: true,
+              isPremium: true
             });
             return done(null, newUser);
           }
