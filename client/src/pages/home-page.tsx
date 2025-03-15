@@ -128,9 +128,6 @@ export default function HomePage() {
             <Button asChild>
               <Link href="/swipe">Commencer à matcher</Link>
             </Button>
-            <Button variant="outline" asChild>
-              <Link href="/messages">Messages</Link>
-            </Button>
             {!user?.isPremium && (
               <Button variant="outline" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700" asChild>
                 <Link href="/subscribe">Devenir Premium</Link>
