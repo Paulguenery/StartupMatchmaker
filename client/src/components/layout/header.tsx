@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, Menu, User, PlusCircle, List, Lightbulb, MessageSquare } from "lucide-react";
+import { ArrowLeft, Menu, User, List, Lightbulb, MessageSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,17 +32,6 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            {user.role === 'project_owner' && (
-              <>
-                <Button variant="outline" asChild>
-                  <Link href="/new-project" className="flex items-center gap-2">
-                    <PlusCircle className="h-4 w-4" />
-                    Nouvelle annonce
-                  </Link>
-                </Button>
-              </>
-            )}
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
