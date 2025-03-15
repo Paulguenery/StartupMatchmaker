@@ -1,0 +1,171 @@
+📌 Informatique et Technologie
+✔️ Programmation (Python, Java, C++, etc.)
+✔️ Cybersécurité et protection des données
+✔️ Développement web et mobile
+✔️ Bases de données (SQL, NoSQL)
+✔️ Systèmes d’exploitation (Linux, Windows)
+✔️ Intelligence artificielle et Machine Learning
+✔️ DevOps et automatisation
+✔️ Informatique quantique (émergent)
+
+📌 Marketing et Publicité
+✔️ SEO et SEA (Référencement naturel et payant)
+✔️ Marketing digital et réseaux sociaux
+✔️ Rédaction et copywriting persuasif
+✔️ Publicité programmatique et Google Ads
+✔️ Branding et identité visuelle
+✔️ Analyse des données et CRM
+✔️ Automatisation marketing
+
+📌 Design et Création
+✔️ UX/UI design (Expérience utilisateur)
+✔️ Graphisme (Photoshop, Illustrator, Figma)
+✔️ Motion design et animation
+✔️ Typographie et colorimétrie
+✔️ Modélisation 3D et rendu (Blender, Maya)
+✔️ Création de contenus interactifs
+
+📌 Ressources Humaines
+✔️ Recrutement et gestion des talents
+✔️ Droit du travail et conformité RH
+✔️ Psychologie du travail et bien-être des employés
+✔️ Gestion de la paie et administration du personnel
+✔️ Développement des compétences et formation
+
+📌 Finance et Comptabilité
+✔️ Gestion budgétaire et analyse financière
+✔️ Comptabilité et fiscalité
+✔️ Audit et contrôle de gestion
+✔️ Trading et gestion de portefeuille
+✔️ Blockchain et cryptomonnaies
+
+📌 Vente et Développement Commercial
+✔️ Prospection et négociation commerciale
+✔️ Gestion de la relation client (CRM)
+✔️ Stratégies de vente et closing
+✔️ Analyse de marché et veille concurrentielle
+✔️ Fidélisation et satisfaction client
+
+📌 Santé
+✔️ Connaissances médicales générales
+✔️ Gestion des dossiers patients et confidentialité
+✔️ Protocoles d’urgence et premiers secours
+✔️ Bioéthique et déontologie médicale
+✔️ Pratique des nouvelles technologies médicales
+
+📌 Ingénierie
+✔️ Conception et simulation (CAD, SolidWorks)
+✔️ Mathématiques appliquées et physique
+✔️ Gestion de projet et innovation
+✔️ Intelligence artificielle et robotique
+✔️ Matériaux et procédés industriels
+
+📌 Éducation
+✔️ Pédagogie et méthodologie d’enseignement
+✔️ Psychologie cognitive et apprentissage
+✔️ Outils numériques éducatifs
+✔️ Communication et adaptation aux différents profils d’élèves
+
+📌 Droit
+✔️ Connaissance des législations nationales et internationales
+✔️ Rédaction de contrats et actes juridiques
+✔️ Plaidoyer et argumentation juridique
+✔️ Gestion des litiges et médiation
+
+📌 Entrepreneuriat
+✔️ Business model et planification stratégique
+✔️ Gestion financière et levée de fonds
+✔️ Leadership et prise de décision
+✔️ Growth hacking et acquisition client
+
+📌 Architecture
+✔️ Conception et dessin technique (AutoCAD, SketchUp)
+✔️ Normes et réglementations urbaines
+✔️ Maquette numérique et BIM
+✔️ Matériaux et écoconstruction
+
+📌 Médias et Communication
+✔️ Journalisme et storytelling
+✔️ Relations presse et communication de crise
+✔️ Production audiovisuelle et montage
+✔️ Gestion des réseaux sociaux
+
+📌 Logistique et Transport
+✔️ Gestion des flux et chaîne d’approvisionnement
+✔️ Transport international et douanes
+✔️ Négociation et gestion des fournisseurs
+
+📌 Recherche et Développement
+✔️ Veille technologique et innovation
+✔️ Méthodologie scientifique
+✔️ Expérimentation et tests
+
+📌 Gestion de Projet
+✔️ Planification et gestion du temps
+✔️ Outils de gestion (Trello, Jira, Asana)
+✔️ Gestion des risques et pilotage budgétaire
+
+📌 Industrie et Production
+✔️ Processus de fabrication
+✔️ Maintenance industrielle et automatisation
+✔️ Lean management
+
+📌 Conseil
+✔️ Stratégie d’entreprise
+✔️ Analyse des besoins et diagnostic
+✔️ Gestion du changement
+
+📌 Hôtellerie et Tourisme
+✔️ Accueil et relation client
+✔️ Gestion des réservations et événements
+✔️ Marketing touristique
+
+📌 Agriculture et Agroalimentaire
+✔️ Techniques agricoles modernes
+✔️ Normes alimentaires et sécurité
+✔️ Agriculture durable
+
+📌 Énergie et Environnement
+✔️ Gestion des énergies renouvelables
+✔️ Bilan carbone et éco-conception
+✔️ Réglementations environnementales
+
+📌 Immobilier
+✔️ Estimation et évaluation immobilière
+✔️ Techniques de négociation immobilière
+✔️ Droit immobilier
+
+📌 Art et Culture
+✔️ Création artistique et performance
+✔️ Gestion de projets culturels
+✔️ Histoire de l’art et patrimoine
+
+📌 Sciences Sociales
+✔️ Analyse des comportements et tendances
+✔️ Méthodologie de recherche sociale
+✔️ Communication et médiation
+
+📌 Télécommunications
+✔️ Réseaux et protocoles de communication
+✔️ Sécurité des infrastructures télécoms
+✔️ 5G et innovations réseau
+
+📌 Sécurité et Défense
+✔️ Cyberdéfense et sécurité informatique
+✔️ Gestion de crise et protection des populations
+✔️ Enquête et renseignement
+
+📌 Administration Publique
+✔️ Droit administratif
+✔️ Gestion des finances publiques
+✔️ Relations institutionnelles
+
+📌 Informatique Cloud et Big Data
+✔️ Gestion des infrastructures cloud (AWS, Azure, GCP)
+✔️ Analyse de données massives
+✔️ Sécurité des données
+
+📌 Biotechnologie et Pharmaceutique
+✔️ Bio-informatique et génomique
+✔️ Recherche clinique et réglementations médicales
+...

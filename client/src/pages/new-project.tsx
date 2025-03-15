@@ -31,7 +31,11 @@ export default function NewProjectPage() {
 
   const createProjectMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/projects", data);
+      console.log("Sending data:", data); // Debug log
+      const res = await apiRequest("POST", "/api/projects", {
+        ...data,
+        requiredSkills: Array.isArray(data.requiredSkills) ? data.requiredSkills : [data.requiredSkills],
+      });
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || "Erreur lors de la création du projet");
@@ -131,10 +135,7 @@ export default function NewProjectPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Compétences requises</FormLabel>
-                      <Select
-                        onValueChange={(value) => field.onChange([value])}
-                        value={field.value?.[0] || ""}
-                      >
+                      <Select onValueChange={field.onChange} value={field.value?.[0] || ""}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionnez les compétences requises" />
@@ -207,7 +208,7 @@ export default function NewProjectPage() {
                 <Button 
                   type="submit" 
                   className="w-full" 
-                  disabled={createProjectMutation.isPending || !form.formState.isValid}
+                  disabled={createProjectMutation.isPending}
                 >
                   {createProjectMutation.isPending ? "Publication en cours..." : "Publier l'annonce"}
                 </Button>

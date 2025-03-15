@@ -7,7 +7,6 @@ export const PROJECT_CATEGORIES = [
   { value: "cloud", label: "Informatique Cloud et Big Data" },
   { value: "ai", label: "Intelligence Artificielle et Machine Learning" },
   { value: "blockchain", label: "Blockchain et Cryptomonnaies" },
-  { value: "robotics", label: "Robotique" },
   { value: "marketing", label: "Marketing et Publicité" },
   { value: "design", label: "Design et Création" },
   { value: "hr", label: "Ressources humaines" },
@@ -34,21 +33,21 @@ export const PROJECT_CATEGORIES = [
   { value: "telecom", label: "Télécommunications" },
   { value: "security", label: "Sécurité et Défense" },
   { value: "public", label: "Administration publique" },
-  { value: "pr", label: "Relations Publiques" },
   { value: "biotech", label: "Biotechnologie et Pharmaceutique" },
   { value: "sports", label: "Sports et Loisirs" },
-  { value: "events", label: "Événementiel" },
-  { value: "transport", label: "Transports et Mobilité" },
-  { value: "medical", label: "Médical et paramédical" },
-  { value: "it", label: "Systèmes d'information" },
-  { value: "retail", label: "Commerce de détail" },
-  { value: "food", label: "Restauration" },
-  { value: "fashion", label: "Mode et Textile" },
-  { value: "trade", label: "Commerce international" },
-  { value: "ecommerce", label: "Commerce électronique" },
-  { value: "gaming", label: "Jeux vidéo et eSports" },
-  { value: "social_media", label: "Réseaux Sociaux et Influenceurs" },
-  { value: "aerospace", label: "Aéronautique et Spatiale" }
+  { value: "robotics", label: "Robotique"},
+  { value: "pr", label: "Relations Publiques"},
+  { value: "transport", label: "Transports et Mobilité"},
+  { value: "medical", label: "Médical et paramédical"},
+  { value: "it", label: "Systèmes d'information"},
+  { value: "retail", label: "Commerce de détail"},
+  { value: "food", label: "Restauration"},
+  { value: "fashion", label: "Mode et Textile"},
+  { value: "trade", label: "Commerce international"},
+  { value: "ecommerce", label: "Commerce électronique"},
+  { value: "gaming", label: "Jeux vidéo et eSports"},
+  { value: "social_media", label: "Réseaux Sociaux et Influenceurs"},
+  { value: "aerospace", label: "Aéronautique et Spatiale"}
 ] as const;
 
 export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
@@ -57,20 +56,12 @@ export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
     "Java",
     "C++",
     "Cybersécurité",
-    "Base de données SQL",
-    "Base de données NoSQL",
+    "Bases de données SQL",
+    "Bases de données NoSQL",
     "Linux",
     "Windows",
     "DevOps",
-  ],
-  mobile: [
-    "React Native",
-    "Flutter",
-    "iOS (Swift)",
-    "Android (Kotlin)",
-    "UI/UX Mobile",
-    "Tests Mobile",
-    "Performance Mobile",
+    "Automatisation"
   ],
   web: [
     "HTML/CSS",
@@ -81,7 +72,33 @@ export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
     "Vue.js",
     "Angular",
     "PHP",
-    "WordPress",
+    "WordPress"
+  ],
+  mobile: [
+    "React Native",
+    "Flutter",
+    "iOS (Swift)",
+    "Android (Kotlin)",
+    "UI/UX Mobile",
+    "Tests Mobile",
+    "Performance Mobile"
+  ],
+  cloud: [
+    "AWS",
+    "Azure",
+    "Google Cloud",
+    "Gestion d'infrastructure cloud",
+    "Analyse de données massives",
+    "Sécurité des données"
+  ],
+  ai: [
+    "Machine Learning",
+    "Deep Learning",
+    "TensorFlow",
+    "PyTorch",
+    "NLP",
+    "Computer Vision",
+    "Data Science"
   ],
   design: [
     "UX/UI Design",
@@ -91,15 +108,8 @@ export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
     "Motion Design",
     "Typographie",
     "Modélisation 3D",
-  ],
-  ai: [
-    "Machine Learning",
-    "Deep Learning",
-    "TensorFlow",
-    "PyTorch",
-    "NLP",
-    "Computer Vision",
-    "Data Science",
+    "Blender",
+    "Maya"
   ],
   marketing: [
     "SEO",
@@ -109,8 +119,53 @@ export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
     "Content Marketing",
     "Google Ads",
     "Analytics",
+    "Branding",
+    "Copywriting"
   ],
-  // Ajout d'autres catégories selon le fichier
+  hr: [
+    "Recrutement",
+    "Gestion des talents",
+    "Droit du travail",
+    "Formation",
+    "GPEC",
+    "Administration RH",
+    "Paie"
+  ],
+  finance: [
+    "Analyse financière",
+    "Comptabilité",
+    "Contrôle de gestion",
+    "Audit",
+    "Trading",
+    "Gestion de portefeuille",
+    "Blockchain"
+  ],
+  engineering: [
+    "CAD",
+    "SolidWorks",
+    "Mathématiques appliquées",
+    "Physique",
+    "Robotique",
+    "Matériaux",
+    "Procédés industriels"
+  ],
+  media: [
+    "Journalisme",
+    "Storytelling",
+    "Relations presse",
+    "Production audiovisuelle",
+    "Montage vidéo",
+    "Animation"
+  ],
+  project: [
+    "Méthodologie Agile",
+    "Scrum",
+    "MS Project",
+    "Jira",
+    "Trello",
+    "Gestion des risques",
+    "Planification"
+  ]
 };
 
 // Schema pour la validation des projets
