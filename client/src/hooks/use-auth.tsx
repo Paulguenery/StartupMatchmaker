@@ -2,24 +2,23 @@ import { createContext, ReactNode, useContext } from "react";
 import {
   useQuery,
   useMutation,
-  UseMutationResult,
 } from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
+import { insertUserSchema, User as SelectUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+
+type LoginData = {
+  email: string;
+  password: string;
+};
 
 type AuthContextType = {
   user: SelectUser | null;
   isLoading: boolean;
   error: Error | null;
-  loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
-  logoutMutation: UseMutationResult<void, Error, void>;
-  registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
-};
-
-type LoginData = {
-  email: string;
-  password: string;
+  loginMutation: any;
+  logoutMutation: any;
+  registerMutation: any;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -34,11 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<SelectUser | undefined, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    retry: 0,
   });
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
+      console.log("Envoi de la demande de connexion");
       const res = await apiRequest("POST", "/api/login", credentials);
       if (!res.ok) {
         const error = await res.json();
@@ -47,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return res.json();
     },
     onSuccess: (user: SelectUser) => {
+      console.log("Connexion réussie", user);
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Connexion réussie",
@@ -54,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      console.error("Erreur de connexion:", error);
       toast({
         title: "Échec de la connexion",
         description: error.message,
@@ -63,8 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   const registerMutation = useMutation({
-    mutationFn: async (credentials: InsertUser) => {
-      const res = await apiRequest("POST", "/api/register", credentials);
+    mutationFn: async (data: any) => {
+      console.log("Envoi de la demande d'inscription");
+      const res = await apiRequest("POST", "/api/register", data);
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || "Erreur lors de l'inscription");
@@ -72,6 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return res.json();
     },
     onSuccess: (user: SelectUser) => {
+      console.log("Inscription réussie", user);
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "Inscription réussie",
@@ -79,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      console.error("Erreur d'inscription:", error);
       toast({
         title: "Échec de l'inscription",
         description: error.message,
@@ -89,12 +93,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
+      console.log("Envoi de la demande de déconnexion");
       const res = await apiRequest("POST", "/api/logout");
       if (!res.ok) {
         throw new Error("Erreur lors de la déconnexion");
       }
     },
     onSuccess: () => {
+      console.log("Déconnexion réussie");
       queryClient.setQueryData(["/api/user"], null);
       queryClient.clear();
       toast({
@@ -103,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
+      console.error("Erreur de déconnexion:", error);
       toast({
         title: "Échec de la déconnexion",
         description: error.message,

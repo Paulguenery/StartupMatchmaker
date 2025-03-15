@@ -22,49 +22,60 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Session configuration basique
+  // Configuration simple de la session
   app.use(session({
     secret: 'mymate_secret_key_2024',
     resave: false,
-    saveUninitialized: true,
-    cookie: {
-      secure: false,
-      maxAge: 24 * 60 * 60 * 1000
+    saveUninitialized: false,
+    cookie: { 
+      maxAge: 24 * 60 * 60 * 1000,
+      secure: false
     }
   }));
 
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Configuration Passport simple
+  // Configuration de base de Passport
   passport.use(new LocalStrategy(
     { usernameField: 'email' },
     async (email, password, done) => {
       try {
+        console.log('Tentative de connexion pour:', email);
         const user = await storage.getUserByEmail(email);
+
         if (!user) {
-          return done(null, false, { message: 'Email inconnu' });
+          console.log('Utilisateur non trouvé:', email);
+          return done(null, false);
         }
+
         const isValid = await comparePasswords(password, user.password);
+        console.log('Mot de passe valide:', isValid);
+
         if (!isValid) {
-          return done(null, false, { message: 'Mot de passe incorrect' });
+          return done(null, false);
         }
+
         return done(null, user);
       } catch (err) {
+        console.error('Erreur lors de l\'authentification:', err);
         return done(err);
       }
     }
   ));
 
-  passport.serializeUser((user: Express.User, done) => {
+  passport.serializeUser((user: any, done) => {
+    console.log('Sérialisation de l\'utilisateur:', user.id);
     done(null, user.id);
   });
 
   passport.deserializeUser(async (id: number, done) => {
     try {
+      console.log('Désérialisation de l\'utilisateur:', id);
       const user = await storage.getUser(id);
       done(null, user);
     } catch (err) {
+      console.error('Erreur lors de la désérialisation:', err);
       done(err);
     }
   });
@@ -72,51 +83,64 @@ export function setupAuth(app: Express) {
   // Routes d'authentification simplifiées
   app.post('/api/register', async (req, res) => {
     try {
-      const { email, password, ...rest } = req.body;
-      const existingUser = await storage.getUserByEmail(email);
+      console.log('Données d\'inscription reçues:', req.body);
+      const existingUser = await storage.getUserByEmail(req.body.email);
 
       if (existingUser) {
-        return res.status(400).json({ message: 'Cet email est déjà utilisé' });
+        return res.status(400).json({ message: 'Email déjà utilisé' });
       }
 
-      const hashedPassword = await hashPassword(password);
+      const hashedPassword = await hashPassword(req.body.password);
       const user = await storage.createUser({
-        email,
-        password: hashedPassword,
-        ...rest
+        ...req.body,
+        password: hashedPassword
       });
 
       req.login(user, (err) => {
         if (err) {
-          return res.status(500).json({ message: 'Erreur lors de la connexion automatique' });
+          console.error('Erreur lors de la connexion après inscription:', err);
+          return res.status(500).json({ message: 'Erreur lors de la connexion' });
         }
         res.json(user);
       });
     } catch (error) {
+      console.error('Erreur lors de l\'inscription:', error);
       res.status(500).json({ message: 'Erreur lors de l\'inscription' });
     }
   });
 
   app.post('/api/login', (req, res, next) => {
+    console.log('Tentative de connexion avec:', req.body);
+
     passport.authenticate('local', (err, user, info) => {
       if (err) {
+        console.error('Erreur d\'authentification:', err);
         return res.status(500).json({ message: 'Erreur serveur' });
       }
+
       if (!user) {
-        return res.status(401).json({ message: info.message || 'Email ou mot de passe incorrect' });
+        return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
       }
+
       req.login(user, (err) => {
         if (err) {
+          console.error('Erreur de login:', err);
           return res.status(500).json({ message: 'Erreur lors de la connexion' });
         }
+
+        console.log('Connexion réussie pour:', user.email);
         res.json(user);
       });
     })(req, res, next);
   });
 
   app.post('/api/logout', (req, res) => {
+    const userEmail = req.user?.email;
+    console.log('Déconnexion pour:', userEmail);
+
     req.logout((err) => {
       if (err) {
+        console.error('Erreur de déconnexion:', err);
         return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
       }
       res.sendStatus(200);
@@ -124,6 +148,7 @@ export function setupAuth(app: Express) {
   });
 
   app.get('/api/user', (req, res) => {
+    console.log('Vérification de session, authentifié:', req.isAuthenticated());
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: 'Non authentifié' });
     }
