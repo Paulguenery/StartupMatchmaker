@@ -39,28 +39,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
-      console.log("Tentative de connexion avec:", credentials.email);
       const res = await apiRequest("POST", "/api/login", credentials);
-      const data = await res.json();
-
       if (!res.ok) {
-        console.error("Erreur de connexion:", data);
-        throw new Error(data.message || "Erreur de connexion");
+        const error = await res.json();
+        throw new Error(error.message || "Erreur de connexion");
       }
-
-      return data;
+      return res.json();
     },
     onSuccess: (user: SelectUser) => {
-      console.log("Connexion réussie pour:", user.email);
       queryClient.setQueryData(["/api/user"], user);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Connexion réussie",
         description: `Bienvenue ${user.fullName}`,
       });
     },
     onError: (error: Error) => {
-      console.error("Erreur de connexion:", error);
       toast({
         title: "Échec de la connexion",
         description: error.message,
@@ -71,28 +64,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const registerMutation = useMutation({
     mutationFn: async (credentials: InsertUser) => {
-      console.log("Tentative d'inscription pour:", credentials.email);
       const res = await apiRequest("POST", "/api/register", credentials);
-      const data = await res.json();
-
       if (!res.ok) {
-        console.error("Erreur d'inscription:", data);
-        throw new Error(data.message || "Erreur lors de l'inscription");
+        const error = await res.json();
+        throw new Error(error.message || "Erreur lors de l'inscription");
       }
-
-      return data;
+      return res.json();
     },
     onSuccess: (user: SelectUser) => {
-      console.log("Inscription réussie pour:", user.email);
       queryClient.setQueryData(["/api/user"], user);
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Inscription réussie",
         description: "Votre compte a été créé avec succès",
       });
     },
     onError: (error: Error) => {
-      console.error("Erreur d'inscription:", error);
       toast({
         title: "Échec de l'inscription",
         description: error.message,
@@ -109,7 +95,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     },
     onSuccess: () => {
-      console.log("Déconnexion réussie");
       queryClient.setQueryData(["/api/user"], null);
       queryClient.clear();
       toast({
@@ -118,7 +103,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     },
     onError: (error: Error) => {
-      console.error("Erreur de déconnexion:", error);
       toast({
         title: "Échec de la déconnexion",
         description: error.message,
