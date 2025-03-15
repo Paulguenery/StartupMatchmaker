@@ -141,10 +141,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
-    if (!process.env.STRIPE_PRICE_ID) {
-      console.error('ID de prix Stripe manquant');
+    if (!process.env.STRIPE_PRICE_ID || !process.env.STRIPE_PRICE_ID.startsWith('price_')) {
+      console.error('ID de prix Stripe invalide:', process.env.STRIPE_PRICE_ID);
       return res.status(400).json({ 
-        error: { message: "Configuration de l'abonnement incomplète" }
+        error: { message: "L'ID de prix doit commencer par 'price_'. Veuillez configurer un ID de prix valide dans les paramètres Stripe." }
       });
     }
 
@@ -163,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const subscription = await stripe.subscriptions.create({
         customer: customer.id,
         items: [{
-          price: process.env.STRIPE_PRICE_ID.trim(), // Utiliser l'ID de prix configuré et supprimer les espaces
+          price: process.env.STRIPE_PRICE_ID.trim(),
         }],
         payment_behavior: 'default_incomplete',
         expand: ['latest_invoice.payment_intent'],
@@ -178,7 +178,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('Erreur Stripe:', error);
-      res.status(400).json({ error: { message: error.message } });
+      res.status(400).json({ 
+        error: { 
+          message: error.message === "No such price" 
+            ? "L'ID de prix Stripe n'existe pas. Veuillez vérifier la configuration."
+            : error.message 
+        } 
+      });
     }
   });
 
