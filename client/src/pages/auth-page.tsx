@@ -84,16 +84,8 @@ function LoginForm() {
   });
 
   const onSubmit = (data: LoginFormData) => {
-    // Pour l'email spécifique, on ignore le mot de passe
-    if (data.email === "guenerypaul@gmail.com") {
-      loginMutation.mutate({ email: data.email, password: "admin" });
-    } else {
-      loginMutation.mutate(data);
-    }
+    loginMutation.mutate(data);
   };
-
-  // Détermine si l'email est celui qui a un accès simplifié
-  const isPrivilegedEmail = form.watch("email") === "guenerypaul@gmail.com";
 
   return (
     <Card>
@@ -109,7 +101,7 @@ function LoginForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Email *</FormLabel>
                   <FormControl>
                     <Input type="email" {...field} placeholder="vous@exemple.com" />
                   </FormControl>
@@ -118,25 +110,23 @@ function LoginForm() {
               )}
             />
 
-            {!isPrivilegedEmail && (
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Mot de passe *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="password" 
-                        {...field} 
-                        placeholder="Votre mot de passe" 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Mot de passe *</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="password" 
+                      {...field} 
+                      placeholder="Votre mot de passe" 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Button 
               type="submit" 
@@ -170,6 +160,9 @@ function RegisterForm() {
       bio: "",
       skills: [],
       location: null,
+      collaborationType: "full_time",
+      experienceLevel: "junior",
+      availability: "immediate"
     },
   });
 

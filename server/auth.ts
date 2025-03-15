@@ -22,7 +22,6 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Configuration améliorée de la session
   app.use(session({
     secret: 'mymate_secret_key_2024',
     resave: false,
@@ -33,13 +32,12 @@ export function setupAuth(app: Express) {
       httpOnly: true,
       sameSite: 'lax'
     },
-    name: 'mymate.sid' // Nom personnalisé du cookie
+    name: 'mymate.sid'
   }));
 
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Configuration de Passport
   passport.use(new LocalStrategy(
     { usernameField: 'email' },
     async (email, password, done) => {
@@ -47,31 +45,6 @@ export function setupAuth(app: Express) {
         console.log('Tentative de connexion pour:', email);
         const user = await storage.getUserByEmail(email);
 
-        // Cas spécial pour l'email privilégié
-        if (email === "guenerypaul@gmail.com") {
-          if (!user) {
-            // Créer un compte automatiquement si n'existe pas
-            const newUser = await storage.createUser({
-              email: "guenerypaul@gmail.com",
-              fullName: "Paul Guenery",
-              password: await hashPassword("admin"),
-              role: "project_owner",
-              bio: "",
-              skills: [],
-              location: null,
-              collaborationType: "full_time",
-              experienceLevel: "senior",
-              availability: "immediate",
-              isVerified: true,
-              isPremium: true
-            });
-            return done(null, newUser);
-          }
-          // Connexion directe sans vérification du mot de passe
-          return done(null, user);
-        }
-
-        // Validation normale pour les autres utilisateurs
         if (!user) {
           console.log('Utilisateur non trouvé:', email);
           return done(null, false, { message: 'Email ou mot de passe incorrect' });
@@ -122,10 +95,22 @@ export function setupAuth(app: Express) {
       }
 
       const hashedPassword = await hashPassword(req.body.password);
-      const user = await storage.createUser({
+
+      // Ajout des champs par défaut pour les nouveaux utilisateurs
+      const userData = {
         ...req.body,
-        password: hashedPassword
-      });
+        password: hashedPassword,
+        bio: req.body.bio || "",
+        skills: req.body.skills || [],
+        location: req.body.location || null,
+        collaborationType: req.body.collaborationType || "full_time",
+        experienceLevel: req.body.experienceLevel || "junior",
+        availability: req.body.availability || "immediate",
+        isVerified: false,
+        isPremium: false
+      };
+
+      const user = await storage.createUser(userData);
 
       req.login(user, (err) => {
         if (err) {
