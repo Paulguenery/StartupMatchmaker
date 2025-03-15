@@ -51,7 +51,7 @@ interface User {
   premiumDiscount?: number;
   freeConversationCredits?: number;
   referralCode?: string;
-  isAdult?: boolean; // Added isAdult field
+  isAdult?: boolean;
 }
 
 export function setupAuth(app: Express) {
@@ -62,7 +62,8 @@ export function setupAuth(app: Express) {
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      sameSite: 'lax'
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000 // 24 heures par défaut
     },
     name: 'mymate.sid'
   }));
@@ -72,6 +73,8 @@ export function setupAuth(app: Express) {
 
   // Fonction pour vérifier les restrictions de connexion
   async function checkLoginRestrictions(user: User): Promise<{ allowed: boolean; message?: string }> {
+    console.log('Vérification des restrictions pour:', user.email);
+
     // Vérifier le statut du compte
     if (user.accountStatus === "suspended") {
       return { allowed: false, message: "Votre compte est suspendu. Contactez le support." };
@@ -109,16 +112,20 @@ export function setupAuth(app: Express) {
         const user = await storage.getUserByEmail(email);
 
         if (!user) {
+          console.log('Utilisateur non trouvé:', email);
           return done(null, false, { message: 'Email ou mot de passe incorrect' });
         }
 
         // Vérifier les restrictions de connexion
         const loginCheck = await checkLoginRestrictions(user);
         if (!loginCheck.allowed) {
+          console.log('Restrictions de connexion pour:', email, loginCheck.message);
           return done(null, false, { message: loginCheck.message });
         }
 
         const isValid = await comparePasswords(password, user.password);
+        console.log('Validation du mot de passe:', isValid);
+
         if (!isValid) {
           return done(null, false, { message: 'Email ou mot de passe incorrect' });
         }
@@ -128,6 +135,7 @@ export function setupAuth(app: Express) {
           lastLoginAttempt: new Date()
         });
 
+        console.log('Connexion réussie pour:', email);
         return done(null, user);
       } catch (err) {
         console.error('Erreur lors de l\'authentification:', err);
@@ -146,6 +154,7 @@ export function setupAuth(app: Express) {
       console.log('Désérialisation de l\'utilisateur:', id);
       const user = await storage.getUser(id);
       if (!user) {
+        console.log('Utilisateur non trouvé lors de la désérialisation:', id);
         return done(null, false);
       }
       done(null, user);
@@ -153,6 +162,13 @@ export function setupAuth(app: Express) {
       console.error('Erreur lors de la désérialisation:', err);
       done(err);
     }
+  });
+
+  // Middleware pour vérifier l'authentification
+  app.use((req, res, next) => {
+    console.log('Session:', req.session);
+    console.log('Utilisateur authentifié:', req.isAuthenticated());
+    next();
   });
 
   // Routes d'authentification
@@ -180,7 +196,6 @@ export function setupAuth(app: Express) {
           message: 'La pièce d\'identité est obligatoire'
         });
       }
-
 
       // Génération du code de parrainage
       const referralCode = generateReferralCode();
@@ -216,15 +231,23 @@ export function setupAuth(app: Express) {
         });
       }
 
-      res.json({
-        message: 'Inscription réussie. Votre compte est en attente de vérification.',
-        user: {
-          id: user.id,
-          email: user.email,
-          fullName: user.fullName,
-          role: user.role,
-          accountStatus: user.accountStatus
+      // Connecter l'utilisateur automatiquement après l'inscription
+      req.login(user, (err) => {
+        if (err) {
+          console.error('Erreur lors de la connexion après inscription:', err);
+          return res.status(500).json({ message: 'Erreur lors de la connexion' });
         }
+
+        res.json({
+          message: 'Inscription réussie',
+          user: {
+            id: user.id,
+            email: user.email,
+            fullName: user.fullName,
+            role: user.role,
+            accountStatus: user.accountStatus
+          }
+        });
       });
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
@@ -255,8 +278,6 @@ export function setupAuth(app: Express) {
         // Si Remember Me est activé, on prolonge la session
         if (req.body.rememberMe) {
           req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 jours
-        } else {
-          req.session.cookie.maxAge = 24 * 60 * 60 * 1000; // 24 heures
         }
 
         console.log('Connexion réussie pour:', user.email);
@@ -278,12 +299,14 @@ export function setupAuth(app: Express) {
 
   app.get('/api/user', (req, res) => {
     console.log('Vérification de session, authentifié:', req.isAuthenticated());
+    console.log('Session:', req.session);
+    console.log('User:', req.user);
+
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: 'Non authentifié' });
     }
     res.json(req.user);
   });
-
   // Updated reset password route with email sending
   app.post('/api/reset-password', async (req, res) => {
     try {

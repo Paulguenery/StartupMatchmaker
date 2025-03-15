@@ -8,9 +8,28 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Content Security Policy
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; " +
+    "style-src 'self' 'unsafe-inline'; " + // Permettre les styles inline
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com; " + // Permettre Stripe.js
+    "connect-src 'self' https://api.stripe.com; " + // Permettre les appels API Stripe
+    "frame-src 'self' https://*.stripe.com; " + // Permettre les iframes Stripe
+    "img-src 'self' data: blob: https:; " + // Permettre les images depuis diverses sources
+    "font-src 'self' data:;" // Permettre les polices
+  );
+  next();
+});
+
 // Logging middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
+  // Log les en-têtes pour le debugging
+  console.log('Headers:', req.headers);
+  // Log les cookies pour le debugging de session
+  console.log('Cookies:', req.cookies);
   next();
 });
 
