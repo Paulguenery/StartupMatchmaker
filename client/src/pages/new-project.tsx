@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { PROJECT_CATEGORIES, SKILLS_BY_CATEGORY } from "@/lib/constants";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 
 export default function NewProjectPage() {
   const { toast } = useToast();
@@ -31,11 +33,8 @@ export default function NewProjectPage() {
 
   const createProjectMutation = useMutation({
     mutationFn: async (data: any) => {
-      console.log("Sending data:", data); // Debug log
-      const res = await apiRequest("POST", "/api/projects", {
-        ...data,
-        requiredSkills: Array.isArray(data.requiredSkills) ? data.requiredSkills : [data.requiredSkills],
-      });
+      console.log("Sending data:", data);
+      const res = await apiRequest("POST", "/api/projects", data);
       if (!res.ok) {
         const error = await res.json();
         throw new Error(error.message || "Erreur lors de la création du projet");
@@ -60,6 +59,7 @@ export default function NewProjectPage() {
   });
 
   const categorySkills = form.watch("category") ? SKILLS_BY_CATEGORY[form.watch("category")] || [] : [];
+  const selectedSkills = form.watch("requiredSkills") || [];
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -135,26 +135,51 @@ export default function NewProjectPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Compétences requises</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value?.[0] || ""}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sélectionnez les compétences requises" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {categorySkills.length > 0 ? (
-                            categorySkills.map((skill) => (
-                              <SelectItem key={skill} value={skill}>
-                                {skill}
+                      <div className="space-y-2">
+                        <Select
+                          onValueChange={(value) => {
+                            if (!field.value.includes(value)) {
+                              field.onChange([...field.value, value]);
+                            }
+                          }}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionnez les compétences requises" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {categorySkills.length > 0 ? (
+                              categorySkills.map((skill) => (
+                                <SelectItem key={skill} value={skill}>
+                                  {skill}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="select_category" disabled>
+                                Sélectionnez d'abord une catégorie
                               </SelectItem>
-                            ))
-                          ) : (
-                            <SelectItem value="" disabled>
-                              Sélectionnez d'abord une catégorie
-                            </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
+                            )}
+                          </SelectContent>
+                        </Select>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedSkills.map((skill) => (
+                            <Badge
+                              key={skill}
+                              variant="secondary"
+                              className="flex items-center gap-1"
+                            >
+                              {skill}
+                              <X
+                                className="h-3 w-3 cursor-pointer"
+                                onClick={() => {
+                                  field.onChange(field.value.filter((s) => s !== skill));
+                                }}
+                              />
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}

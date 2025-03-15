@@ -35,19 +35,6 @@ export const PROJECT_CATEGORIES = [
   { value: "public", label: "Administration publique" },
   { value: "biotech", label: "Biotechnologie et Pharmaceutique" },
   { value: "sports", label: "Sports et Loisirs" },
-  { value: "robotics", label: "Robotique"},
-  { value: "pr", label: "Relations Publiques"},
-  { value: "transport", label: "Transports et Mobilité"},
-  { value: "medical", label: "Médical et paramédical"},
-  { value: "it", label: "Systèmes d'information"},
-  { value: "retail", label: "Commerce de détail"},
-  { value: "food", label: "Restauration"},
-  { value: "fashion", label: "Mode et Textile"},
-  { value: "trade", label: "Commerce international"},
-  { value: "ecommerce", label: "Commerce électronique"},
-  { value: "gaming", label: "Jeux vidéo et eSports"},
-  { value: "social_media", label: "Réseaux Sociaux et Influenceurs"},
-  { value: "aerospace", label: "Aéronautique et Spatiale"}
 ] as const;
 
 export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
@@ -100,6 +87,15 @@ export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
     "Computer Vision",
     "Data Science"
   ],
+  blockchain: [
+    "Smart contracts",
+    "NFT",
+    "Sécurité et cryptographie",
+    "Finances décentralisées (DeFi)",
+    "Web3",
+    "Ethereum",
+    "Solidity"
+  ],
   design: [
     "UX/UI Design",
     "Photoshop",
@@ -140,6 +136,23 @@ export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
     "Gestion de portefeuille",
     "Blockchain"
   ],
+  sales: [
+    "Prospection",
+    "Négociation commerciale",
+    "CRM",
+    "Stratégies de vente",
+    "Closing",
+    "Analyse de marché",
+    "Fidélisation client"
+  ],
+  health: [
+    "Connaissances médicales",
+    "Gestion des dossiers patients",
+    "Protocoles d'urgence",
+    "Bioéthique",
+    "Technologies médicales",
+    "Confidentialité"
+  ],
   engineering: [
     "CAD",
     "SolidWorks",
@@ -149,13 +162,59 @@ export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
     "Matériaux",
     "Procédés industriels"
   ],
+  education: [
+    "Pédagogie",
+    "Méthodologie d'enseignement",
+    "Psychologie cognitive",
+    "Outils numériques éducatifs",
+    "Communication adaptative"
+  ],
+  legal: [
+    "Droit national",
+    "Droit international",
+    "Rédaction juridique",
+    "Plaidoyer",
+    "Gestion des litiges",
+    "Médiation"
+  ],
+  entrepreneurship: [
+    "Business model",
+    "Planification stratégique",
+    "Gestion financière",
+    "Levée de fonds",
+    "Leadership",
+    "Growth hacking"
+  ],
+  architecture: [
+    "AutoCAD",
+    "SketchUp",
+    "Normes urbaines",
+    "Maquette numérique",
+    "BIM",
+    "Écoconstruction"
+  ],
   media: [
     "Journalisme",
     "Storytelling",
     "Relations presse",
     "Production audiovisuelle",
     "Montage vidéo",
-    "Animation"
+    "Animation",
+    "Gestion des réseaux sociaux"
+  ],
+  logistics: [
+    "Gestion des flux",
+    "Chaîne d'approvisionnement",
+    "Transport international",
+    "Douanes",
+    "Gestion des fournisseurs"
+  ],
+  research: [
+    "Veille technologique",
+    "Innovation",
+    "Méthodologie scientifique",
+    "Expérimentation",
+    "Tests"
   ],
   project: [
     "Méthodologie Agile",
@@ -165,6 +224,97 @@ export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
     "Trello",
     "Gestion des risques",
     "Planification"
+  ],
+  industry: [
+    "Processus de fabrication",
+    "Maintenance industrielle",
+    "Automatisation",
+    "Lean management",
+    "Qualité"
+  ],
+  consulting: [
+    "Stratégie d'entreprise",
+    "Analyse des besoins",
+    "Diagnostic",
+    "Gestion du changement",
+    "Conseil en organisation"
+  ],
+  tourism: [
+    "Accueil client",
+    "Gestion des réservations",
+    "Événementiel",
+    "Marketing touristique",
+    "Relations clients"
+  ],
+  agriculture: [
+    "Techniques agricoles modernes",
+    "Normes alimentaires",
+    "Sécurité alimentaire",
+    "Agriculture durable",
+    "Agroécologie"
+  ],
+  energy: [
+    "Énergies renouvelables",
+    "Bilan carbone",
+    "Éco-conception",
+    "Réglementations environnementales",
+    "Gestion énergétique"
+  ],
+  realestate: [
+    "Estimation immobilière",
+    "Négociation immobilière",
+    "Droit immobilier",
+    "Gestion locative",
+    "Transactions"
+  ],
+  culture: [
+    "Création artistique",
+    "Performance",
+    "Gestion de projets culturels",
+    "Histoire de l'art",
+    "Patrimoine"
+  ],
+  social: [
+    "Analyse comportementale",
+    "Recherche sociale",
+    "Communication",
+    "Médiation",
+    "Études sociologiques"
+  ],
+  telecom: [
+    "Réseaux",
+    "Protocoles de communication",
+    "Sécurité des infrastructures",
+    "5G",
+    "Innovations réseau"
+  ],
+  security: [
+    "Cyberdéfense",
+    "Sécurité informatique",
+    "Gestion de crise",
+    "Protection des populations",
+    "Renseignement"
+  ],
+  public: [
+    "Droit administratif",
+    "Finances publiques",
+    "Relations institutionnelles",
+    "Politiques publiques",
+    "Administration"
+  ],
+  biotech: [
+    "Bio-informatique",
+    "Génomique",
+    "Recherche clinique",
+    "Réglementations médicales",
+    "Développement médicaments"
+  ],
+  sports: [
+    "Coaching",
+    "Préparation physique",
+    "Gestion d'événements sportifs",
+    "Psychologie du sport",
+    "Performance"
   ]
 };
 
