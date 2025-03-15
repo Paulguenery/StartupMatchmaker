@@ -5,7 +5,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Shield, Star, Check } from "lucide-react";
+import { Shield, Star, Check, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 
 if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
   throw new Error('Clé publique Stripe manquante: VITE_STRIPE_PUBLIC_KEY');
@@ -80,6 +81,17 @@ export default function SubscribePage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-4xl mx-auto">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="mb-6"
+          asChild
+        >
+          <Link href="/">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
+
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Passez à Premium</h1>
           <p className="text-gray-600 mt-2">
