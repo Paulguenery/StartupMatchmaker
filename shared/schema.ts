@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   skills: text("skills").array(),
   isVerified: boolean("is_verified").default(false),
   isPremium: boolean("is_premium").default(false),
+  role: text("role").notNull(), // 'project_owner' ou 'project_seeker'
   location: json("location").$type<{
     latitude: number;
     longitude: number;
@@ -61,6 +62,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   bio: true,
   skills: true,
   location: true,
+  role: true,
 });
 
 export const insertProjectSchema = createInsertSchema(projects).omit({

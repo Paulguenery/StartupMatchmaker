@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Shield, Star, Check, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
 
 if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
   throw new Error('Clé publique Stripe manquante: VITE_STRIPE_PUBLIC_KEY');
@@ -51,10 +52,69 @@ const SubscribeForm = () => {
   );
 };
 
+const ProjectOwnerBenefits = () => (
+  <ul className="space-y-4">
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Mise en avant prioritaire dans les résultats</span>
+    </li>
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Badge Premium pour renforcer la crédibilité</span>
+    </li>
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Voir qui a consulté votre projet</span>
+    </li>
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Messagerie instantanée illimitée</span>
+    </li>
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Filtres de recherche avancés</span>
+    </li>
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Support client prioritaire</span>
+    </li>
+  </ul>
+);
+
+const ProjectSeekerBenefits = () => (
+  <ul className="space-y-4">
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Accès illimité aux projets Premium</span>
+    </li>
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Contact direct avec les porteurs de projet</span>
+    </li>
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Messagerie illimitée</span>
+    </li>
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Filtres de recherche avancés</span>
+    </li>
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Voir qui a consulté votre profil</span>
+    </li>
+    <li className="flex items-center gap-2">
+      <Check className="h-5 w-5 text-green-500" />
+      <span>Suggestions intelligentes de projets</span>
+    </li>
+  </ul>
+);
+
 export default function SubscribePage() {
   const [clientSecret, setClientSecret] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   useEffect(() => {
     setIsLoading(true);
@@ -143,28 +203,15 @@ export default function SubscribePage() {
                 Avantages Premium
               </CardTitle>
               <CardDescription>
-                Tout ce qui est inclus dans votre abonnement
+                {user?.role === 'project_owner'
+                  ? "Tout ce qui est inclus pour les porteurs de projet"
+                  : "Tout ce qui est inclus pour les chercheurs de projet"}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ul className="space-y-4">
-                <li className="flex items-center gap-2">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Accès illimité aux projets</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Chat vidéo avec les matches</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Badge vérifié sur votre profil</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-5 w-5 text-green-500" />
-                  <span>Support prioritaire</span>
-                </li>
-              </ul>
+              {user?.role === 'project_owner'
+                ? <ProjectOwnerBenefits />
+                : <ProjectSeekerBenefits />}
             </CardContent>
           </Card>
 
