@@ -5,6 +5,7 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
+import { sendPasswordResetEmail } from './email';
 
 const scryptAsync = promisify(scrypt);
 
@@ -187,7 +188,7 @@ export function setupAuth(app: Express) {
     res.json(req.user);
   });
 
-  // Nouvelle route pour la réinitialisation du mot de passe
+  // Updated reset password route with email sending
   app.post('/api/reset-password', async (req, res) => {
     try {
       const { email } = req.body;
@@ -196,7 +197,9 @@ export function setupAuth(app: Express) {
       const user = await storage.getUserByEmail(email);
       if (!user) {
         // Pour des raisons de sécurité, on renvoie toujours un succès
-        return res.json({ message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.' });
+        return res.json({ 
+          message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.' 
+        });
       }
 
       // Générer un token unique
@@ -209,9 +212,8 @@ export function setupAuth(app: Express) {
         resetTokenExpiry: resetTokenExpiry.toISOString(),
       });
 
-      // TODO: Envoyer l'email avec le lien de réinitialisation
-      // Pour l'instant, on log le token pour le développement
-      console.log('Token de réinitialisation:', resetToken);
+      // Envoyer l'email avec le lien de réinitialisation
+      await sendPasswordResetEmail(email, resetToken);
 
       res.json({
         message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.'
