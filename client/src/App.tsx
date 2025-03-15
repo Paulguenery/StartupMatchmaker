@@ -10,6 +10,8 @@ import ProfilePage from "@/pages/profile-page";
 import SwipePage from "@/pages/swipe-page";
 import MessagesPage from "@/pages/messages-page";
 import SubscribePage from "@/pages/subscribe-page";
+import MyProjectsPage from "@/pages/my-projects";
+import NewProjectPage from "@/pages/new-project";
 import { ProtectedRoute } from "./lib/protected-route";
 import { Header } from "./components/layout/header";
 
@@ -24,6 +26,8 @@ function Router() {
         <ProtectedRoute path="/swipe" component={SwipePage} />
         <ProtectedRoute path="/messages" component={MessagesPage} />
         <ProtectedRoute path="/subscribe" component={SubscribePage} />
+        <ProtectedRoute path="/my-projects" component={MyProjectsPage} />
+        <ProtectedRoute path="/new-project" component={NewProjectPage} />
         <Route component={NotFound} />
       </Switch>
     </>

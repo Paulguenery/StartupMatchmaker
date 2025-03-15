@@ -19,7 +19,9 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
             <p className="text-sm text-gray-600 mb-4">
               Passez à Premium pour accéder aux filtres avancés et trouver les meilleurs talents pour votre projet !
             </p>
-            <Button variant="premium">Devenir Premium</Button>
+            <Button variant="outline" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700">
+              Devenir Premium
+            </Button>
           </div>
         </CardContent>
       </Card>
