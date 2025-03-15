@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Search, X } from "lucide-react";
+import { PROJECT_CATEGORIES } from "@/lib/constants";
 
 interface FiltersProps {
   onFilterChange: (filters: any) => void;
@@ -47,55 +48,11 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
                 <SelectValue placeholder="Sélectionnez une spécialité" />
               </SelectTrigger>
               <SelectContent className="max-h-[300px]">
-                <SelectItem value="tech">Informatique et technologie</SelectItem>
-                <SelectItem value="mobile">Application mobile</SelectItem>
-                <SelectItem value="web">Site internet</SelectItem>
-                <SelectItem value="cloud">Informatique Cloud et Big Data</SelectItem>
-                <SelectItem value="ai">Intelligence Artificielle et Machine Learning</SelectItem>
-                <SelectItem value="blockchain">Blockchain et Cryptomonnaies</SelectItem>
-                <SelectItem value="robotics">Robotique</SelectItem>
-                <SelectItem value="marketing">Marketing et Publicité</SelectItem>
-                <SelectItem value="design">Design et Création</SelectItem>
-                <SelectItem value="hr">Ressources humaines</SelectItem>
-                <SelectItem value="finance">Finance et Comptabilité</SelectItem>
-                <SelectItem value="sales">Vente et Développement Commercial</SelectItem>
-                <SelectItem value="health">Santé</SelectItem>
-                <SelectItem value="engineering">Ingénierie</SelectItem>
-                <SelectItem value="education">Éducation</SelectItem>
-                <SelectItem value="legal">Droit</SelectItem>
-                <SelectItem value="entrepreneurship">Entrepreneuriat</SelectItem>
-                <SelectItem value="architecture">Architecture</SelectItem>
-                <SelectItem value="media">Médias et Communication</SelectItem>
-                <SelectItem value="logistics">Logistique et Transport</SelectItem>
-                <SelectItem value="research">Recherche et développement</SelectItem>
-                <SelectItem value="project">Gestion de Projet</SelectItem>
-                <SelectItem value="industry">Industrie et Production</SelectItem>
-                <SelectItem value="consulting">Conseil</SelectItem>
-                <SelectItem value="tourism">Hôtellerie et Tourisme</SelectItem>
-                <SelectItem value="agriculture">Agriculture et Agroalimentaire</SelectItem>
-                <SelectItem value="energy">Énergie et environnement</SelectItem>
-                <SelectItem value="realestate">Immobilier</SelectItem>
-                <SelectItem value="culture">Art et Culture</SelectItem>
-                <SelectItem value="social">Sciences Sociales</SelectItem>
-                <SelectItem value="telecom">Télécommunications</SelectItem>
-                <SelectItem value="security">Sécurité et Défense</SelectItem>
-                <SelectItem value="public">Administration publique</SelectItem>
-                <SelectItem value="pr">Relations Publiques</SelectItem>
-                <SelectItem value="biotech">Biotechnologie et Pharmaceutique</SelectItem>
-                <SelectItem value="sports">Sports et Loisirs</SelectItem>
-                <SelectItem value="events">Événementiel</SelectItem>
-                <SelectItem value="transport">Transports et Mobilité</SelectItem>
-                <SelectItem value="medical">Médical et paramédical</SelectItem>
-                <SelectItem value="it">Systèmes d'information</SelectItem>
-                <SelectItem value="retail">Commerce de détail</SelectItem>
-                <SelectItem value="food">Restauration</SelectItem>
-                <SelectItem value="fashion">Mode et Textile</SelectItem>
-                <SelectItem value="trade">Commerce international</SelectItem>
-                <SelectItem value="hightech">Haute technologie</SelectItem>
-                <SelectItem value="ecommerce">Commerce électronique</SelectItem>
-                <SelectItem value="gaming">Jeux vidéo et eSports</SelectItem>
-                <SelectItem value="social_media">Réseaux Sociaux et Influenceurs</SelectItem>
-                <SelectItem value="aerospace">Aéronautique et Spatiale</SelectItem>
+                {PROJECT_CATEGORIES.map(category => (
+                  <SelectItem key={category.value} value={category.value}>
+                    {category.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
