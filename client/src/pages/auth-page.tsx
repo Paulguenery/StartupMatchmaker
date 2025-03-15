@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLocation } from "wouter";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 
 // Schéma de validation modifié pour le login
 const loginSchema = z.object({
@@ -77,6 +79,8 @@ export default function AuthPage() {
 
 function LoginForm() {
   const { loginMutation } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -119,13 +123,28 @@ function LoginForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Mot de passe *</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="password" 
-                      {...field} 
-                      placeholder="Votre mot de passe" 
-                    />
-                  </FormControl>
+                  <div className="relative">
+                    <FormControl>
+                      <Input 
+                        type={showPassword ? "text" : "password"}
+                        {...field} 
+                        placeholder="Votre mot de passe" 
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-gray-400" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-gray-400" />
+                      )}
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
