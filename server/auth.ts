@@ -80,25 +80,22 @@ export function setupAuth(app: Express) {
       return { allowed: false, message: "Votre compte n'a pas été approuvé." };
     }
 
+    // Vérifier la pièce d'identité pour tous les utilisateurs
+    const userDocs = user.documents || [];
+    const hasIdCard = userDocs.some(doc => doc.type === "id_card");
+    if (!hasIdCard) {
+      return {
+        allowed: false,
+        message: "Vous devez fournir une pièce d'identité valide pour accéder à la plateforme."
+      };
+    }
+
     // Restrictions spécifiques pour les freelances (project_seeker)
     if (user.role === "project_seeker" && !user.isAdult) {
       return {
         allowed: false,
         message: "Vous devez certifier être majeur pour accéder à la plateforme."
       };
-    }
-
-    // Pour les porteurs de projet, vérifier uniquement la pièce d'identité
-    if (user.role === "project_owner") {
-      const userDocs = user.documents || [];
-      const hasIdCard = userDocs.some(doc => doc.type === "id_card");
-
-      if (!hasIdCard) {
-        return {
-          allowed: false,
-          message: "Vous devez fournir une pièce d'identité valide pour accéder à la plateforme."
-        };
-      }
     }
 
     return { allowed: true };
@@ -176,13 +173,12 @@ export function setupAuth(app: Express) {
         });
       }
 
-      if (role === "project_owner") {
-        const hasIdCard = req.body.documents?.some(doc => doc.type === "id_card");
-        if (!hasIdCard) {
-          return res.status(400).json({
-            message: 'La pièce d\'identité est obligatoire pour les porteurs de projet'
-          });
-        }
+      // Vérifier la pièce d'identité pour tous les utilisateurs
+      const hasIdCard = req.body.documents?.some(doc => doc.type === "id_card");
+      if (!hasIdCard) {
+        return res.status(400).json({
+          message: 'La pièce d\'identité est obligatoire'
+        });
       }
 
 

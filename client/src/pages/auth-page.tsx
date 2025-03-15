@@ -307,7 +307,7 @@ function RegisterForm() {
   // Obtenir les documents requis en fonction du rôle
   const requiredDocuments = selectedRole === "project_owner" 
     ? documentTypes.PROJECT_OWNER 
-    : [];
+    : documentTypes.PROJECT_SEEKER;
 
   const handleFileUpload = async (type: string, file: File) => {
     // TODO: Implémenter le téléchargement réel des fichiers
@@ -460,25 +460,89 @@ function RegisterForm() {
             )}
 
             {selectedRole === "project_seeker" && (
-              <FormField
-                control={form.control}
-                name="isAdult"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Je certifie sur l'honneur être majeur et avoir plus de 18 ans *
-                      </FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
+              <div className="space-y-4">
+                <Label>Documents</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileUpload("id_card", file);
+                      }
+                    }}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Pièce d'identité *
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileUpload("resume", file);
+                      }
+                    }}
+                    accept=".pdf,.doc,.docx"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    CV (optionnel)
+                  </p>
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="isAdult"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          Je certifie sur l'honneur être majeur et avoir plus de 18 ans *
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileUpload("portfolio", file);
+                      }
+                    }}
+                    accept=".pdf,.jpg,.jpeg,.png,.zip"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Portfolio (optionnel)
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        handleFileUpload("professional_certifications", file);
+                      }
+                    }}
+                    accept=".pdf,.jpg,.jpeg,.png"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Certifications professionnelles (optionnel)
+                  </p>
+                </div>
+              </div>
             )}
 
             <FormField
