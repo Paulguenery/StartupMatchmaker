@@ -11,15 +11,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLocation } from "wouter";
 import { z } from "zod";
 
+// Schéma de validation simplifié pour le login
 const loginSchema = z.object({
-  email: z.string().email("Email invalide").min(1, "L'email est requis"),
+  email: z.string().email("Email invalide"),
   password: z.string().min(1, "Le mot de passe est requis"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
 
   if (user) {
@@ -82,16 +83,16 @@ function LoginForm() {
     },
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    console.log("Login attempt with:", { email: data.email });
+  const onSubmit = (data: LoginFormData) => {
+    console.log("Tentative de connexion avec:", data);
     loginMutation.mutate(data);
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Bon retour parmi nous</CardTitle>
-        <CardDescription>Connectez-vous à votre compte professionnel</CardDescription>
+        <CardTitle>Connexion</CardTitle>
+        <CardDescription>Accédez à votre espace personnel</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -101,14 +102,15 @@ function LoginForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email professionnel</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" {...field} placeholder="vous@entreprise.fr" />
+                    <Input type="email" {...field} placeholder="vous@exemple.com" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="password"
@@ -122,13 +124,20 @@ function LoginForm() {
                 </FormItem>
               )}
             />
+
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full"
               disabled={loginMutation.isPending}
             >
               {loginMutation.isPending ? "Connexion en cours..." : "Se connecter"}
             </Button>
+
+            {loginMutation.error && (
+              <p className="text-sm text-red-500 mt-2">
+                {loginMutation.error.message}
+              </p>
+            )}
           </form>
         </Form>
       </CardContent>
@@ -154,8 +163,8 @@ function RegisterForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Créer un compte professionnel</CardTitle>
-        <CardDescription>Rejoignez le réseau des experts</CardDescription>
+        <CardTitle>Inscription</CardTitle>
+        <CardDescription>Créez votre compte professionnel</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -173,19 +182,21 @@ function RegisterForm() {
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email professionnel</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input type="email" {...field} placeholder="vous@entreprise.fr" />
+                    <Input type="email" {...field} placeholder="vous@exemple.com" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="password"
@@ -193,12 +204,13 @@ function RegisterForm() {
                 <FormItem>
                   <FormLabel>Mot de passe</FormLabel>
                   <FormControl>
-                    <Input type="password" {...field} placeholder="8 caractères minimum" />
+                    <Input type="password" {...field} placeholder="Minimum 8 caractères" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
             <FormField
               control={form.control}
               name="role"
@@ -220,13 +232,20 @@ function RegisterForm() {
                 </FormItem>
               )}
             />
+
             <Button 
               type="submit" 
-              className="w-full" 
+              className="w-full"
               disabled={registerMutation.isPending}
             >
-              {registerMutation.isPending ? "Création en cours..." : "Créer mon compte"}
+              {registerMutation.isPending ? "Inscription en cours..." : "S'inscrire"}
             </Button>
+
+            {registerMutation.error && (
+              <p className="text-sm text-red-500 mt-2">
+                {registerMutation.error.message}
+              </p>
+            )}
           </form>
         </Form>
       </CardContent>

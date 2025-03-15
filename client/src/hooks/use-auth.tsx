@@ -34,22 +34,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<SelectUser | undefined, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
-    retry: false,
+    retry: 0,
   });
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData) => {
       console.log("Tentative de connexion avec:", credentials.email);
       const res = await apiRequest("POST", "/api/login", credentials);
+      const data = await res.json();
+
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Erreur de connexion");
+        console.error("Erreur de connexion:", data);
+        throw new Error(data.message || "Erreur de connexion");
       }
-      return res.json();
+
+      return data;
     },
     onSuccess: (user: SelectUser) => {
       console.log("Connexion réussie pour:", user.email);
       queryClient.setQueryData(["/api/user"], user);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Connexion réussie",
         description: `Bienvenue ${user.fullName}`,
@@ -69,15 +73,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     mutationFn: async (credentials: InsertUser) => {
       console.log("Tentative d'inscription pour:", credentials.email);
       const res = await apiRequest("POST", "/api/register", credentials);
+      const data = await res.json();
+
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Erreur d'inscription");
+        console.error("Erreur d'inscription:", data);
+        throw new Error(data.message || "Erreur lors de l'inscription");
       }
-      return res.json();
+
+      return data;
     },
     onSuccess: (user: SelectUser) => {
       console.log("Inscription réussie pour:", user.email);
       queryClient.setQueryData(["/api/user"], user);
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       toast({
         title: "Inscription réussie",
         description: "Votre compte a été créé avec succès",
