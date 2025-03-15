@@ -9,9 +9,6 @@ const transporter = nodemailer.createTransport({
     user: process.env.SMTP_USER,
     pass: "pymt lhgd onbb agee",
   },
-  tls: {
-    rejectUnauthorized: false // Pour le développement, à supprimer en production
-  },
   debug: true,
   logger: true
 });
