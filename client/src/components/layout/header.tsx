@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, User, PlusCircle, List } from "lucide-react";
+import { ArrowLeft, User, PlusCircle, List, Lightbulb } from "lucide-react";
 
 export function Header() {
   const [location] = useLocation();
@@ -39,6 +39,12 @@ export function Header() {
                 </Button>
               </>
             )}
+            <Button variant="ghost" asChild>
+              <Link href="/suggestions">
+                <Lightbulb className="h-5 w-5 mr-2" />
+                Suggestions
+              </Link>
+            </Button>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" asChild>

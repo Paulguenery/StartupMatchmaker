@@ -4,7 +4,7 @@ import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { setupWebSocket } from "./websocket";
-import { insertProjectSchema, insertMatchSchema, insertRatingSchema } from "@shared/schema";
+import { insertProjectSchema, insertMatchSchema, insertRatingSchema, insertSuggestionSchema } from "@shared/schema";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Clé secrète Stripe manquante: STRIPE_SECRET_KEY');
@@ -283,6 +283,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     res.json(users);
   });
+
+  // Suggestions
+  app.get("/api/suggestions", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const suggestions = await storage.getSuggestions();
+    res.json(suggestions);
+  });
+
+  app.post("/api/suggestions", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const validation = insertSuggestionSchema.safeParse(req.body);
+    if (!validation.success) {
+      return res.status(400).json(validation.error);
+    }
+    const suggestion = await storage.createSuggestion({
+      ...validation.data,
+      userId: req.user!.id,
+    });
+    res.status(201).json(suggestion);
+  });
+
+  app.post("/api/suggestions/:id/vote", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    const suggestion = await storage.voteSuggestion(parseInt(req.params.id));
+    res.json(suggestion);
+  });
+
 
   const httpServer = createServer(app);
   setupWebSocket(httpServer);

@@ -2,6 +2,8 @@ import { users, projects, matches, type User, type Project, type Match, type Ins
 import session from "express-session";
 import createMemoryStore from "memorystore";
 import { ratings, type Rating, type InsertRating } from "@shared/schema";
+import { suggestions, type Suggestion, type InsertSuggestion } from "@shared/schema"; // Added import for suggestions
+
 
 const MemoryStore = createMemoryStore(session);
 
@@ -9,7 +11,7 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  getUsers(): Promise<User[]>;  // Added this function
+  getUsers(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   verifyUser(userId: number): Promise<User>;
   upgradeToPremium(userId: number): Promise<User>;
@@ -28,6 +30,11 @@ export interface IStorage {
   getProjectRatings(projectId: number): Promise<Rating[]>;
   getRecommendedProjects(userId: number): Promise<Project[]>;
 
+  // Suggestion operations
+  createSuggestion(suggestion: InsertSuggestion): Promise<Suggestion>;
+  getSuggestions(): Promise<Suggestion[]>;
+  voteSuggestion(suggestionId: number): Promise<Suggestion>;
+
   sessionStore: session.Store;
 }
 
@@ -36,10 +43,12 @@ export class MemStorage implements IStorage {
   private projects: Map<number, Project>;
   private matches: Map<number, Match>;
   private ratings: Map<number, Rating>;
+  private suggestions: Map<number, Suggestion>; // Added suggestions map
   private currentUserId: number;
   private currentProjectId: number;
   private currentMatchId: number;
   private currentRatingId: number;
+  private currentSuggestionId: number; // Added currentSuggestionId
   sessionStore: session.Store;
 
   constructor() {
@@ -47,10 +56,12 @@ export class MemStorage implements IStorage {
     this.projects = new Map();
     this.matches = new Map();
     this.ratings = new Map();
+    this.suggestions = new Map(); // Initialize suggestions map
     this.currentUserId = 1;
     this.currentProjectId = 1;
     this.currentMatchId = 1;
     this.currentRatingId = 1;
+    this.currentSuggestionId = 1; // Initialize currentSuggestionId
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
@@ -154,6 +165,34 @@ export class MemStorage implements IStorage {
       const bMatches = b.requiredSkills?.filter(skill => userSkillSet.has(skill)).length || 0;
       return bMatches - aMatches;
     });
+  }
+
+  async createSuggestion(insertSuggestion: InsertSuggestion): Promise<Suggestion> {
+    const id = this.currentSuggestionId++;
+    const suggestion: Suggestion = {
+      id,
+      votes: 0,
+      createdAt: new Date(),
+      ...insertSuggestion,
+    };
+    this.suggestions.set(id, suggestion);
+    return suggestion;
+  }
+
+  async getSuggestions(): Promise<Suggestion[]> {
+    return Array.from(this.suggestions.values());
+  }
+
+  async voteSuggestion(suggestionId: number): Promise<Suggestion> {
+    const suggestion = this.suggestions.get(suggestionId);
+    if (!suggestion) throw new Error("Suggestion not found");
+
+    const updatedSuggestion = {
+      ...suggestion,
+      votes: suggestion.votes + 1,
+    };
+    this.suggestions.set(suggestionId, updatedSuggestion);
+    return updatedSuggestion;
   }
 }
 

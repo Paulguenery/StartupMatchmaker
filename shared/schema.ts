@@ -58,6 +58,16 @@ export const ratings = pgTable("ratings", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const suggestions = pgTable("suggestions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  status: text("status").notNull(), // 'pending', 'approved', 'implemented'
+  votes: integer("votes").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   password: true,
@@ -87,11 +97,20 @@ export const insertRatingSchema = createInsertSchema(ratings).omit({
   createdAt: true,
 });
 
+export const insertSuggestionSchema = createInsertSchema(suggestions).omit({
+  id: true,
+  userId: true,
+  votes: true,
+  createdAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type InsertMatch = z.infer<typeof insertMatchSchema>;
 export type InsertRating = z.infer<typeof insertRatingSchema>;
+export type InsertSuggestion = z.infer<typeof insertSuggestionSchema>;
 export type User = typeof users.$inferSelect;
 export type Project = typeof projects.$inferSelect;
 export type Match = typeof matches.$inferSelect;
 export type Rating = typeof ratings.$inferSelect;
+export type Suggestion = typeof suggestions.$inferSelect;
