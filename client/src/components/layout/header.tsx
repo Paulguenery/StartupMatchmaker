@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, Menu, User, PlusCircle, List, Lightbulb } from "lucide-react";
+import { ArrowLeft, Menu, User, PlusCircle, List, Lightbulb, MessageSquare } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,7 +46,7 @@ export function Header() {
                   Mon profil
                 </Link>
               </DropdownMenuItem>
-              {user.role === 'project_owner' && (
+              {user.role === 'project_owner' ? (
                 <>
                   <DropdownMenuItem asChild>
                     <Link href="/my-projects" className="flex items-center">
@@ -61,6 +61,13 @@ export function Header() {
                     </Link>
                   </DropdownMenuItem>
                 </>
+              ) : (
+                <DropdownMenuItem asChild>
+                  <Link href="/messages" className="flex items-center">
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    Messages
+                  </Link>
+                </DropdownMenuItem>
               )}
               <DropdownMenuItem asChild>
                 <Link href="/suggestions" className="flex items-center">
