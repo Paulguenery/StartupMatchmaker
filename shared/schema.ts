@@ -21,11 +21,13 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   fullName: text("full_name").notNull(),
+  profilePicture: text("profile_picture"), // Ajout du champ photo de profil
   bio: text("bio"),
   skills: text("skills").array(),
   isVerified: boolean("is_verified").default(false),
   isPremium: boolean("is_premium").default(false),
-  role: text("role").notNull(), // 'project_owner' ou 'project_seeker'
+  role: text("role").notNull(), // 'project_owner' ou 'project_seeker' ou 'admin'
+  currentRole: text("current_role"), // Pour les admins: 'project_owner' ou 'project_seeker'
   experienceLevel: text("experience_level"), // 'motivated', 'junior', 'intermediate', 'senior'
   availability: text("availability"), // 'immediate', 'one_month', 'three_months'
   collaborationType: text("collaboration_type"), // 'full_time', 'part_time'
@@ -35,19 +37,19 @@ export const users = pgTable("users", {
     city: string;
     department: string;
   }>(),
-  referralCode: text("referral_code").unique(), // Code de parrainage unique de l'utilisateur
-  referredBy: text("referred_by"), // Code de parrainage utilisé lors de l'inscription
-  freeConversationCredits: integer("free_conversation_credits").default(0), // Nombre de conversations gratuites
-  premiumDiscount: integer("premium_discount").default(0), // Pourcentage de réduction sur l'abonnement premium
+  referralCode: text("referral_code").unique(),
+  referredBy: text("referred_by"),
+  freeConversationCredits: integer("free_conversation_credits").default(0),
+  premiumDiscount: integer("premium_discount").default(0),
   documents: json("documents").$type<{
     type: keyof typeof documentTypes;
     url: string;
     verified: boolean;
     verifiedAt?: Date;
   }[]>(),
-  accountStatus: text("account_status").default("pending"), // 'pending', 'active', 'suspended', 'rejected'
-  verificationNotes: text("verification_notes"), // Notes sur la vérification des documents
-  lastLoginAttempt: timestamp("last_login_attempt"), // Pour limiter les tentatives de connexion
+  accountStatus: text("account_status").default("pending"),
+  verificationNotes: text("verification_notes"),
+  lastLoginAttempt: timestamp("last_login_attempt"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -76,6 +78,7 @@ export const insertUserSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
   fullName: z.string().min(1),
+  profilePicture: z.string().optional(), // URL de la photo de profil
   bio: z.string().optional(),
   skills: z.array(z.string()).optional(),
   location: z.object({
@@ -84,7 +87,7 @@ export const insertUserSchema = z.object({
     city: z.string(),
     department: z.string(),
   }).optional(),
-  role: z.enum(["project_owner", "project_seeker"]),
+  role: z.enum(["project_owner", "project_seeker", "admin"]),
   experienceLevel: z.enum(["motivated", "junior", "intermediate", "senior"]).optional(),
   availability: z.enum(["immediate", "one_month", "three_months"]).optional(),
   collaborationType: z.enum(["full_time", "part_time"]).optional(),

@@ -59,10 +59,11 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // Set to true only in production with HTTPS
+      secure: false, // En développement, pas de HTTPS
       httpOnly: true,
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000 // 24 heures
+      maxAge: 24 * 60 * 60 * 1000, // 24 heures
+      path: '/'
     },
     name: 'mymate.sid'
   }));

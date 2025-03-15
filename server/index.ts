@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { setupAuth } from "./auth";
 
 const app = express();
 
@@ -8,28 +9,31 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Initialiser l'authentification avant les autres middlewares
+setupAuth(app);
+
 // Content Security Policy
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; " +
-    "style-src 'self' 'unsafe-inline'; " + // Permettre les styles inline
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com; " + // Permettre Stripe.js
-    "connect-src 'self' https://api.stripe.com; " + // Permettre les appels API Stripe
-    "frame-src 'self' https://*.stripe.com; " + // Permettre les iframes Stripe
-    "img-src 'self' data: blob: https:; " + // Permettre les images depuis diverses sources
-    "font-src 'self' data:;" // Permettre les polices
+    "style-src 'self' 'unsafe-inline'; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com; " +
+    "connect-src 'self' https://api.stripe.com; " +
+    "frame-src 'self' https://*.stripe.com; " +
+    "img-src 'self' data: blob: https:; " +
+    "font-src 'self' data:;"
   );
   next();
 });
 
-// Logging middleware
+// Logging middleware pour le debugging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
-  // Log les en-têtes pour le debugging
   console.log('Headers:', req.headers);
-  // Log les cookies pour le debugging de session
   console.log('Cookies:', req.cookies);
+  console.log('Session:', req.session);
+  console.log('Authenticated:', req.isAuthenticated());
   next();
 });
 

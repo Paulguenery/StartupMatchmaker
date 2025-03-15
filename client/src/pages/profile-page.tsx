@@ -10,16 +10,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Star, LogOut, FileText, Image, Award, BriefcaseIcon, GraduationCap, MapPin } from "lucide-react";
+import { Shield, Star, LogOut, FileText, Image as ImageIcon, Award, BriefcaseIcon, GraduationCap, MapPin, Camera } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+type Document = {
+  type: string;
+  url: string;
+  verified?: boolean;
+};
 
 export default function ProfilePage() {
   const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
@@ -30,10 +38,11 @@ export default function ProfilePage() {
       skills: user?.skills || [],
       location: user?.location || null,
       role: user?.role || "",
+      profilePicture: user?.profilePicture || "",
       experienceLevel: user?.experienceLevel || "",
       education: user?.education || "",
       availability: user?.availability || "",
-      documents: user?.documents || []
+      documents: (user?.documents || []) as Document[]
     },
   });
 
@@ -42,7 +51,7 @@ export default function ProfilePage() {
       const formData = new FormData();
       for (const key in data) {
         if (key === 'documents' && Array.isArray(data.documents) && data.documents.length > 0) {
-          data.documents.forEach((doc: any, index: number) => {
+          data.documents.forEach((doc: Document, index: number) => {
             formData.append(`documents[${index}].type`, doc.type);
             formData.append(`documents[${index}].url`, doc.url);
           });
@@ -50,6 +59,11 @@ export default function ProfilePage() {
           formData.append(key, data[key]);
         }
       }
+
+      if (selectedFile) {
+        formData.append('profilePicture', selectedFile);
+      }
+
       const res = await apiRequest("PATCH", "/api/user/profile", formData);
       return res.json();
     },
@@ -68,8 +82,21 @@ export default function ProfilePage() {
     form.setValue("documents", [
       ...currentDocs.filter(doc => doc.type !== type),
       { type, url: URL.createObjectURL(file) }
-    ]);
+    ] as Document[]);
   };
+
+  const handleProfilePictureChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setPreviewUrl(previewUrl);
+      form.setValue("profilePicture", previewUrl);
+    }
+  };
+
+  const isProjectOwner = user?.role === "project_owner" || user?.currentRole === "project_owner";
+  const isProjectSeeker = user?.role === "project_seeker" || user?.currentRole === "project_seeker";
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -108,6 +135,39 @@ export default function ProfilePage() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(data => updateProfileMutation.mutate(data))} className="space-y-6">
+                {/* Section Photo de profil */}
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-24 w-24">
+                    <AvatarImage 
+                      src={previewUrl || user?.profilePicture || ''} 
+                      alt={user?.fullName || ''} 
+                    />
+                    <AvatarFallback>{user?.fullName?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="space-y-2">
+                    <Label htmlFor="picture">Photo de profil</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="picture"
+                        type="file"
+                        onChange={handleProfilePictureChange}
+                        accept="image/*"
+                        className="w-full"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => document.getElementById('picture')?.click()}
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
                 {/* Section Informations de base */}
                 <div className="space-y-4">
                   <FormField
@@ -147,7 +207,13 @@ export default function ProfilePage() {
                         <FormControl>
                           <div className="relative">
                             <MapPin className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                            <Input {...field} className="pl-8" placeholder="Ville, Pays" />
+                            <Input 
+                              {...field} 
+                              value={field.value?.city || ''} 
+                              onChange={e => field.onChange({ ...field.value, city: e.target.value })}
+                              className="pl-8" 
+                              placeholder="Ville, Pays" 
+                            />
                           </div>
                         </FormControl>
                         <FormMessage />
@@ -156,7 +222,7 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <Separator className="my-6" />
+                <Separator />
 
                 {/* Section Profil Professionnel */}
                 <div className="space-y-4">
@@ -215,10 +281,10 @@ export default function ProfilePage() {
                   />
                 </div>
 
-                <Separator className="my-6" />
+                <Separator />
 
-                {/* Section Documents Professionnels */}
-                {user?.role === "project_seeker" && (
+                {/* Section Documents Professionnels - Uniquement pour les chercheurs de projet */}
+                {isProjectSeeker && (
                   <div className="space-y-4">
                     <h3 className="text-lg font-semibold">Documents professionnels</h3>
 
@@ -244,7 +310,7 @@ export default function ProfilePage() {
 
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Image className="h-4 w-4 text-gray-500" />
+                          <ImageIcon className="h-4 w-4 text-gray-500" />
                           <Label className="text-sm font-medium">Portfolio</Label>
                         </div>
                         <Input
@@ -284,10 +350,10 @@ export default function ProfilePage() {
                     {/* Affichage des documents actuels */}
                     <div className="mt-6 space-y-3">
                       <h4 className="text-sm font-medium text-gray-700">Documents téléchargés</h4>
-                      {form.getValues("documents")?.map((doc: any) => (
+                      {(form.getValues("documents") || []).map((doc: Document) => (
                         <div key={doc.type} className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
                           {doc.type === "resume" && <FileText className="h-4 w-4" />}
-                          {doc.type === "portfolio" && <Image className="h-4 w-4" />}
+                          {doc.type === "portfolio" && <ImageIcon className="h-4 w-4" />}
                           {doc.type === "certification" && <Award className="h-4 w-4" />}
                           <a href={doc.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                             {doc.type === "resume" && "CV"}
@@ -297,6 +363,26 @@ export default function ProfilePage() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Section spécifique aux porteurs de projet */}
+                {isProjectOwner && (
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold">Informations Porteur de Projet</h3>
+                    <FormField
+                      control={form.control}
+                      name="collaborationType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Type de collaboration recherchée</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Ex: Temps plein, temps partiel" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 )}
 
