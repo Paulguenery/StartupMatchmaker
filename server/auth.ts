@@ -7,7 +7,6 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { sendPasswordResetEmail } from './email';
 import { nanoid } from 'nanoid';
-import { documentTypes } from "@shared/schema";
 
 const scryptAsync = promisify(scrypt);
 
@@ -26,7 +25,7 @@ async function comparePasswords(supplied: string, stored: string) {
 
 // Admin account credentials
 const ADMIN_EMAIL = 'admin@mymate.com';
-const ADMIN_PASSWORD = 'admin123!'; // À changer en production
+const ADMIN_PASSWORD = 'admin123!';
 
 export function setupAuth(app: Express) {
   // Créer le compte admin s'il n'existe pas
@@ -54,15 +53,16 @@ export function setupAuth(app: Express) {
   // Créer le compte admin au démarrage
   createAdminAccount();
 
+  // Configuration de la session
   app.use(session({
     secret: 'mymate_secret_key_2024',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Set to true only in production with HTTPS
       httpOnly: true,
       sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000 // 24 heures par défaut
+      maxAge: 24 * 60 * 60 * 1000 // 24 heures
     },
     name: 'mymate.sid'
   }));
@@ -76,6 +76,7 @@ export function setupAuth(app: Express) {
 
     // Les admins contournent toutes les restrictions
     if (user.role === 'admin') {
+      console.log('Utilisateur admin, pas de restrictions');
       return { allowed: true };
     }
 
@@ -109,8 +110,8 @@ export function setupAuth(app: Express) {
   }
 
   passport.use(new LocalStrategy(
-    { usernameField: 'email', passReqToCallback: true },
-    async (req, email, password, done) => {
+    { usernameField: 'email' },
+    async (email, password, done) => {
       try {
         console.log('Tentative de connexion pour:', email);
         const user = await storage.getUserByEmail(email);
@@ -120,11 +121,13 @@ export function setupAuth(app: Express) {
           return done(null, false, { message: 'Email ou mot de passe incorrect' });
         }
 
-        // Vérifier les restrictions de connexion
-        const loginCheck = await checkLoginRestrictions(user);
-        if (!loginCheck.allowed) {
-          console.log('Restrictions de connexion pour:', email, loginCheck.message);
-          return done(null, false, { message: loginCheck.message });
+        if (user.role !== 'admin') {
+          // Vérifier les restrictions de connexion seulement pour les non-admins
+          const loginCheck = await checkLoginRestrictions(user);
+          if (!loginCheck.allowed) {
+            console.log('Restrictions de connexion pour:', email, loginCheck.message);
+            return done(null, false, { message: loginCheck.message });
+          }
         }
 
         const isValid = await comparePasswords(password, user.password);
@@ -168,13 +171,6 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Middleware pour vérifier l'authentification
-  app.use((req, res, next) => {
-    console.log('Session:', req.session);
-    console.log('Utilisateur authentifié:', req.isAuthenticated());
-    next();
-  });
-
   // Routes d'authentification
   app.post('/api/register', async (req, res) => {
     try {
@@ -185,57 +181,15 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: 'Email déjà utilisé' });
       }
 
-      // Vérifications selon le rôle
-      const role = req.body.role;
-      if (role === "project_seeker" && !req.body.isAdult) {
-        return res.status(400).json({
-          message: 'Vous devez certifier être majeur pour vous inscrire'
-        });
-      }
-
-      // Vérifier la pièce d'identité sauf pour les admins
-      if (role !== 'admin') {
-        const hasIdCard = req.body.documents?.some(doc => doc.type === "id_card");
-        if (!hasIdCard) {
-          return res.status(400).json({
-            message: 'La pièce d\'identité est obligatoire'
-          });
-        }
-      }
-
-      // Génération du code de parrainage
-      const referralCode = generateReferralCode();
-      let referrerId = null;
-      if (req.body.referredBy) {
-        const referrer = await storage.getUserByReferralCode(req.body.referredBy);
-        if (!referrer) {
-          return res.status(400).json({ message: 'Code de parrainage invalide' });
-        }
-        referrerId = referrer.id;
-      }
-
       const hashedPassword = await hashPassword(req.body.password);
       const userData = {
         ...req.body,
         password: hashedPassword,
-        referralCode,
-        accountStatus: "pending",
-        documents: req.body.documents.map(doc => ({
-          ...doc,
-          verified: false
-        }))
+        accountStatus: "active", // Pour les admins
+        documents: []
       };
 
       const user = await storage.createUser(userData);
-
-      // Création de la relation de parrainage si applicable
-      if (referrerId) {
-        await storage.createReferral({
-          referrerId,
-          referredId: user.id,
-          status: "pending"
-        });
-      }
 
       // Connecter l'utilisateur automatiquement après l'inscription
       req.login(user, (err) => {
@@ -250,8 +204,7 @@ export function setupAuth(app: Express) {
             id: user.id,
             email: user.email,
             fullName: user.fullName,
-            role: user.role,
-            accountStatus: user.accountStatus
+            role: user.role
           }
         });
       });
@@ -281,12 +234,14 @@ export function setupAuth(app: Express) {
           return res.status(500).json({ message: 'Erreur lors de la connexion' });
         }
 
-        // Si Remember Me est activé, on prolonge la session
         if (req.body.rememberMe) {
           req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 jours
         }
 
         console.log('Connexion réussie pour:', user.email);
+        console.log('Session ID:', req.sessionID);
+        console.log('Cookie:', req.session.cookie);
+
         res.json(user);
       });
     })(req, res, next);
@@ -304,7 +259,8 @@ export function setupAuth(app: Express) {
   });
 
   app.get('/api/user', (req, res) => {
-    console.log('Vérification de session, authentifié:', req.isAuthenticated());
+    console.log('Vérification de session:', req.sessionID);
+    console.log('Utilisateur authentifié:', req.isAuthenticated());
     console.log('Session:', req.session);
     console.log('User:', req.user);
 
@@ -401,18 +357,55 @@ export function setupAuth(app: Express) {
       res.status(500).json({ message: 'Erreur serveur' });
     }
   });
+
+  // Nouvelle route pour mettre à jour le rôle (admin seulement)
+  app.patch('/api/user/role', async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Non authentifié' });
+    }
+
+    const user = req.user as User;
+    if (user.role !== 'admin') {
+      return res.status(403).json({ message: 'Non autorisé' });
+    }
+
+    try {
+      const { role } = req.body;
+      if (!['project_owner', 'project_seeker'].includes(role)) {
+        return res.status(400).json({ message: 'Rôle invalide' });
+      }
+
+      await storage.updateUser(user.id, {
+        currentRole: role
+      });
+
+      // Mettre à jour la session
+      const updatedUser = await storage.getUser(user.id);
+      req.login(updatedUser, (err) => {
+        if (err) {
+          console.error('Erreur lors de la mise à jour de la session:', err);
+          return res.status(500).json({ message: 'Erreur lors de la mise à jour de la session' });
+        }
+        res.json(updatedUser);
+      });
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du rôle:', error);
+      res.status(500).json({ message: 'Erreur lors de la mise à jour du rôle' });
+    }
+  });
 }
 
 interface User {
   id: number;
   email: string;
-  password?: string;
+  password: string;
   fullName?: string;
   role?: string;
+  currentRole?: string; // Ajout du champ currentRole pour les admins
   accountStatus?: string;
   documents?: { type: string; verified: boolean }[];
-  resetToken?: string;
-  resetTokenExpiry?: string;
+  resetToken?: string | null;
+  resetTokenExpiry?: string | null;
   lastLoginAttempt?: Date;
   bio?: string;
   skills?: string[];
@@ -430,5 +423,5 @@ interface User {
 
 // Fonction pour générer un code de parrainage unique
 function generateReferralCode() {
-  return nanoid(8).toUpperCase(); // Génère un code de 8 caractères en majuscules
+  return nanoid(8).toUpperCase();
 }
