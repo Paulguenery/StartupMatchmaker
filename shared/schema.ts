@@ -12,7 +12,7 @@ export const users = pgTable("users", {
   isVerified: boolean("is_verified").default(false),
   isPremium: boolean("is_premium").default(false),
   role: text("role").notNull(), // 'project_owner' ou 'project_seeker'
-  experienceLevel: text("experience_level"), // 'junior', 'intermediate', 'senior'
+  experienceLevel: text("experience_level"), // 'motivated', 'junior', 'intermediate', 'senior'
   availability: text("availability"), // 'immediate', 'one_month', 'three_months'
   collaborationType: text("collaboration_type"), // 'full_time', 'part_time', 'freelance'
   location: json("location").$type<{

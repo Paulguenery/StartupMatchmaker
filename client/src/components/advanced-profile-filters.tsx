@@ -35,10 +35,17 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-2">
             <label className="text-sm font-medium">Compétences recherchées</label>
-            <Input 
-              placeholder="ex: React, Node.js, UX Design"
-              onChange={(e) => onFilterChange({ skills: e.target.value.split(',').map(s => s.trim()) })}
-            />
+            <Select onValueChange={(value) => onFilterChange({ skills: value === "none" ? [] : value.split(',').map(s => s.trim()) })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez des compétences" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sans compétence spécifique</SelectItem>
+                <SelectItem value="react,typescript">React, TypeScript</SelectItem>
+                <SelectItem value="python,django">Python, Django</SelectItem>
+                <SelectItem value="design,ui">Design, UI/UX</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -79,6 +86,7 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
                 <SelectValue placeholder="Sélectionnez un niveau" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="motivated">Je suis motivé et prêt à apprendre</SelectItem>
                 <SelectItem value="junior">Junior</SelectItem>
                 <SelectItem value="intermediate">Intermédiaire</SelectItem>
                 <SelectItem value="senior">Senior</SelectItem>
