@@ -109,7 +109,11 @@ export default function NewProjectPage() {
                           <SelectItem value="web">Développement Web</SelectItem>
                           <SelectItem value="mobile">Développement Mobile</SelectItem>
                           <SelectItem value="design">Design</SelectItem>
-                          <SelectItem value="marketing">Marketing</SelectItem>
+                          <SelectItem value="data">Data & IA</SelectItem>
+                          <SelectItem value="marketing">Marketing Digital</SelectItem>
+                          <SelectItem value="consulting">Conseil & Stratégie</SelectItem>
+                          <SelectItem value="content">Création de Contenu</SelectItem>
+                          <SelectItem value="security">Cybersécurité</SelectItem>
                           <SelectItem value="other">Autre</SelectItem>
                         </SelectContent>
                       </Select>
@@ -150,7 +154,7 @@ export default function NewProjectPage() {
                       <FormControl>
                         <Input 
                           {...field} 
-                          placeholder="Ex: React, Node.js (séparés par des virgules)"
+                          placeholder="Ex: React, Node.js, UX Design (séparés par des virgules)"
                           onChange={(e) => field.onChange(e.target.value.split(',').map(s => s.trim()))}
                         />
                       </FormControl>

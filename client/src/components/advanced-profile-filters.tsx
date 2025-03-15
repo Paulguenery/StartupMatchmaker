@@ -33,11 +33,30 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">Compétences</label>
+            <label className="text-sm font-medium">Compétences recherchées</label>
             <Input 
-              placeholder="ex: React, Node.js"
-              onChange={(e) => onFilterChange({ skills: e.target.value.split(',') })}
+              placeholder="ex: React, Node.js, UX Design"
+              onChange={(e) => onFilterChange({ skills: e.target.value.split(',').map(s => s.trim()) })}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Spécialité</label>
+            <Select onValueChange={(value) => onFilterChange({ category: value })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez une spécialité" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="web">Développement Web</SelectItem>
+                <SelectItem value="mobile">Développement Mobile</SelectItem>
+                <SelectItem value="design">Design</SelectItem>
+                <SelectItem value="data">Data & IA</SelectItem>
+                <SelectItem value="marketing">Marketing Digital</SelectItem>
+                <SelectItem value="consulting">Conseil & Stratégie</SelectItem>
+                <SelectItem value="content">Création de Contenu</SelectItem>
+                <SelectItem value="security">Cybersécurité</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -93,19 +112,6 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
                 <SelectItem value="full_time">Temps plein</SelectItem>
                 <SelectItem value="part_time">Temps partiel</SelectItem>
                 <SelectItem value="freelance">Freelance</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Statut de vérification</label>
-            <Select onValueChange={(value) => onFilterChange({ isVerified: value })}>
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez un statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="true">Profils vérifiés uniquement</SelectItem>
-                <SelectItem value="false">Tous les profils</SelectItem>
               </SelectContent>
             </Select>
           </div>
