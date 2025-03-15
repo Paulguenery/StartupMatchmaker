@@ -40,11 +40,6 @@ export function Header() {
                     Nouvelle annonce
                   </Link>
                 </Button>
-                {!user.isPremium && (
-                  <Button variant="outline" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700" asChild>
-                    <Link href="/subscribe">Devenir Premium</Link>
-                  </Button>
-                )}
               </>
             )}
 

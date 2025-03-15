@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectCard } from "@/components/project-card";
-import { UserCircle, SearchCode, Briefcase, Star } from "lucide-react";
+import { UserCircle, SearchCode, Briefcase, Star, PlusCircle } from "lucide-react";
 import { AdvancedProfileFilters } from "@/components/advanced-profile-filters";
 
 export default function HomePage() {
@@ -38,10 +38,20 @@ export default function HomePage() {
               <p className="text-gray-600">Trouvez les meilleurs talents pour vos projets</p>
             </div>
             <div className="flex gap-4">
-              {!user?.isPremium && (
-                <Button variant="outline" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700" asChild>
-                  <Link href="/subscribe">Devenir Premium</Link>
-                </Button>
+              {user.role === 'project_owner' && (
+                <>
+                  <Button variant="outline" asChild>
+                    <Link href="/new-project" className="flex items-center gap-2">
+                      <PlusCircle className="h-4 w-4" />
+                      Nouvelle annonce
+                    </Link>
+                  </Button>
+                  {!user.isPremium && (
+                    <Button variant="outline" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700" asChild>
+                      <Link href="/subscribe">Devenir Premium</Link>
+                    </Button>
+                  )}
+                </>
               )}
             </div>
           </div>
