@@ -9,26 +9,26 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
+  getUsers(): Promise<User[]>;  // Added this function
   createUser(user: InsertUser): Promise<User>;
   verifyUser(userId: number): Promise<User>;
   upgradeToPremium(userId: number): Promise<User>;
-  
+
   // Project operations
   createProject(project: InsertProject): Promise<Project>;
   getProjects(): Promise<Project[]>;
   getProjectById(id: number): Promise<Project | undefined>;
-  
+
   // Match operations
   createMatch(match: InsertMatch): Promise<Match>;
   getMatchesByUserId(userId: number): Promise<Match[]>;
-  
+
   // Rating operations
   createRating(rating: InsertRating): Promise<Rating>;
   getProjectRatings(projectId: number): Promise<Rating[]>;
   getRecommendedProjects(userId: number): Promise<Project[]>;
-  
-  sessionStore: session.SessionStore;
+
+  sessionStore: session.Store;
 }
 
 export class MemStorage implements IStorage {
@@ -40,7 +40,7 @@ export class MemStorage implements IStorage {
   private currentProjectId: number;
   private currentMatchId: number;
   private currentRatingId: number;
-  sessionStore: session.SessionStore;
+  sessionStore: session.Store;
 
   constructor() {
     this.users = new Map();
@@ -54,54 +54,14 @@ export class MemStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
+  }
 
-    // Ajout de projets de test
-    this.createProject({
-      userId: 1,
-      title: "Développement Application Mobile",
-      description: "Création d'une application mobile innovante dans le secteur de la santé",
-      category: "Informatique et technologie",
-      duration: "medium",
-      requiredSkills: ["React Native", "TypeScript", "API REST"],
-      location: {
-        latitude: 48.8566,
-        longitude: 2.3522,
-        city: "Paris",
-        department: "Île-de-France"
-      }
-    });
-
-    this.createProject({
-      userId: 1,
-      title: "Refonte Site E-commerce",
-      description: "Modernisation complète d'une plateforme de vente en ligne",
-      category: "Marketing et Publicité",
-      duration: "long",
-      requiredSkills: ["React", "Node.js", "UX Design"],
-      location: {
-        latitude: 45.7578,
-        longitude: 4.8320,
-        city: "Lyon",
-        department: "Rhône"
-      }
-    });
-
-    // Ajout d'un match de test
-    this.createMatch({
-      projectId: 1,
-      userId: 1,
-      status: "accepted"
-    });
+  async getUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
   }
 
   async getUser(id: number): Promise<User | undefined> {
     return this.users.get(id);
-  }
-
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
@@ -112,7 +72,13 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id, isVerified: false, isPremium: false, createdAt: new Date() };
+    const user: User = {
+      id,
+      isVerified: false,
+      isPremium: false,
+      createdAt: new Date(),
+      ...insertUser,
+    };
     this.users.set(id, user);
     return user;
   }
@@ -120,7 +86,7 @@ export class MemStorage implements IStorage {
   async verifyUser(userId: number): Promise<User> {
     const user = await this.getUser(userId);
     if (!user) throw new Error("User not found");
-    
+
     const updatedUser = { ...user, isVerified: true };
     this.users.set(userId, updatedUser);
     return updatedUser;
@@ -129,7 +95,7 @@ export class MemStorage implements IStorage {
   async upgradeToPremium(userId: number): Promise<User> {
     const user = await this.getUser(userId);
     if (!user) throw new Error("User not found");
-    
+
     const updatedUser = { ...user, isPremium: true };
     this.users.set(userId, updatedUser);
     return updatedUser;
@@ -177,25 +143,13 @@ export class MemStorage implements IStorage {
   }
 
   async getRecommendedProjects(userId: number): Promise<Project[]> {
-    // Récupérer les projets notés par l'utilisateur
-    const userRatings = Array.from(this.ratings.values()).filter(
-      (rating) => rating.userId === userId
-    );
-
-    // Récupérer tous les projets
-    const allProjects = await this.getProjects();
-
-    // Exclure les projets déjà notés par l'utilisateur
-    const ratedProjectIds = new Set(userRatings.map(r => r.projectId));
-    const unratedProjects = allProjects.filter(p => !ratedProjectIds.has(p.id));
-
-    // Trier les projets en fonction des compétences correspondantes de l'utilisateur
     const user = await this.getUser(userId);
-    if (!user || !user.skills) return unratedProjects;
+    if (!user || !user.skills) return this.getProjects();
 
     const userSkillSet = new Set(user.skills);
+    const allProjects = await this.getProjects();
 
-    return unratedProjects.sort((a, b) => {
+    return allProjects.sort((a, b) => {
       const aMatches = a.requiredSkills?.filter(skill => userSkillSet.has(skill)).length || 0;
       const bMatches = b.requiredSkills?.filter(skill => userSkillSet.has(skill)).length || 0;
       return bMatches - aMatches;

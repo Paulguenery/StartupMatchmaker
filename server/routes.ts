@@ -1,17 +1,17 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { setupWebSocket } from "./websocket";
 import { insertProjectSchema, insertMatchSchema, insertRatingSchema } from "@shared/schema";
-import Stripe from "stripe";
 
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Clé secrète Stripe manquante: STRIPE_SECRET_KEY');
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2024-02-24",
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
