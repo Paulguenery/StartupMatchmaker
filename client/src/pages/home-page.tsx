@@ -35,6 +35,9 @@ export default function HomePage() {
               <Link href="/swipe">Commencer à matcher</Link>
             </Button>
             <Button variant="outline" asChild>
+              <Link href="/messages">Messages</Link>
+            </Button>
+            <Button variant="outline" asChild>
               <Link href="/profile">Voir le profil</Link>
             </Button>
           </div>
