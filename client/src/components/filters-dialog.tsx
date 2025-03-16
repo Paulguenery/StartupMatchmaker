@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,6 +18,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SlidersHorizontal } from "lucide-react";
+import { searchCity } from "@/lib/geocoding";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
+import { Check, Loader2 } from "lucide-react";
 
 interface FiltersDialogProps {
   filters: {
@@ -25,9 +29,19 @@ interface FiltersDialogProps {
     distance: number;
     duration: string;
     city: string;
+    latitude?: number;
+    longitude?: number;
+    department?: string;
   };
   onFiltersChange: (filters: FiltersDialogProps["filters"]) => void;
 }
+
+type City = {
+  city: string;
+  latitude: number;
+  longitude: number;
+  department: string;
+};
 
 const categories = [
   "Informatique et technologie",
@@ -59,6 +73,37 @@ const durations = [
 export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [tempFilters, setTempFilters] = useState(filters);
+  const [citySearch, setCitySearch] = useState("");
+  const [cities, setCities] = useState<City[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const searchTimeout = setTimeout(async () => {
+      if (citySearch.length >= 2) {
+        setIsLoading(true);
+        try {
+          const results = await searchCity(citySearch);
+          setCities(results);
+        } catch (error) {
+          console.error('Erreur lors de la recherche:', error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    }, 300);
+
+    return () => clearTimeout(searchTimeout);
+  }, [citySearch]);
+
+  const handleCitySelect = (city: City) => {
+    setTempFilters({
+      ...tempFilters,
+      city: city.city,
+      latitude: city.latitude,
+      longitude: city.longitude,
+      department: city.department
+    });
+  };
 
   const handleApplyFilters = () => {
     onFiltersChange(tempFilters);
@@ -80,16 +125,45 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
         <div className="space-y-6 py-4">
           <div className="space-y-2">
             <Label>Ville</Label>
-            <Input
-              placeholder="Entrez une ville"
-              value={tempFilters.city}
-              onChange={(e) =>
-                setTempFilters({
-                  ...tempFilters,
-                  city: e.target.value,
-                })
-              }
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <Input
+                  placeholder="Rechercher une ville..."
+                  value={citySearch}
+                  onChange={(e) => setCitySearch(e.target.value)}
+                />
+              </PopoverTrigger>
+              <PopoverContent className="w-[300px] p-0" align="start">
+                <Command>
+                  <CommandGroup>
+                    {isLoading ? (
+                      <div className="flex items-center justify-center p-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      </div>
+                    ) : cities.length > 0 ? (
+                      cities.map((city) => (
+                        <CommandItem
+                          key={`${city.city}-${city.department}`}
+                          onSelect={() => handleCitySelect(city)}
+                          className="flex items-center justify-between"
+                        >
+                          <span>{city.city} ({city.department})</span>
+                          {tempFilters.city === city.city && (
+                            <Check className="h-4 w-4" />
+                          )}
+                        </CommandItem>
+                      ))
+                    ) : (
+                      citySearch.length >= 2 && (
+                        <div className="p-2 text-sm text-gray-500">
+                          Aucune ville trouvée
+                        </div>
+                      )
+                    )}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
 
           <div className="space-y-2">

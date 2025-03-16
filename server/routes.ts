@@ -71,6 +71,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(201).json(project);
   });
 
+  app.post("/api/projects", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      // Exemple d'offre près de Rouen
+      const exampleProject = {
+        title: "Développement d'une application mobile",
+        description: "Recherche développeur React Native pour une application de livraison locale",
+        category: "Informatique et technologie",
+        collaborationType: "full_time",
+        location: {
+          city: "Rouen",
+          department: "Seine-Maritime",
+          latitude: 49.443232,
+          longitude: 1.099971
+        },
+        requiredSkills: ["React Native", "TypeScript", "Mobile Development"],
+        userId: req.user!.id,
+      };
+
+      const project = await storage.createProject(exampleProject);
+      res.status(201).json(project);
+    } catch (error) {
+      console.error('Erreur lors de la création du projet:', error);
+      res.status(500).json({ message: 'Erreur lors de la création du projet' });
+    }
+  });
+
+
   // Matches
   app.post("/api/matches", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

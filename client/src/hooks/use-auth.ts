@@ -39,13 +39,10 @@ export function useAuth() {
       return res;
     },
     onSuccess: () => {
-      // Invalider toutes les requêtes
       queryClient.clear();
-      // Rediriger vers la page d'authentification
       setLocation("/auth");
     },
     onError: () => {
-      // En cas d'erreur, rediriger quand même vers la page d'auth
       queryClient.clear();
       setLocation("/auth");
     },
@@ -62,11 +59,13 @@ export function useAuth() {
     },
   });
 
-  // Détermine le rôle pour l'affichage conditionnel
+  // Détermine les accès et rôles
   const isProjectOwner = user?.role === "project_owner";
   const isProjectSeeker = user?.role === "project_seeker";
   const isAdmin = user?.role === "admin";
-  const isPremium = user?.isPremium || isProjectOwner; // Les porteurs de projet ont automatiquement accès aux fonctionnalités premium
+
+  // Les porteurs de projet et les admins ont automatiquement accès aux fonctionnalités premium
+  const isPremium = user?.isPremium || isProjectOwner || isAdmin;
 
   return {
     user,
