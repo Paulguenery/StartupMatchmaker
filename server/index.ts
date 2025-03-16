@@ -20,8 +20,9 @@ app.use((req, res, next) => {
     'Content-Security-Policy',
     "default-src 'self'; " +
     "style-src 'self' 'unsafe-inline'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-    "connect-src 'self' http://localhost:* https://*; " + // Permettre les connexions locales et HTTPS
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com; " +
+    "connect-src 'self' http://localhost:* https://*.stripe.com https://api.stripe.com; " +
+    "frame-src 'self' https://*.stripe.com; " +
     "img-src 'self' data: blob: https:; " +
     "font-src 'self' data:;"
   );
@@ -31,10 +32,9 @@ app.use((req, res, next) => {
 // Logging middleware pour le debugging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
-  console.log('Headers:', req.headers);
-  console.log('Cookies:', req.cookies);
   console.log('Session:', req.session);
   console.log('Authenticated:', req.isAuthenticated());
+  console.log('User:', req.user);
   next();
 });
 
@@ -64,14 +64,11 @@ app.use((req, res, next) => {
     }
 
     const port = 5000;
-    console.log(`Tentative de démarrage du serveur sur le port ${port}...`);
-
     server.listen({
       port,
       host: "0.0.0.0",
     }, () => {
       console.log(`✅ Serveur démarré avec succès sur le port ${port}`);
-      console.log('URL de l\'application:', `http://0.0.0.0:${port}`);
     });
 
     // Gestion des erreurs de serveur

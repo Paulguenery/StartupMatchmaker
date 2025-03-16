@@ -31,40 +31,17 @@ export function setupAuth(app: Express) {
     secret: process.env.SESSION_SECRET || 'mymate_secret_key_2024',
     resave: false,
     saveUninitialized: false,
+    name: 'mymate.sid',
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 heures
-    },
-    name: 'mymate.sid'
+    }
   }));
 
   app.use(passport.initialize());
   app.use(passport.session());
-
-  // Créer le compte admin s'il n'existe pas
-  async function createAdminAccount() {
-    try {
-      const existingAdmin = await storage.getUserByEmail(ADMIN_EMAIL);
-      if (!existingAdmin) {
-        const hashedPassword = await hashPassword(ADMIN_PASSWORD);
-        await storage.createUser({
-          email: ADMIN_EMAIL,
-          password: hashedPassword,
-          fullName: 'Admin',
-          role: 'admin',
-          accountStatus: 'active'
-        });
-        console.log('Compte admin créé avec succès');
-      }
-    } catch (error) {
-      console.error('Erreur lors de la création du compte admin:', error);
-    }
-  }
-
-  // Créer le compte admin au démarrage
-  createAdminAccount();
 
   passport.use(new LocalStrategy(
     { usernameField: 'email' },
@@ -107,7 +84,7 @@ export function setupAuth(app: Express) {
     try {
       const { email, password, fullName, role } = req.body;
 
-      // Pour l'admin, permettre plusieurs inscriptions avec le même email
+      // Pour l'admin, permettre l'utilisation du même email
       if (email === ADMIN_EMAIL) {
         const hashedPassword = await hashPassword(password);
         const userData = {
@@ -123,7 +100,12 @@ export function setupAuth(app: Express) {
           if (err) {
             return res.status(500).json({ message: 'Erreur lors de la connexion' });
           }
-          res.json({ id: user.id, email: user.email, fullName: user.fullName, role: user.role });
+          res.json({ 
+            id: user.id, 
+            email: user.email, 
+            fullName: user.fullName, 
+            role: user.role 
+          });
         });
         return;
       }
@@ -147,7 +129,12 @@ export function setupAuth(app: Express) {
         if (err) {
           return res.status(500).json({ message: 'Erreur lors de la connexion' });
         }
-        res.json({ id: user.id, email: user.email, fullName: user.fullName, role: user.role });
+        res.json({ 
+          id: user.id, 
+          email: user.email, 
+          fullName: user.fullName, 
+          role: user.role 
+        });
       });
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
@@ -169,7 +156,12 @@ export function setupAuth(app: Express) {
         if (err) {
           return res.status(500).json({ message: 'Erreur lors de la connexion' });
         }
-        res.json({ id: user.id, email: user.email, fullName: user.fullName, role: user.role });
+        res.json({ 
+          id: user.id, 
+          email: user.email, 
+          fullName: user.fullName, 
+          role: user.role 
+        });
       });
     })(req, res, next);
   });
