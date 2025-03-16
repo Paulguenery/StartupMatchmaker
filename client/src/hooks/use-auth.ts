@@ -6,7 +6,6 @@ type User = {
   id: number;
   email: string;
   role: string;
-  currentRole?: string;
   fullName?: string;
 };
 
@@ -51,23 +50,9 @@ export function useAuth() {
     },
   });
 
-  const updateRoleMutation = useMutation({
-    mutationFn: async (role: string) => {
-      const res = await apiRequest("PATCH", "/api/user/role", { role });
-      if (!res.ok) {
-        throw new Error('Failed to update role');
-      }
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-    },
-  });
-
-  // Déterminer le rôle effectif
-  const effectiveRole = user?.currentRole || user?.role;
-  const isProjectOwner = effectiveRole === "project_owner";
-  const isProjectSeeker = effectiveRole === "project_seeker";
+  // Détermine le rôle pour l'affichage conditionnel
+  const isProjectOwner = user?.role === "project_owner";
+  const isProjectSeeker = user?.role === "project_seeker";
   const isAdmin = user?.role === "admin";
 
   return {
@@ -78,7 +63,5 @@ export function useAuth() {
     loginMutation,
     logoutMutation,
     registerMutation,
-    updateRoleMutation,
-    effectiveRole,
   };
 }

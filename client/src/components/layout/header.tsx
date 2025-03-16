@@ -8,11 +8,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export function Header() {
   const [location] = useLocation();
-  const { user, updateRoleMutation, effectiveRole } = useAuth();
+  const { user, isProjectOwner } = useAuth();
 
   const showBackButton = location !== "/" && location !== "/auth";
 
@@ -33,21 +32,6 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-4">
-            {user.role === 'admin' && (
-              <Select 
-                value={effectiveRole || 'project_owner'} 
-                onValueChange={(value) => updateRoleMutation.mutate(value)}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Sélectionner un rôle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="project_owner">Porteur de projet</SelectItem>
-                  <SelectItem value="project_seeker">Chercheur de projet</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -62,7 +46,7 @@ export function Header() {
                   </Link>
                 </DropdownMenuItem>
 
-                {effectiveRole === 'project_owner' && (
+                {isProjectOwner && (
                   <DropdownMenuItem asChild>
                     <Link href="/my-projects" className="flex items-center">
                       <List className="h-4 w-4 mr-2" />
