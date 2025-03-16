@@ -40,7 +40,6 @@ export default function ProfilePage() {
       role: user?.role || "",
       profilePicture: user?.profilePicture || "",
       experienceLevel: user?.experienceLevel || "",
-      education: user?.education || "",
       availability: user?.availability || "",
       documents: (user?.documents || []) as Document[]
     },
@@ -95,34 +94,19 @@ export default function ProfilePage() {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Profil</h1>
-            <p className="text-gray-600">Gérez votre profil professionnel et vos documents</p>
-          </div>
-          <div className="flex gap-2">
-            {user?.isVerified ? (
-              <Badge variant="default" className="gap-1">
-                <Shield className="h-4 w-4" /> Vérifié
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="gap-1">
-                En attente de vérification
-              </Badge>
-            )}
-            {user?.isPremium ? (
-              <Badge variant="default" className="gap-1">
-                <Star className="h-4 w-4" /> Premium
-              </Badge>
-            ) : (
-              <Button variant="outline" asChild>
-                <a href="/subscribe">Devenir Premium</a>
-              </Button>
-            )}
+            <h1 className="text-3xl font-bold text-gray-900">
+              {isProjectOwner ? "Profil Porteur de Projet" : "Profil Chercheur de Projet"}
+            </h1>
+            <p className="text-gray-600">
+              {isProjectOwner 
+                ? "Gérez votre profil de porteur de projet et vos annonces" 
+                : "Gérez votre profil professionnel et vos documents"}
+            </p>
           </div>
         </div>
 
@@ -133,13 +117,10 @@ export default function ProfilePage() {
           <CardContent>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(data => updateProfileMutation.mutate(data))} className="space-y-6">
-                {/* Section Photo de profil */}
+                {/* Photo de profil */}
                 <div className="flex items-center space-x-4">
                   <Avatar className="h-24 w-24">
-                    <AvatarImage 
-                      src={previewUrl || user?.profilePicture || ''} 
-                      alt={user?.fullName || ''} 
-                    />
+                    <AvatarImage src={previewUrl || user?.profilePicture || ''} alt={user?.fullName || ''} />
                     <AvatarFallback>{user?.fullName?.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <div className="space-y-2">
@@ -152,21 +133,13 @@ export default function ProfilePage() {
                         accept="image/*"
                         className="w-full"
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        onClick={() => document.getElementById('picture')?.click()}
-                      >
-                        <Camera className="h-4 w-4" />
-                      </Button>
                     </div>
                   </div>
                 </div>
 
                 <Separator />
 
-                {/* Section Informations de base */}
+                {/* Informations de base */}
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
@@ -222,152 +195,138 @@ export default function ProfilePage() {
 
                 <Separator />
 
-                {/* Section Profil Professionnel */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold">Profil Professionnel</h3>
-
-                  <FormField
-                    control={form.control}
-                    name="bio"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Biographie professionnelle</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            {...field} 
-                            placeholder="Décrivez votre parcours, vos intérêts professionnels et vos objectifs..."
-                            className="min-h-[150px]"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="experienceLevel"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Niveau d'expérience</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <BriefcaseIcon className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                            <Input {...field} className="pl-8" placeholder="Ex: 5 ans d'expérience" />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="education"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Formation</FormLabel>
-                        <FormControl>
-                          <div className="relative">
-                            <GraduationCap className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                            <Input {...field} className="pl-8" placeholder="Ex: Master en Développement Web" />
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <Separator />
-
-                {/* Section Documents Professionnels - Uniquement pour les chercheurs de projet */}
-                {isProjectSeeker && (
+                {/* Sections spécifiques selon le rôle */}
+                {isProjectSeeker ? (
+                  // Interface Chercheur de Projet
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Documents professionnels</h3>
+                    <h3 className="text-lg font-semibold">Profil Professionnel</h3>
 
-                    <div className="grid gap-6">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-gray-500" />
-                          <Label className="text-sm font-medium">CV</Label>
+                    <FormField
+                      control={form.control}
+                      name="bio"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Biographie professionnelle</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              {...field} 
+                              placeholder="Décrivez votre parcours, vos compétences et vos objectifs..."
+                              className="min-h-[150px]"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="experienceLevel"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Niveau d'expérience</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <BriefcaseIcon className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+                              <Input {...field} className="pl-8" placeholder="Ex: 5 ans d'expérience" />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold">Documents professionnels</h3>
+                      <div className="grid gap-6">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-gray-500" />
+                            <Label className="text-sm font-medium">CV</Label>
+                          </div>
+                          <Input
+                            type="file"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload("resume", file);
+                            }}
+                            accept=".pdf,.doc,.docx"
+                            className="cursor-pointer"
+                          />
                         </div>
-                        <Input
-                          type="file"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleFileUpload("resume", file);
-                          }}
-                          accept=".pdf,.doc,.docx"
-                          className="cursor-pointer"
-                        />
-                        <p className="text-sm text-muted-foreground">
-                          Format accepté : PDF, DOC, DOCX
-                        </p>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <ImageIcon className="h-4 w-4 text-gray-500" />
+                            <Label className="text-sm font-medium">Portfolio</Label>
+                          </div>
+                          <Input
+                            type="file"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload("portfolio", file);
+                            }}
+                            accept=".pdf,.jpg,.jpeg,.png,.zip"
+                            className="cursor-pointer"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Award className="h-4 w-4 text-gray-500" />
+                            <Label className="text-sm font-medium">Certifications</Label>
+                          </div>
+                          <Input
+                            type="file"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleFileUpload("certification", file);
+                            }}
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            className="cursor-pointer"
+                          />
+                        </div>
                       </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <ImageIcon className="h-4 w-4 text-gray-500" />
-                          <Label className="text-sm font-medium">Portfolio</Label>
-                        </div>
-                        <Input
-                          type="file"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleFileUpload("portfolio", file);
-                          }}
-                          accept=".pdf,.jpg,.jpeg,.png,.zip"
-                          className="cursor-pointer"
-                        />
-                        <p className="text-sm text-muted-foreground">
-                          Format accepté : PDF, JPG, PNG, ZIP
-                        </p>
+                      <div className="mt-6 space-y-3">
+                        <h4 className="text-sm font-medium text-gray-700">Documents téléchargés</h4>
+                        {(form.getValues("documents") || []).map((doc: Document) => (
+                          <div key={doc.type} className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                            {doc.type === "resume" && <FileText className="h-4 w-4" />}
+                            {doc.type === "portfolio" && <ImageIcon className="h-4 w-4" />}
+                            {doc.type === "certification" && <Award className="h-4 w-4" />}
+                            <a href={doc.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                              {doc.type === "resume" && "CV"}
+                              {doc.type === "portfolio" && "Portfolio"}
+                              {doc.type === "certification" && "Certification"}
+                            </a>
+                          </div>
+                        ))}
                       </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Award className="h-4 w-4 text-gray-500" />
-                          <Label className="text-sm font-medium">Certifications</Label>
-                        </div>
-                        <Input
-                          type="file"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleFileUpload("certification", file);
-                          }}
-                          accept=".pdf,.jpg,.jpeg,.png"
-                          className="cursor-pointer"
-                        />
-                        <p className="text-sm text-muted-foreground">
-                          Format accepté : PDF, JPG, PNG
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Affichage des documents actuels */}
-                    <div className="mt-6 space-y-3">
-                      <h4 className="text-sm font-medium text-gray-700">Documents téléchargés</h4>
-                      {(form.getValues("documents") || []).map((doc: Document) => (
-                        <div key={doc.type} className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                          {doc.type === "resume" && <FileText className="h-4 w-4" />}
-                          {doc.type === "portfolio" && <ImageIcon className="h-4 w-4" />}
-                          {doc.type === "certification" && <Award className="h-4 w-4" />}
-                          <a href={doc.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
-                            {doc.type === "resume" && "CV"}
-                            {doc.type === "portfolio" && "Portfolio"}
-                            {doc.type === "certification" && "Certification"}
-                          </a>
-                        </div>
-                      ))}
                     </div>
                   </div>
-                )}
-
-                {/* Section spécifique aux porteurs de projet */}
-                {isProjectOwner && (
+                ) : (
+                  // Interface Porteur de Projet
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">Informations Porteur de Projet</h3>
+                    <h3 className="text-lg font-semibold">Profil Porteur de Projet</h3>
+
+                    <FormField
+                      control={form.control}
+                      name="bio"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description de votre activité</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              {...field} 
+                              placeholder="Présentez votre entreprise et vos besoins en termes de projets..."
+                              className="min-h-[150px]"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <FormField
                       control={form.control}
                       name="collaborationType"
