@@ -5,14 +5,17 @@ import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LocationFilterProps {
   onFilterChange: (filters: { distance: number; city?: string }) => void;
+  projectCount?: number;
 }
 
-export function LocationFilter({ onFilterChange }: LocationFilterProps) {
+export function LocationFilter({ onFilterChange, projectCount }: LocationFilterProps) {
   const [distance, setDistance] = useState(50);
   const [city, setCity] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
 
   // Appliquer les filtres de manière indépendante
   const handleDistanceChange = (values: number[]) => {
@@ -26,7 +29,6 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
 
   const handleCityChange = (value: string) => {
     setCity(value);
-    // N'appliquer le filtre ville que lorsqu'on clique sur le bouton
   };
 
   const handleSearch = () => {
@@ -46,16 +48,39 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Label>Distance maximale</Label>
-            <span className="text-sm text-muted-foreground font-medium">
-              {distance} km
-            </span>
+            <AnimatePresence>
+              <motion.div
+                key={distance}
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                className="flex items-center gap-2"
+              >
+                <span className="text-sm font-medium text-muted-foreground">
+                  {distance} km
+                </span>
+                {projectCount !== undefined && (
+                  <span className="text-sm text-muted-foreground">
+                    ({projectCount} projet{projectCount !== 1 ? 's' : ''})
+                  </span>
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
-          <Slider
-            value={[distance]}
-            max={150}
-            step={10}
-            onValueChange={handleDistanceChange}
-          />
+          <motion.div
+            whileTap={{ scale: 1.02 }}
+            whileHover={{ scale: 1.01 }}
+          >
+            <Slider
+              value={[distance]}
+              max={150}
+              step={10}
+              onValueChange={handleDistanceChange}
+              onValueCommit={() => setIsDragging(false)}
+              onPointerDown={() => setIsDragging(true)}
+              className={isDragging ? "cursor-grabbing" : "cursor-grab"}
+            />
+          </motion.div>
         </div>
 
         {/* Section Ville */}

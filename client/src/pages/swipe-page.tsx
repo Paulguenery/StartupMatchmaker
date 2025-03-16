@@ -45,8 +45,7 @@ export default function SwipePage() {
   const {
     data: projects = [],
     isLoading,
-    error,
-    refetch
+    error
   } = useQuery<Project[]>({
     queryKey: ["/api/projects/suggestions", userLocation, filters],
     queryFn: async () => {
@@ -64,7 +63,6 @@ export default function SwipePage() {
   const handleFilterChange = (newFilters: Filters) => {
     setCurrentIndex(0);
     setFilters(newFilters);
-    refetch();
   };
 
   const handleSwipe = async (projectId: number, action: 'like' | 'pass') => {
@@ -123,10 +121,18 @@ export default function SwipePage() {
           </p>
         </div>
 
-        <LocationFilter onFilterChange={handleFilterChange} />
+        <LocationFilter 
+          onFilterChange={handleFilterChange} 
+          projectCount={projects.length}
+        />
 
         {currentProject ? (
-          <div className="relative">
+          <motion.div
+            className="relative"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentProject.id}
@@ -140,23 +146,27 @@ export default function SwipePage() {
             </AnimatePresence>
 
             <div className="flex justify-center gap-4 mt-6">
-              <Button
-                size="lg"
-                variant="outline"
-                className="rounded-full p-6"
-                onClick={() => handleSwipe(currentProject.id, 'pass')}
-              >
-                <ThumbsDown className="h-6 w-6" />
-              </Button>
-              <Button
-                size="lg"
-                className="rounded-full p-6"
-                onClick={() => handleSwipe(currentProject.id, 'like')}
-              >
-                <ThumbsUp className="h-6 w-6" />
-              </Button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="rounded-full p-6"
+                  onClick={() => handleSwipe(currentProject.id, 'pass')}
+                >
+                  <ThumbsDown className="h-6 w-6" />
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  size="lg"
+                  className="rounded-full p-6"
+                  onClick={() => handleSwipe(currentProject.id, 'like')}
+                >
+                  <ThumbsUp className="h-6 w-6" />
+                </Button>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         ) : (
           <Card className="p-6 text-center">
             <p className="text-gray-600">Plus de projets à afficher pour le moment !</p>
