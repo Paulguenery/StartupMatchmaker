@@ -122,6 +122,7 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
                 Faites glisser pour ajuster le rayon
               </motion.div>
             )}
+            {/* Barre de progression principale */}
             <motion.div
               className="absolute -bottom-3 left-0 right-0 h-1 bg-primary/10 rounded-full"
               style={{
@@ -130,6 +131,7 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
               }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             />
+            {/* Effet de traînée lors du glissement */}
             <motion.div
               className="absolute -bottom-3 left-0 right-0 h-1 bg-primary/5 rounded-full"
               initial={{ scaleX: 0 }}
@@ -138,6 +140,34 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
                 transition: { type: "spring", stiffness: 400, damping: 40 }
               }}
               style={{ transformOrigin: "left" }}
+            />
+            {/* Animation d'onde */}
+            <motion.div
+              className="absolute -bottom-3 left-0 right-0 h-1 bg-primary/20"
+              initial={{ scaleX: 0, opacity: 0 }}
+              animate={isDragging ? {
+                scaleX: [0, 1, 0],
+                opacity: [0, 0.5, 0],
+                transition: {
+                  duration: 1,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }
+              } : { scaleX: 0, opacity: 0 }}
+              style={{ transformOrigin: "left" }}
+            />
+            {/* Indicateur de progression */}
+            <motion.div
+              className="absolute -bottom-3 left-0 h-1 bg-primary rounded-full"
+              style={{
+                width: "2px",
+                left: `${(distance / 150) * 100}%`,
+                transform: "translateX(-50%)"
+              }}
+              animate={{
+                height: isDragging ? "4px" : "2px",
+                opacity: isDragging ? 1 : 0.7
+              }}
             />
           </motion.div>
         </div>
