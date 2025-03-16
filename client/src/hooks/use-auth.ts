@@ -37,6 +37,11 @@ export function useAuth() {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       setLocation("/auth");
     },
+    onError: (error) => {
+      console.error("Erreur lors de la déconnexion:", error);
+      // En cas d'erreur, on redirige quand même vers la page d'auth
+      setLocation("/auth");
+    },
   });
 
   const registerMutation = useMutation({
