@@ -5,7 +5,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectCard } from "@/components/project-card";
-import { UserCircle, SearchCode, Briefcase, Star, PlusCircle } from "lucide-react";
+import { UserCircle, SearchCode, Briefcase, Star, PlusCircle, Search } from "lucide-react";
 import { AdvancedProfileFilters } from "@/components/advanced-profile-filters";
 import { AdvancedFilters } from "@/components/advanced-filters";
 import { useTranslation } from "react-i18next";
@@ -43,6 +43,12 @@ export default function HomePage() {
               <p className="text-gray-600">Trouvez les meilleurs talents pour vos projets</p>
             </div>
             <div className="flex gap-4">
+              <Button variant="outline" asChild>
+                <Link href="/search-profiles" className="flex items-center gap-2">
+                  <Search className="h-4 w-4" />
+                  Rechercher des talents
+                </Link>
+              </Button>
               <Button variant="outline" asChild>
                 <Link href="/new-project" className="flex items-center gap-2">
                   <PlusCircle className="h-4 w-4" />
@@ -159,8 +165,8 @@ export default function HomePage() {
           </div>
         </div>
 
-        <AdvancedFilters 
-          onFilterChange={handleFilterChange} 
+        <AdvancedFilters
+          onFilterChange={handleFilterChange}
           projectCount={projects.length}
         />
 

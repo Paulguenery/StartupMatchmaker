@@ -12,6 +12,7 @@ import SubscribePage from "@/pages/subscribe-page";
 import MyProjectsPage from "@/pages/my-projects";
 import NewProjectPage from "@/pages/new-project";
 import SuggestionsPage from "@/pages/suggestions-page";
+import SearchProfilesPage from "@/pages/search-profiles";
 import { ProtectedRoute } from "./lib/protected-route";
 import { Header } from "./components/layout/header";
 
@@ -29,6 +30,7 @@ function Router() {
         <ProtectedRoute path="/my-projects" component={MyProjectsPage} />
         <ProtectedRoute path="/new-project" component={NewProjectPage} />
         <ProtectedRoute path="/suggestions" component={SuggestionsPage} />
+        <ProtectedRoute path="/search-profiles" component={SearchProfilesPage} />
         <Route component={NotFound} />
       </Switch>
     </>
