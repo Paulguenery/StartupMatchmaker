@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Project } from "@shared/schema";
 import { ProjectCard } from "@/components/project-card";
+import { LocationFilter } from "@/components/location-filter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,6 +13,7 @@ import { matchWithProject, getSuggestedProjects } from "@/lib/matching";
 export default function SwipePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
+  const [filters, setFilters] = useState({ distance: 50 });
   const { toast } = useToast();
 
   // Get user's location
@@ -38,10 +40,14 @@ export default function SwipePage() {
 
   // Fetch suggested projects
   const { data: projects = [], isLoading } = useQuery<Project[]>({
-    queryKey: ["/api/projects/suggestions", userLocation],
+    queryKey: ["/api/projects/suggestions", userLocation, filters],
     queryFn: async () => {
       if (!userLocation) return [];
-      return getSuggestedProjects(userLocation.latitude, userLocation.longitude);
+      return getSuggestedProjects(
+        userLocation.latitude,
+        userLocation.longitude,
+        filters.distance
+      );
     },
     enabled: !!userLocation,
   });
@@ -92,6 +98,8 @@ export default function SwipePage() {
           </p>
         </div>
 
+        <LocationFilter onFilterChange={setFilters} />
+
         {currentProject ? (
           <div className="relative">
             <AnimatePresence mode="wait">
@@ -102,7 +110,7 @@ export default function SwipePage() {
                 exit={{ scale: 0.8, opacity: 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <ProjectCard project={currentProject} />
+                <ProjectCard project={currentProject} showDistance={true} />
               </motion.div>
             </AnimatePresence>
 

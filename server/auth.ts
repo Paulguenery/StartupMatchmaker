@@ -34,7 +34,8 @@ export function setupAuth(app: Express) {
       sameSite: 'lax' as const,
       path: '/',
       maxAge: 24 * 60 * 60 * 1000 // 24 heures
-    }
+    },
+    store: storage.sessionStore
   };
 
   app.use(session(sessionConfig));
@@ -87,6 +88,7 @@ export function setupAuth(app: Express) {
   // Routes d'authentification
   app.post('/api/register', async (req, res) => {
     try {
+      console.log('Tentative d\'inscription:', req.body);
       const { email, password, fullName, role } = req.body;
 
       const existingUser = await storage.getUserByEmail(email);
@@ -105,8 +107,10 @@ export function setupAuth(app: Express) {
 
       req.login(user, (err) => {
         if (err) {
+          console.error('Erreur lors de la connexion après inscription:', err);
           return res.status(500).json({ message: 'Erreur lors de la connexion' });
         }
+        console.log('Inscription réussie pour:', user.email);
         res.json(user);
       });
     } catch (error) {
@@ -116,6 +120,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post('/api/login', (req, res, next) => {
+    console.log('Tentative de connexion avec:', req.body);
     passport.authenticate('local', (err: any, user: any, info: any) => {
       if (err) {
         console.error('Erreur lors de la connexion:', err);
@@ -138,6 +143,7 @@ export function setupAuth(app: Express) {
   });
 
   app.get('/api/user', (req, res) => {
+    console.log('Vérification de l\'authentification:', req.isAuthenticated(), req.user);
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: 'Non authentifié' });
     }
@@ -147,10 +153,12 @@ export function setupAuth(app: Express) {
   app.post('/api/logout', (req, res) => {
     req.logout((err) => {
       if (err) {
+        console.error('Erreur lors de la déconnexion:', err);
         return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
       }
       req.session.destroy((err) => {
         if (err) {
+          console.error('Erreur lors de la destruction de la session:', err);
           return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
         }
         res.clearCookie('mymate.sid');
