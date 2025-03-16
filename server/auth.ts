@@ -31,7 +31,7 @@ export function setupAuth(app: Express) {
     cookie: {
       secure: false, // Pour le développement local
       httpOnly: true,
-      sameSite: 'lax',
+      sameSite: 'lax' as const,
       path: '/',
       maxAge: 24 * 60 * 60 * 1000 // 24 heures
     }
@@ -41,7 +41,6 @@ export function setupAuth(app: Express) {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  // Configuration de Passport
   passport.use(new LocalStrategy(
     { usernameField: 'email' },
     async (email, password, done) => {

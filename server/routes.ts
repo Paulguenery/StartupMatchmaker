@@ -12,8 +12,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    const { distance, latitude, longitude } = req.query;
+    const { distance, latitude, longitude, sector } = req.query;
     let projects = await storage.getProjects();
+
+    // Filtrer par secteur si spécifié
+    if (sector) {
+      projects = projects.filter(project => project.sector === sector);
+    }
 
     // Filtrer par distance si des coordonnées sont fournies
     if (distance && latitude && longitude) {
@@ -37,43 +42,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(projects);
   });
 
-  app.post("/api/projects", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const project = await storage.createProject({
-        ...req.body,
-        userId: req.user!.id,
-      });
-      res.status(201).json(project);
-    } catch (error) {
-      console.error('Erreur lors de la création du projet:', error);
-      res.status(500).json({ message: 'Erreur lors de la création du projet' });
-    }
-  });
-
-
-  // Matches
+  // Matching
   app.post("/api/matches", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const match = await storage.createMatch({
-        ...req.body,
-        userId: req.user!.id,
-      });
-      res.status(201).json(match);
+      const { projectId, action } = req.body;
+
+      if (action === 'like') {
+        const match = await storage.createMatch({
+          userId: req.user!.id,
+          projectId,
+          status: 'pending'
+        });
+
+        // Vérifier si c'est un match mutuel
+        const projectOwnerMatch = await storage.getMatchByProjectAndUser(projectId, req.user!.id);
+        if (projectOwnerMatch && projectOwnerMatch.status === 'liked') {
+          await storage.updateMatch(match.id, { status: 'matched' });
+          await storage.updateMatch(projectOwnerMatch.id, { status: 'matched' });
+        }
+
+        res.status(201).json(match);
+      } else if (action === 'pass') {
+        await storage.createMatch({
+          userId: req.user!.id,
+          projectId,
+          status: 'passed'
+        });
+        res.status(200).json({ message: 'Projet passé' });
+      }
     } catch (error) {
       console.error('Erreur lors de la création du match:', error);
       res.status(500).json({ message: 'Erreur lors de la création du match' });
     }
   });
 
+  // Récupérer les matches d'un utilisateur
   app.get("/api/matches", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const matches = await storage.getMatchesByUserId(req.user!.id);
-    res.json(matches);
+
+    try {
+      const matches = await storage.getMatchesByUserId(req.user!.id);
+      res.json(matches);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des matches:', error);
+      res.status(500).json({ message: 'Erreur lors de la récupération des matches' });
+    }
   });
+
+  // Suggestions de projets basées sur la localisation
+  app.get("/api/projects/suggestions", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const { latitude, longitude } = req.query;
+      if (!latitude || !longitude) {
+        return res.status(400).json({ message: 'Coordonnées requises' });
+      }
+
+      const userLat = parseFloat(latitude as string);
+      const userLon = parseFloat(longitude as string);
+
+      let projects = await storage.getProjects();
+
+      // Filtrer les projets déjà matchés ou passés
+      const userMatches = await storage.getMatchesByUserId(req.user!.id);
+      const matchedProjectIds = userMatches.map(m => m.projectId);
+
+      projects = projects
+        .filter(p => !matchedProjectIds.includes(p.id))
+        .map(project => {
+          if (!project.location) return { ...project, distance: null };
+
+          const distance = calculateDistance(
+            userLat,
+            userLon,
+            project.location.latitude,
+            project.location.longitude
+          );
+
+          return { ...project, distance };
+        })
+        .sort((a, b) => {
+          if (a.distance === null) return 1;
+          if (b.distance === null) return -1;
+          return a.distance - b.distance;
+        });
+
+      res.json(projects);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des suggestions:', error);
+      res.status(500).json({ message: 'Erreur lors de la récupération des suggestions' });
+    }
+  });
+
 
   // Recherche de profils
   app.get("/api/users/search", async (req, res) => {
@@ -185,8 +248,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     } catch (error: any) {
       console.error('Erreur Stripe:', error);
-      res.status(400).json({ 
-        error: { message: error.message } 
+      res.status(400).json({
+        error: { message: error.message }
       });
     }
   });
