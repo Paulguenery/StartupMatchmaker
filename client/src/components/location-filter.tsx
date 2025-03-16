@@ -1,9 +1,8 @@
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useDebouncedCallback } from "use-debounce";
 
 interface LocationFilterProps {
   onFilterChange: (filters: { distance: number; city?: string }) => void;
@@ -11,30 +10,18 @@ interface LocationFilterProps {
 
 export function LocationFilter({ onFilterChange }: LocationFilterProps) {
   const [distance, setDistance] = useState(50);
-  const [city, setCity] = useState("");
+  const [cityInput, setCityInput] = useState("");
 
-  const debouncedFilterChange = useDebouncedCallback((newFilters: { distance: number; city?: string }) => {
-    console.log("Filtre débounced appliqué:", newFilters);
-    onFilterChange(newFilters);
-  }, 300);
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      onFilterChange({ 
+        distance, 
+        city: cityInput.trim() || undefined 
+      });
+    }, 500);
 
-  const handleDistanceChange = (values: number[]) => {
-    const newDistance = values[0];
-    setDistance(newDistance);
-    debouncedFilterChange({ distance: newDistance, city });
-  };
-
-  const handleCityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    event.preventDefault();
-    const newCity = event.target.value;
-    console.log("Nouvelle ville saisie:", newCity);
-    setCity(newCity);
-    if (newCity.length > 0) {
-      debouncedFilterChange({ distance, city: newCity });
-    } else {
-      debouncedFilterChange({ distance, city: undefined });
-    }
-  };
+    return () => clearTimeout(timeoutId);
+  }, [cityInput, distance]);
 
   return (
     <Card>
@@ -47,8 +34,11 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
           <Input 
             type="text" 
             placeholder="Entrez une ville"
-            value={city}
-            onChange={handleCityChange}
+            value={cityInput}
+            onChange={(e) => {
+              e.preventDefault();
+              setCityInput(e.target.value);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -66,7 +56,7 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
             defaultValue={[distance]}
             max={150}
             step={10}
-            onValueChange={handleDistanceChange}
+            onValueChange={(values) => setDistance(values[0])}
           />
         </div>
       </CardContent>

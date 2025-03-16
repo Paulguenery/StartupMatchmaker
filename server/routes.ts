@@ -85,6 +85,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const { latitude, longitude, distance, city } = req.query;
+      console.log('Paramètres reçus:', { latitude, longitude, distance, city });
+
       if (!latitude || !longitude) {
         return res.status(400).json({ message: 'Coordonnées requises' });
       }
@@ -93,13 +95,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userLon = parseFloat(longitude as string);
       const maxDistance = distance ? parseInt(distance as string) : 50;
 
+      console.log('Paramètres convertis:', { userLat, userLon, maxDistance, city });
+
       let projects = await storage.getProjects();
+      console.log('Projets avant filtrage:', projects.length);
 
       // Filtrer par ville si spécifiée
-      if (city) {
-        projects = projects.filter(project => 
-          project.location?.city.toLowerCase().includes((city as string).toLowerCase())
-        );
+      if (city && typeof city === 'string' && city.trim() !== '') {
+        console.log('Filtrage par ville:', city);
+        projects = projects.filter(project => {
+          const match = project.location?.city.toLowerCase().includes(city.toLowerCase().trim());
+          console.log(`Ville du projet: ${project.location?.city}, Match: ${match}`);
+          return match;
+        });
+        console.log('Projets après filtrage par ville:', projects.length);
       }
 
       // Filtrer les projets déjà matchés ou passés
@@ -127,6 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return a.distance - b.distance;
         });
 
+      console.log('Projets après tous les filtrages:', projects.length);
       res.json(projects);
     } catch (error) {
       console.error('Erreur lors de la récupération des suggestions:', error);

@@ -18,7 +18,7 @@ interface Filters {
 export default function SwipePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
-  const [filters, setFilters] = useState<Filters>({ distance: 50, city: "" });
+  const [filters, setFilters] = useState<Filters>({ distance: 50 });
   const { toast } = useToast();
 
   // Get user's location
@@ -127,6 +127,7 @@ export default function SwipePage() {
           onFilterChange={(newFilters) => {
             console.log("Nouveaux filtres appliqués:", newFilters);
             setFilters(newFilters);
+            setCurrentIndex(0); // Reset index when filters change
           }} 
         />
 
