@@ -166,9 +166,49 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
               }}
               animate={{
                 height: isDragging ? "4px" : "2px",
-                opacity: isDragging ? 1 : 0.7
+                opacity: isDragging ? 1 : 0.7,
+                scale: isCountUpdating ? [1, 1.5, 1] : 1,
+                transition: {
+                  scale: {
+                    duration: 0.3,
+                    ease: "easeInOut"
+                  }
+                }
               }}
             />
+            {/* Marqueurs de distance */}
+            {[0, 50, 100, 150].map((value) => (
+              <motion.div
+                key={value}
+                className="absolute -bottom-5 h-3 w-px bg-border"
+                style={{
+                  left: `${(value / 150) * 100}%`,
+                }}
+                animate={{
+                  height: distance === value ? "12px" : "8px",
+                  opacity: isDragging ? 0.8 : 0.4,
+                  scale: distance === value ? 1.2 : 1,
+                  transition: {
+                    scale: {
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 20
+                    }
+                  }
+                }}
+              >
+                <motion.span
+                  className="absolute -bottom-5 left-1/2 transform -translate-x-1/2 text-xs text-muted-foreground"
+                  animate={{
+                    opacity: isDragging ? 1 : 0.7,
+                    scale: distance === value ? 1.1 : 1,
+                    color: distance === value ? "var(--primary)" : "var(--muted-foreground)"
+                  }}
+                >
+                  {value}
+                </motion.span>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
 
