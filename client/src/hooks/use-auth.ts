@@ -7,6 +7,7 @@ type User = {
   email: string;
   role: string;
   fullName?: string;
+  isPremium?: boolean;
 };
 
 export function useAuth() {
@@ -65,12 +66,14 @@ export function useAuth() {
   const isProjectOwner = user?.role === "project_owner";
   const isProjectSeeker = user?.role === "project_seeker";
   const isAdmin = user?.role === "admin";
+  const isPremium = user?.isPremium || isProjectOwner; // Les porteurs de projet ont automatiquement accès aux fonctionnalités premium
 
   return {
     user,
     isProjectOwner,
     isProjectSeeker,
     isAdmin,
+    isPremium,
     loginMutation,
     logoutMutation,
     registerMutation,
