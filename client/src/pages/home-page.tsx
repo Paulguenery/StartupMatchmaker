@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectCard } from "@/components/project-card";
 import { UserCircle, SearchCode, Briefcase, Star, PlusCircle, Search } from "lucide-react";
-import { AdvancedProfileFilters } from "@/components/advanced-profile-filters";
-import { AdvancedFilters } from "@/components/advanced-filters";
 import { useTranslation } from "react-i18next";
 
 export default function HomePage() {
@@ -26,11 +24,6 @@ export default function HomePage() {
     queryKey: ["/api/users/search"],
     enabled: user?.role === 'project_owner',
   });
-
-  const handleFilterChange = (filters: any) => {
-    // Implémenter la logique de filtrage selon le rôle
-    console.log("Filtres appliqués:", filters);
-  };
 
   // Vue pour les porteurs de projet
   if (user?.role === 'project_owner') {
@@ -57,8 +50,6 @@ export default function HomePage() {
               </Button>
             </div>
           </div>
-
-          <AdvancedProfileFilters onFilterChange={handleFilterChange} isPremium={isPremium} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
@@ -100,10 +91,15 @@ export default function HomePage() {
           </div>
 
           <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-gray-900">Profils suggérés</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Profils suggérés</h2>
+              <Button variant="outline" asChild>
+                <Link href="/search-profiles">Voir plus de profils</Link>
+              </Button>
+            </div>
             {profiles && profiles.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {profiles.map(profile => (
+                {profiles.slice(0, 3).map(profile => (
                   <Card key={profile.id} className="p-6">
                     <div className="flex items-start justify-between">
                       <div>
@@ -124,8 +120,8 @@ export default function HomePage() {
                       </div>
                     )}
                     <div className="mt-4">
-                      <Button className="w-full" variant="outline">
-                        Voir le profil
+                      <Button className="w-full" variant="outline" asChild>
+                        <Link href={`/search-profiles?id=${profile.id}`}>Voir le profil</Link>
                       </Button>
                     </div>
                   </Card>
@@ -134,7 +130,7 @@ export default function HomePage() {
             ) : (
               <Card>
                 <CardContent className="p-6 text-center text-gray-600">
-                  <p>Aucun profil correspondant trouvé. Ajustez vos critères de recherche.</p>
+                  <p>Aucun profil correspondant trouvé. Commencez à rechercher des talents !</p>
                 </CardContent>
               </Card>
             )}

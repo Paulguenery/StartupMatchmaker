@@ -59,7 +59,7 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
   const handleCitySelect = (city: City) => {
     setSelectedCity(city);
     setCitySearch(`${city.city} (${city.postalCode})`);
-    onFilterChange({ 
+    onFilterChange({
       city: city.city,
       latitude: city.latitude,
       longitude: city.longitude,
@@ -133,7 +133,7 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Spécialité</label>
-            <Select 
+            <Select
               onValueChange={(value) => {
                 setSelectedCategory(value);
                 onFilterChange({ category: value });
@@ -218,6 +218,7 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
                 <SelectValue placeholder="Sélectionnez un type" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">Tout type de collaboration</SelectItem>
                 <SelectItem value="full_time">Temps plein</SelectItem>
                 <SelectItem value="part_time">Temps partiel</SelectItem>
               </SelectContent>
