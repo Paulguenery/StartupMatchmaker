@@ -10,10 +10,15 @@ import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { matchWithProject, getSuggestedProjects } from "@/lib/matching";
 
+interface Filters {
+  distance: number;
+  city: string;
+}
+
 export default function SwipePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
-  const [filters, setFilters] = useState({ distance: 50, city: "" });
+  const [filters, setFilters] = useState<Filters>({ distance: 50, city: "" });
   const { toast } = useToast();
 
   // Get user's location
@@ -99,7 +104,12 @@ export default function SwipePage() {
           </p>
         </div>
 
-        <LocationFilter onFilterChange={setFilters} />
+        <LocationFilter 
+          onFilterChange={(newFilters) => {
+            console.log("Nouveaux filtres appliqués:", newFilters);
+            setFilters(newFilters);
+          }} 
+        />
 
         {currentProject ? (
           <div className="relative">

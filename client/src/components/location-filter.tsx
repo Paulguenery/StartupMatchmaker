@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useDebouncedCallback } from "use-debounce";
 
 interface LocationFilterProps {
   onFilterChange: (filters: { distance: number; city?: string }) => void;
@@ -12,16 +13,21 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
   const [distance, setDistance] = useState(50);
   const [city, setCity] = useState("");
 
+  const debouncedFilterChange = useDebouncedCallback((newFilters: { distance: number; city?: string }) => {
+    onFilterChange(newFilters);
+  }, 300);
+
   const handleDistanceChange = (values: number[]) => {
     const newDistance = values[0];
     setDistance(newDistance);
-    onFilterChange({ distance: newDistance, city });
+    debouncedFilterChange({ distance: newDistance, city });
   };
 
   const handleCityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.preventDefault();
     const newCity = event.target.value;
     setCity(newCity);
-    onFilterChange({ distance, city: newCity });
+    debouncedFilterChange({ distance, city: newCity });
   };
 
   return (
@@ -37,6 +43,11 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
             placeholder="Entrez une ville"
             value={city}
             onChange={handleCityChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+              }
+            }}
           />
         </div>
 
