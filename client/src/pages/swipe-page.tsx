@@ -66,6 +66,12 @@ export default function SwipePage() {
     enabled: !!userLocation,
   });
 
+  const handleFilterChange = (newFilters: Filters) => {
+    console.log("Application des nouveaux filtres:", newFilters);
+    setCurrentIndex(0);
+    setFilters(newFilters);
+  };
+
   const handleSwipe = async (projectId: number, action: 'like' | 'pass') => {
     try {
       await matchWithProject(projectId, action);
@@ -123,13 +129,7 @@ export default function SwipePage() {
           </p>
         </div>
 
-        <LocationFilter 
-          onFilterChange={(newFilters) => {
-            console.log("Nouveaux filtres appliqués:", newFilters);
-            setFilters(newFilters);
-            setCurrentIndex(0); // Reset index when filters change
-          }} 
-        />
+        <LocationFilter onFilterChange={handleFilterChange} />
 
         {currentProject ? (
           <div className="relative">

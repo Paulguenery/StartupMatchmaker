@@ -52,21 +52,29 @@ export async function getSuggestedProjects(
   distance: number,
   city?: string
 ): Promise<Project[]> {
-  const params = new URLSearchParams({
-    latitude: latitude.toString(),
-    longitude: longitude.toString(),
-    distance: distance.toString()
-  });
+  console.log('Appel getSuggestedProjects avec:', { latitude, longitude, distance, city });
 
-  if (city) {
-    params.append('city', city);
+  const params = new URLSearchParams();
+  params.append('latitude', latitude.toString());
+  params.append('longitude', longitude.toString());
+  params.append('distance', distance.toString());
+
+  if (city && city.trim()) {
+    params.append('city', city.trim());
   }
 
-  const response = await apiRequest(
-    "GET", 
-    `/api/projects/suggestions?${params.toString()}`
-  );
-  return response.json();
+  const url = `/api/projects/suggestions?${params.toString()}`;
+  console.log('URL de requête construite:', url);
+
+  try {
+    const response = await apiRequest("GET", url);
+    const data = await response.json();
+    console.log('Réponse reçue:', data);
+    return data;
+  } catch (error) {
+    console.error('Erreur dans getSuggestedProjects:', error);
+    throw error;
+  }
 }
 
 // Fonction pour récupérer les matches d'un utilisateur
