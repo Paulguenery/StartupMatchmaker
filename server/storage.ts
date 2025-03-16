@@ -68,34 +68,68 @@ export class MemStorage implements IStorage {
     };
     await this.createUser(owner);
 
-    // Créer quelques projets de test
-    const project1: InsertProject = {
-      title: "Projet Innovant Tech",
-      description: "Un projet innovant dans le domaine de la technologie",
-      sector: "Technologie",
-      userId: 2, // Lié à l'utilisateur owner
-      location: {
-        latitude: 45.7640,
-        longitude: 4.8357,
-        city: "Lyon",
-        department: "69"
+    // Créer plusieurs projets de test
+    const projectsData = [
+      {
+        title: "Startup Tech Innovante",
+        description: "Développement d'une application mobile révolutionnaire dans le domaine de la santé connectée",
+        sector: "Technologie",
+        location: {
+          latitude: 48.8566,
+          longitude: 2.3522,
+          city: "Paris",
+          department: "75"
+        }
+      },
+      {
+        title: "Restaurant Bio Local",
+        description: "Création d'un restaurant utilisant uniquement des produits bio et locaux",
+        sector: "Restauration",
+        location: {
+          latitude: 45.7640,
+          longitude: 4.8357,
+          city: "Lyon",
+          department: "69"
+        }
+      },
+      {
+        title: "Studio de Design",
+        description: "Studio de design spécialisé dans la création d'identités visuelles éco-responsables",
+        sector: "Design",
+        location: {
+          latitude: 43.2965,
+          longitude: 5.3698,
+          city: "Marseille",
+          department: "13"
+        }
+      },
+      {
+        title: "Boutique Mode Éthique",
+        description: "Création d'une boutique de mode éthique et durable",
+        sector: "Mode",
+        location: {
+          latitude: 43.6047,
+          longitude: 1.4442,
+          city: "Toulouse",
+          department: "31"
+        }
+      },
+      {
+        title: "Centre de Formation Numérique",
+        description: "Centre de formation aux métiers du numérique pour les personnes en reconversion",
+        sector: "Formation",
+        location: {
+          latitude: 47.2184,
+          longitude: -1.5536,
+          city: "Nantes",
+          department: "44"
+        }
       }
-    };
-    await this.createProject(project1);
+    ];
 
-    const project2: InsertProject = {
-      title: "Projet Développement Durable",
-      description: "Un projet écologique et durable",
-      sector: "Environnement",
-      userId: 2,
-      location: {
-        latitude: 43.2965,
-        longitude: 5.3698,
-        city: "Marseille",
-        department: "13"
-      }
-    };
-    await this.createProject(project2);
+    for (const projectData of projectsData) {
+      await this.createProject({ ...projectData, userId: 2 });
+    }
   }
 
   async deleteUserByEmail(email: string): Promise<void> {
