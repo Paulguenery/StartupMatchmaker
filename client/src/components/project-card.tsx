@@ -23,7 +23,7 @@ export function ProjectCard({ project, showDistance = false }: ProjectCardProps)
               <span>{project.location.city}, {project.location.department}</span>
             </div>
           )}
-          {showDistance && project.distance !== undefined && (
+          {showDistance && project.distance && (
             <Badge variant="outline">
               {Math.round(project.distance)}km
             </Badge>

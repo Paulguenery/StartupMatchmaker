@@ -78,5 +78,10 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type InsertMatch = z.infer<typeof insertMatchSchema>;
 export type User = typeof users.$inferSelect;
-export type Project = typeof projects.$inferSelect;
+export type Project = typeof projects.$inferSelect & {
+  distance?: number | null;
+};
 export type Match = typeof matches.$inferSelect;
+
+// Stub pour la rétrocompatibilité
+export const insertSuggestionSchema = z.object({});
