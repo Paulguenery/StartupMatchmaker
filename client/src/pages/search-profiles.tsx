@@ -4,16 +4,20 @@ import { User } from "@shared/schema";
 import { Card, CardContent } from "@/components/ui/card";
 import { AdvancedProfileFilters } from "@/components/advanced-profile-filters";
 import { useTranslation } from "react-i18next";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BriefcaseIcon, MapPinIcon, MessageCircle, UserPlus, Loader2, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { useState } from "react";
+import { useLocation } from "wouter";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { BriefcaseIcon, MapPinIcon, MessageCircle, UserPlus, Loader2 } from "lucide-react";
 import { MOCK_PROFILES } from "@/lib/constants";
+
 
 export default function SearchProfilesPage() {
   const { user, isPremium } = useAuth();
   const { t } = useTranslation();
   const [filters, setFilters] = useState({});
+  const [, setLocation] = useLocation();
 
   // Simuler un chargement des données avec les profils mock
   const { data: profiles = MOCK_PROFILES, isLoading } = useQuery<User[]>({
@@ -25,6 +29,13 @@ export default function SearchProfilesPage() {
     setFilters(newFilters);
     // Dans un cas réel, cela déclencherait une nouvelle requête
     console.log("Filtres appliqués:", newFilters);
+  };
+
+  const handleSearch = () => {
+    // Enregistrer les filtres dans le localStorage ou dans un état global si nécessaire
+    localStorage.setItem('profileFilters', JSON.stringify(filters));
+    // Rediriger vers la page de swipe
+    setLocation('/swipe-profiles');
   };
 
   if (!user || user.role !== 'project_owner') {
@@ -43,7 +54,11 @@ export default function SearchProfilesPage() {
           <CardContent className="p-6">
             <AdvancedProfileFilters onFilterChange={handleFilterChange} isPremium={isPremium} />
             <div className="mt-6 flex justify-end">
-              <Button className="flex items-center gap-2">
+              <Button 
+                onClick={handleSearch}
+                className="flex items-center gap-2"
+                size="lg"
+              >
                 <Search className="h-4 w-4" />
                 Rechercher
               </Button>

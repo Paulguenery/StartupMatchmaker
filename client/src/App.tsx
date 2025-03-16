@@ -7,6 +7,7 @@ import AuthPage from "@/pages/auth-page";
 import HomePage from "@/pages/home-page";
 import ProfilePage from "@/pages/profile-page";
 import SwipePage from "@/pages/swipe-page";
+import SwipeProfilesPage from "@/pages/swipe-profiles";
 import MessagesPage from "@/pages/messages-page";
 import SubscribePage from "@/pages/subscribe-page";
 import MyProjectsPage from "@/pages/my-projects";
@@ -25,6 +26,7 @@ function Router() {
         <ProtectedRoute path="/" component={HomePage} />
         <ProtectedRoute path="/profile" component={ProfilePage} />
         <ProtectedRoute path="/swipe" component={SwipePage} />
+        <ProtectedRoute path="/swipe-profiles" component={SwipeProfilesPage} />
         <ProtectedRoute path="/messages" component={MessagesPage} />
         <ProtectedRoute path="/subscribe" component={SubscribePage} />
         <ProtectedRoute path="/my-projects" component={MyProjectsPage} />
@@ -37,7 +39,7 @@ function Router() {
   );
 }
 
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router />
@@ -45,5 +47,3 @@ function App() {
     </QueryClientProvider>
   );
 }
-
-export default App;

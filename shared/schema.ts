@@ -16,6 +16,11 @@ export const users = pgTable("users", {
     department: string;
     postalCode?: string;
   }>(),
+  experienceLevel: text("experience_level"),
+  skills: json("skills").$type<string[]>(),
+  availability: text("availability"),
+  collaborationType: text("collaboration_type"),
+  profilePicture: text("profile_picture"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -57,6 +62,11 @@ export const insertUserSchema = z.object({
     department: z.string(),
     postalCode: z.string().optional(),
   }).optional(),
+  experienceLevel: z.string().optional(),
+  skills: z.array(z.string()).optional(),
+  availability: z.string().optional(),
+  collaborationType: z.string().optional(),
+  profilePicture: z.string().optional(),
 });
 
 export const insertProjectSchema = z.object({
