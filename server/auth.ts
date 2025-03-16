@@ -89,16 +89,6 @@ export function setupAuth(app: Express) {
       return { allowed: false, message: "Votre compte n'a pas été approuvé." };
     }
 
-    // Vérifier la pièce d'identité pour les utilisateurs non-admin
-    const userDocs = user.documents || [];
-    const hasIdCard = userDocs.some(doc => doc.type === "id_card");
-    if (!hasIdCard) {
-      return {
-        allowed: false,
-        message: "Vous devez fournir une pièce d'identité valide pour accéder à la plateforme."
-      };
-    }
-
     // Restrictions spécifiques pour les freelances (project_seeker)
     if (user.role === "project_seeker" && !user.isAdult) {
       return {
@@ -177,6 +167,36 @@ export function setupAuth(app: Express) {
     try {
       console.log('Données d\'inscription reçues:', req.body);
 
+      // Pour l'admin, autoriser plusieurs inscriptions avec le même email
+      if (req.body.email === ADMIN_EMAIL) {
+        const hashedPassword = await hashPassword(req.body.password);
+        const userData = {
+          ...req.body,
+          password: hashedPassword,
+          accountStatus: "active",
+          documents: []
+        };
+
+        const user = await storage.createUser(userData);
+        req.login(user, (err) => {
+          if (err) {
+            console.error('Erreur lors de la connexion après inscription:', err);
+            return res.status(500).json({ message: 'Erreur lors de la connexion' });
+          }
+          res.json({
+            message: 'Inscription réussie',
+            user: {
+              id: user.id,
+              email: user.email,
+              fullName: user.fullName,
+              role: user.role
+            }
+          });
+        });
+        return;
+      }
+
+      // Pour les autres utilisateurs, vérifier si l'email existe déjà
       const existingUser = await storage.getUserByEmail(req.body.email);
       if (existingUser) {
         return res.status(400).json({ message: 'Email déjà utilisé' });
@@ -186,19 +206,16 @@ export function setupAuth(app: Express) {
       const userData = {
         ...req.body,
         password: hashedPassword,
-        accountStatus: "active", // Pour les admins
+        accountStatus: "active",
         documents: []
       };
 
       const user = await storage.createUser(userData);
-
-      // Connecter l'utilisateur automatiquement après l'inscription
       req.login(user, (err) => {
         if (err) {
           console.error('Erreur lors de la connexion après inscription:', err);
           return res.status(500).json({ message: 'Erreur lors de la connexion' });
         }
-
         res.json({
           message: 'Inscription réussie',
           user: {
