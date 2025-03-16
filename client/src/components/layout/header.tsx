@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export function Header() {
   const [location] = useLocation();
-  const { user, updateRoleMutation } = useAuth();
+  const { user, updateRoleMutation, effectiveRole } = useAuth();
 
   const showBackButton = location !== "/" && location !== "/auth";
 
@@ -35,7 +35,7 @@ export function Header() {
           <div className="flex items-center gap-4">
             {user.role === 'admin' && (
               <Select 
-                value={user.currentRole || 'project_owner'} 
+                value={effectiveRole || 'project_owner'} 
                 onValueChange={(value) => updateRoleMutation.mutate(value)}
               >
                 <SelectTrigger className="w-[180px]">
@@ -62,7 +62,7 @@ export function Header() {
                   </Link>
                 </DropdownMenuItem>
 
-                {(user.role === 'project_owner' || user.currentRole === 'project_owner') && (
+                {effectiveRole === 'project_owner' && (
                   <DropdownMenuItem asChild>
                     <Link href="/my-projects" className="flex items-center">
                       <List className="h-4 w-4 mr-2" />

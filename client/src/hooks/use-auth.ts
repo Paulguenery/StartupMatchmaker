@@ -54,6 +54,9 @@ export function useAuth() {
   const updateRoleMutation = useMutation({
     mutationFn: async (role: string) => {
       const res = await apiRequest("PATCH", "/api/user/role", { role });
+      if (!res.ok) {
+        throw new Error('Failed to update role');
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -76,5 +79,6 @@ export function useAuth() {
     logoutMutation,
     registerMutation,
     updateRoleMutation,
+    effectiveRole,
   };
 }
