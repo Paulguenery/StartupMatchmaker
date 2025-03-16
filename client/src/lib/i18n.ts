@@ -17,49 +17,39 @@ const resources = {
       searchProjects: "Search Projects",
       projectDetails: "Project Details",
       sector: "Sector",
+      sectors: {
+        technology: "Technology",
+        business: "Business",
+        creative: "Creative",
+        other: "Other"
+      },
+      duration: "Duration",
+      durations: {
+        short: "Short term (< 3 months)",
+        medium: "Medium term (3-6 months)",
+        long: "Long term (> 6 months)"
+      },
       location: "Location",
       distance: "Distance",
+      maxDistance: "Maximum Distance",
       noProjects: "No projects found",
-      discoverProjects: "Discover Projects",
-      swipeInstructions: "Swipe right for projects you're interested in",
-      enableLocation: "Enable location to see projects near you",
-      noMoreProjects: "No more projects to display for now!",
-      checkBackLater: "Check back later to discover new projects",
-      loadingLocation: "Getting your location...",
-      loadingProjects: "Searching for projects near you...",
-      projectLoadError: "An error occurred while loading projects",
 
-      // Filters
+      // Advanced Filters
       filters: "Filters",
-      locationFilters: "Location Filters",
-      searchRadius: "Search Radius",
-      city: "City",
-      postalCode: "Postal Code",
-      department: "Department",
+      advancedFilters: "Advanced Filters",
+      selectSector: "Select a sector",
+      selectDuration: "Select duration",
+      projectsFound: "projects found",
+      applyFilters: "Apply Filters",
+      resetFilters: "Reset Filters",
 
-      // Actions
-      submit: "Submit",
-      cancel: "Cancel",
-      save: "Save",
-      delete: "Delete",
-      edit: "Edit",
-      like: "Like",
-      pass: "Pass",
-
-      // Messages
-      loading: "Loading...",
-      error: "An error occurred",
-      success: "Success",
-      locationError: "Could not get your location. Some features may be limited.",
-      swipeError: "Could not process your action.",
-      matchSuccess: "Great!",
-      matchNotification: "You liked this project. You'll be notified if it's a match!",
-
-      // Notifications
-      notificationTitle: "New Match!",
-      notificationBody: "Someone liked your project",
-      enableNotifications: "Enable Notifications",
-    },
+      // Actions and Messages
+      apply: "Apply",
+      reset: "Reset",
+      searching: "Searching...",
+      noResults: "No results found",
+      tryAdjusting: "Try adjusting your filters",
+    }
   },
   fr: {
     translation: {
@@ -76,50 +66,40 @@ const resources = {
       searchProjects: "Rechercher des projets",
       projectDetails: "Détails du projet",
       sector: "Secteur",
+      sectors: {
+        technology: "Technologie",
+        business: "Business",
+        creative: "Créatif",
+        other: "Autre"
+      },
+      duration: "Durée",
+      durations: {
+        short: "Court terme (< 3 mois)",
+        medium: "Moyen terme (3-6 mois)",
+        long: "Long terme (> 6 mois)"
+      },
       location: "Localisation",
       distance: "Distance",
+      maxDistance: "Distance maximale",
       noProjects: "Aucun projet trouvé",
-      discoverProjects: "Découvrir des projets",
-      swipeInstructions: "Swipez à droite pour les projets qui vous intéressent",
-      enableLocation: "Activez la géolocalisation pour voir les projets près de chez vous",
-      noMoreProjects: "Plus de projets à afficher pour le moment !",
-      checkBackLater: "Revenez plus tard pour découvrir de nouveaux projets",
-      loadingLocation: "Récupération de votre position...",
-      loadingProjects: "Recherche des projets près de chez vous...",
-      projectLoadError: "Une erreur est survenue lors du chargement des projets",
 
-      // Filters
+      // Advanced Filters
       filters: "Filtres",
-      locationFilters: "Filtres de localisation",
-      searchRadius: "Rayon de recherche",
-      city: "Ville",
-      postalCode: "Code postal",
-      department: "Département",
+      advancedFilters: "Filtres avancés",
+      selectSector: "Sélectionner un secteur",
+      selectDuration: "Sélectionner une durée",
+      projectsFound: "projets trouvés",
+      applyFilters: "Appliquer les filtres",
+      resetFilters: "Réinitialiser les filtres",
 
-      // Actions
-      submit: "Valider",
-      cancel: "Annuler",
-      save: "Enregistrer",
-      delete: "Supprimer",
-      edit: "Modifier",
-      like: "J'aime",
-      pass: "Passer",
-
-      // Messages
-      loading: "Chargement...",
-      error: "Une erreur est survenue",
-      success: "Succès",
-      locationError: "Impossible d'obtenir votre position. Certaines fonctionnalités peuvent être limitées.",
-      swipeError: "Impossible de traiter votre action.",
-      matchSuccess: "Super !",
-      matchNotification: "Vous avez liké ce projet. Vous serez notifié si c'est un match !",
-
-      // Notifications
-      notificationTitle: "Nouveau Match !",
-      notificationBody: "Quelqu'un a aimé votre projet",
-      enableNotifications: "Activer les notifications",
-    },
-  },
+      // Actions and Messages
+      apply: "Appliquer",
+      reset: "Réinitialiser",
+      searching: "Recherche en cours...",
+      noResults: "Aucun résultat trouvé",
+      tryAdjusting: "Essayez d'ajuster vos filtres"
+    }
+  }
 };
 
 i18n.use(initReactI18next).init({
