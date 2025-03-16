@@ -3,43 +3,119 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { setupWebSocket } from "./websocket";
-import { calculateDistance } from "@/lib/geocoding";
+
+// Calculate distance between two points using Haversine formula
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Earth's radius in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
 
-  // Projects
+  // Recherche de projets avec filtres
   app.get("/api/projects", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    const { distance, latitude, longitude, sector } = req.query;
-    let projects = await storage.getProjects();
+    try {
+      const { distance, latitude, longitude, sector } = req.query;
+      let projects = await storage.getProjects();
 
-    // Filtrer par secteur si spécifié
-    if (sector) {
-      projects = projects.filter(project => project.sector === sector);
+      // Filtrer par secteur si spécifié
+      if (sector) {
+        projects = projects.filter(project => project.sector === sector);
+      }
+
+      // Filtrer par distance si des coordonnées sont fournies
+      if (distance && latitude && longitude) {
+        const maxDistance = parseInt(distance as string);
+        const userLat = parseFloat(latitude as string);
+        const userLon = parseFloat(longitude as string);
+
+        projects = projects
+          .filter(project => {
+            if (!project.location) return false;
+            const dist = calculateDistance(
+              userLat,
+              userLon,
+              project.location.latitude,
+              project.location.longitude
+            );
+            return dist <= maxDistance;
+          })
+          .map(project => ({
+            ...project,
+            distance: project.location ? calculateDistance(
+              userLat,
+              userLon,
+              project.location.latitude,
+              project.location.longitude
+            ) : null
+          }))
+          .sort((a, b) => {
+            if (a.distance === null) return 1;
+            if (b.distance === null) return -1;
+            return a.distance - b.distance;
+          });
+      }
+
+      res.json(projects);
+    } catch (error) {
+      console.error('Erreur lors de la recherche des projets:', error);
+      res.status(500).json({ message: 'Erreur lors de la recherche des projets' });
     }
+  });
 
-    // Filtrer par distance si des coordonnées sont fournies
-    if (distance && latitude && longitude) {
-      const maxDistance = parseInt(distance as string);
+  // Suggestions de projets basées sur la localisation
+  app.get("/api/projects/suggestions", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    try {
+      const { latitude, longitude } = req.query;
+      if (!latitude || !longitude) {
+        return res.status(400).json({ message: 'Coordonnées requises' });
+      }
+
       const userLat = parseFloat(latitude as string);
       const userLon = parseFloat(longitude as string);
 
-      projects = projects.filter(project => {
-        if (!project.location) return false;
+      let projects = await storage.getProjects();
 
-        const dist = calculateDistance(
-          userLat,
-          userLon,
-          project.location.latitude,
-          project.location.longitude
-        );
-        return dist <= maxDistance;
-      });
+      // Filtrer les projets déjà matchés ou passés
+      const userMatches = await storage.getMatchesByUserId(req.user!.id);
+      const matchedProjectIds = userMatches.map(m => m.projectId);
+
+      projects = projects
+        .filter(p => !matchedProjectIds.includes(p.id))
+        .map(project => {
+          if (!project.location) return { ...project, distance: null };
+
+          const distance = calculateDistance(
+            userLat,
+            userLon,
+            project.location.latitude,
+            project.location.longitude
+          );
+
+          return { ...project, distance };
+        })
+        .sort((a, b) => {
+          if (a.distance === null) return 1;
+          if (b.distance === null) return -1;
+          return a.distance - b.distance;
+        });
+
+      res.json(projects);
+    } catch (error) {
+      console.error('Erreur lors de la récupération des suggestions:', error);
+      res.status(500).json({ message: 'Erreur lors de la récupération des suggestions' });
     }
-
-    res.json(projects);
   });
 
   // Matching
@@ -90,54 +166,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Erreur lors de la récupération des matches' });
     }
   });
-
-  // Suggestions de projets basées sur la localisation
-  app.get("/api/projects/suggestions", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    try {
-      const { latitude, longitude } = req.query;
-      if (!latitude || !longitude) {
-        return res.status(400).json({ message: 'Coordonnées requises' });
-      }
-
-      const userLat = parseFloat(latitude as string);
-      const userLon = parseFloat(longitude as string);
-
-      let projects = await storage.getProjects();
-
-      // Filtrer les projets déjà matchés ou passés
-      const userMatches = await storage.getMatchesByUserId(req.user!.id);
-      const matchedProjectIds = userMatches.map(m => m.projectId);
-
-      projects = projects
-        .filter(p => !matchedProjectIds.includes(p.id))
-        .map(project => {
-          if (!project.location) return { ...project, distance: null };
-
-          const distance = calculateDistance(
-            userLat,
-            userLon,
-            project.location.latitude,
-            project.location.longitude
-          );
-
-          return { ...project, distance };
-        })
-        .sort((a, b) => {
-          if (a.distance === null) return 1;
-          if (b.distance === null) return -1;
-          return a.distance - b.distance;
-        });
-
-      res.json(projects);
-    } catch (error) {
-      console.error('Erreur lors de la récupération des suggestions:', error);
-      res.status(500).json({ message: 'Erreur lors de la récupération des suggestions' });
-    }
-  });
-
-
   // Recherche de profils
   app.get("/api/users/search", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
