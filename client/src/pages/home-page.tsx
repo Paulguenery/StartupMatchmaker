@@ -89,52 +89,6 @@ export default function HomePage() {
               </CardContent>
             </Card>
           </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">Profils suggérés</h2>
-              <Button variant="outline" asChild>
-                <Link href="/search-profiles">Voir plus de profils</Link>
-              </Button>
-            </div>
-            {profiles && profiles.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {profiles.slice(0, 3).map(profile => (
-                  <Card key={profile.id} className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-semibold">{profile.fullName}</h3>
-                        <p className="text-sm text-gray-500">{profile.experienceLevel}</p>
-                      </div>
-                    </div>
-                    {profile.skills && profile.skills.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium">Compétences:</p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {profile.skills.map(skill => (
-                            <span key={skill} className="px-2 py-1 text-xs bg-gray-100 rounded-full">
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div className="mt-4">
-                      <Button className="w-full" variant="outline" asChild>
-                        <Link href={`/search-profiles?id=${profile.id}`}>Voir le profil</Link>
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="p-6 text-center text-gray-600">
-                  <p>Aucun profil correspondant trouvé. Commencez à rechercher des talents !</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
         </div>
       </div>
     );
@@ -160,11 +114,6 @@ export default function HomePage() {
             )}
           </div>
         </div>
-
-        <AdvancedFilters
-          onFilterChange={handleFilterChange}
-          projectCount={projects.length}
-        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
