@@ -21,7 +21,6 @@ export default function SwipePage() {
   const [filters, setFilters] = useState<Filters>({ distance: 50 });
   const { toast } = useToast();
 
-  // Get user's location
   useEffect(() => {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -43,31 +42,21 @@ export default function SwipePage() {
     }
   }, [toast]);
 
-  // Fetch suggested projects
   const { data: projects = [], isLoading, error } = useQuery<Project[]>({
     queryKey: ["/api/projects/suggestions", userLocation, filters],
     queryFn: async () => {
       if (!userLocation) return [];
-      console.log("Appel API avec les filtres:", filters);
-      try {
-        const results = await getSuggestedProjects(
-          userLocation.latitude,
-          userLocation.longitude,
-          filters.distance,
-          filters.city
-        );
-        console.log("Résultats de l'API:", results);
-        return results;
-      } catch (error) {
-        console.error("Erreur API:", error);
-        throw error;
-      }
+      return getSuggestedProjects(
+        userLocation.latitude,
+        userLocation.longitude,
+        filters.distance,
+        filters.city
+      );
     },
     enabled: !!userLocation,
   });
 
   const handleFilterChange = (newFilters: Filters) => {
-    console.log("Application des nouveaux filtres:", newFilters);
     setCurrentIndex(0);
     setFilters(newFilters);
   };
@@ -107,7 +96,6 @@ export default function SwipePage() {
   }
 
   if (error) {
-    console.error("Erreur de chargement:", error);
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center text-red-500">

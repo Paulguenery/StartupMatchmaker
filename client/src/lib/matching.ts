@@ -39,6 +39,26 @@ function toRad(degrees: number): number {
   return degrees * (Math.PI / 180);
 }
 
+export function filterProjectsByDistance(userLat: number, userLon: number, maxDistance: number, projects: Project[]): Project[] {
+  return projects.map(project => {
+    if (!project.location) return { ...project, distance: null };
+
+    const distance = calculateDistance(
+      userLat,
+      userLon,
+      project.location.latitude,
+      project.location.longitude
+    );
+
+    return { ...project, distance };
+  }).filter(project => project.distance === null || project.distance <= maxDistance)
+    .sort((a, b) => {
+      if (a.distance === null) return 1;
+      if (b.distance === null) return -1;
+      return a.distance - b.distance;
+    });
+}
+
 // Fonction pour liker ou passer un projet
 export async function matchWithProject(projectId: number, action: 'like' | 'pass'): Promise<MatchResult> {
   const response = await apiRequest("POST", "/api/matches", { projectId, action });
@@ -52,8 +72,6 @@ export async function getSuggestedProjects(
   distance: number,
   city?: string
 ): Promise<Project[]> {
-  console.log('Appel getSuggestedProjects avec:', { latitude, longitude, distance, city });
-
   const params = new URLSearchParams();
   params.append('latitude', latitude.toString());
   params.append('longitude', longitude.toString());
@@ -63,14 +81,9 @@ export async function getSuggestedProjects(
     params.append('city', city.trim());
   }
 
-  const url = `/api/projects/suggestions?${params.toString()}`;
-  console.log('URL de requête construite:', url);
-
   try {
-    const response = await apiRequest("GET", url);
-    const data = await response.json();
-    console.log('Réponse reçue:', data);
-    return data;
+    const response = await apiRequest("GET", `/api/projects/suggestions?${params.toString()}`);
+    return response.json();
   } catch (error) {
     console.error('Erreur dans getSuggestedProjects:', error);
     throw error;
