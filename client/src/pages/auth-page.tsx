@@ -12,7 +12,7 @@ import { useLocation } from "wouter";
 import { z } from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 
 
@@ -506,8 +506,15 @@ export default function AuthPage() {
   const [, setLocation] = useLocation();
   const [showResetPassword, setShowResetPassword] = useState(false);
 
+  // Use useEffect for navigation instead of doing it during render
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
+
+  // Return null if user is not yet loaded to prevent flash of content
   if (user) {
-    setLocation("/");
     return null;
   }
 
