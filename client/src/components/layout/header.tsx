@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { ArrowLeft, Menu, User, List, Settings } from "lucide-react";
+import { ArrowLeft, Menu, User, List } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -66,16 +66,7 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/my-projects" className="flex items-center">
                       <List className="h-4 w-4 mr-2" />
-                      Mes annonces
-                    </Link>
-                  </DropdownMenuItem>
-                )}
-
-                {user.role === 'admin' && (
-                  <DropdownMenuItem asChild>
-                    <Link href="/admin" className="flex items-center">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Administration
+                      Mes projets
                     </Link>
                   </DropdownMenuItem>
                 )}

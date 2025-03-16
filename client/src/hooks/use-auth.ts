@@ -1,7 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
-import { createContext, useContext, ReactNode } from "react";
 
 type User = {
   id: number;
@@ -11,20 +10,7 @@ type User = {
   fullName?: string;
 };
 
-interface AuthContextType {
-  user: User | null;
-  isProjectOwner: boolean;
-  isProjectSeeker: boolean;
-  isAdmin: boolean;
-  loginMutation: any;
-  logoutMutation: any;
-  registerMutation: any;
-  updateRoleMutation: any;
-}
-
-const AuthContext = createContext<AuthContextType | null>(null);
-
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function useAuth() {
   const [, setLocation] = useLocation();
 
   const { data: user } = useQuery<User>({
@@ -81,7 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isProjectSeeker = effectiveRole === "project_seeker";
   const isAdmin = user?.role === "admin";
 
-  const value: AuthContextType = {
+  return {
     user,
     isProjectOwner,
     isProjectSeeker,
@@ -91,14 +77,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     registerMutation,
     updateRoleMutation,
   };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 }
