@@ -19,6 +19,7 @@ type City = {
   latitude: number;
   longitude: number;
   department: string;
+  postalCode: string;
 };
 
 export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersProps) {
@@ -57,12 +58,13 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
 
   const handleCitySelect = (city: City) => {
     setSelectedCity(city);
-    setCitySearch(city.city);
+    setCitySearch(`${city.city} (${city.postalCode})`);
     onFilterChange({ 
       city: city.city,
       latitude: city.latitude,
       longitude: city.longitude,
-      department: city.department
+      department: city.department,
+      postalCode: city.postalCode
     });
   };
 
@@ -107,11 +109,11 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
                     ) : cities.length > 0 ? (
                       cities.map((city) => (
                         <CommandItem
-                          key={`${city.city}-${city.department}`}
+                          key={`${city.city}-${city.postalCode}`}
                           onSelect={() => handleCitySelect(city)}
                           className="flex items-center justify-between"
                         >
-                          <span>{city.city} ({city.department})</span>
+                          <span>{city.city} ({city.postalCode}) - {city.department}</span>
                           {selectedCity?.city === city.city && (
                             <Check className="h-4 w-4" />
                           )}

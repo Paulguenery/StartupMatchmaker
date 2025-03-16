@@ -75,27 +75,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      // Exemple d'offre près de Rouen
-      const exampleProject = {
-        title: "Développement d'une application mobile",
-        description: "Recherche développeur React Native pour une application de livraison locale",
-        category: "Informatique et technologie",
-        collaborationType: "full_time",
-        location: {
-          city: "Rouen",
-          department: "Seine-Maritime",
-          latitude: 49.443232,
-          longitude: 1.099971
+      // Exemples d'offres autour de Rouen
+      const exampleProjects = [
+        {
+          title: "Développement d'une application mobile",
+          description: "Recherche développeur React Native pour une application de livraison locale",
+          category: "Informatique et technologie",
+          collaborationType: "full_time",
+          location: {
+            city: "Rouen",
+            department: "Seine-Maritime (76)",
+            latitude: 49.443232,
+            longitude: 1.099971
+          },
+          requiredSkills: ["React Native", "TypeScript", "Mobile Development"],
+          userId: req.user!.id,
         },
-        requiredSkills: ["React Native", "TypeScript", "Mobile Development"],
-        userId: req.user!.id,
-      };
+        {
+          title: "Création site e-commerce",
+          description: "Création d'un site e-commerce pour une boutique locale",
+          category: "Informatique et technologie",
+          collaborationType: "part_time",
+          location: {
+            city: "Le Havre",
+            department: "Seine-Maritime (76)",
+            latitude: 49.494370,
+            longitude: 0.107929
+          },
+          requiredSkills: ["React", "Node.js", "E-commerce"],
+          userId: req.user!.id,
+        },
+        {
+          title: "Développement backend Python",
+          description: "Développement d'une API REST pour une startup",
+          category: "Informatique et technologie",
+          collaborationType: "full_time",
+          location: {
+            city: "Évreux",
+            department: "Eure (27)",
+            latitude: 49.027013,
+            longitude: 1.151361
+          },
+          requiredSkills: ["Python", "Django", "API REST"],
+          userId: req.user!.id,
+        }
+      ];
 
-      const project = await storage.createProject(exampleProject);
-      res.status(201).json(project);
+      // Créer tous les projets
+      const projects = await Promise.all(
+        exampleProjects.map(project => storage.createProject(project))
+      );
+
+      res.status(201).json(projects);
     } catch (error) {
-      console.error('Erreur lors de la création du projet:', error);
-      res.status(500).json({ message: 'Erreur lors de la création du projet' });
+      console.error('Erreur lors de la création des projets:', error);
+      res.status(500).json({ message: 'Erreur lors de la création des projets' });
     }
   });
 

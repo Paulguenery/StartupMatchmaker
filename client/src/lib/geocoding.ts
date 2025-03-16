@@ -3,6 +3,7 @@ type GeocodingResult = {
   latitude: number;
   longitude: number;
   department: string;
+  postalCode: string;
 };
 
 export async function searchCity(query: string): Promise<GeocodingResult[]> {
@@ -11,12 +12,13 @@ export async function searchCity(query: string): Promise<GeocodingResult[]> {
       `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(query)}&type=municipality&limit=5`
     );
     const data = await response.json();
-    
+
     return data.features.map((feature: any) => ({
       city: feature.properties.city,
       latitude: feature.geometry.coordinates[1],
       longitude: feature.geometry.coordinates[0],
-      department: feature.properties.context.split(',')[0].trim()
+      department: feature.properties.context.split(',')[0].trim(),
+      postalCode: feature.properties.postcode
     }));
   } catch (error) {
     console.error('Erreur lors de la recherche de la ville:', error);
