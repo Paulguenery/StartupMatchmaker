@@ -6,23 +6,25 @@ import { AdvancedProfileFilters } from "@/components/advanced-profile-filters";
 import { useTranslation } from "react-i18next";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { BriefcaseIcon, MapPinIcon, StarIcon, MessageCircle, UserPlus, Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { BriefcaseIcon, MapPinIcon, MessageCircle, UserPlus, Loader2, Search } from "lucide-react";
 import { useState } from "react";
+import { MOCK_PROFILES } from "@/lib/constants";
 
 export default function SearchProfilesPage() {
   const { user, isPremium } = useAuth();
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState({});
 
-  const { data: profiles = [], isLoading } = useQuery<User[]>({
-    queryKey: ["/api/users/search"],
+  // Simuler un chargement des données avec les profils mock
+  const { data: profiles = MOCK_PROFILES, isLoading } = useQuery<User[]>({
+    queryKey: ["/api/users/search", filters],
     enabled: user?.role === 'project_owner',
   });
 
-  const handleFilterChange = (filters: any) => {
-    // TODO: Implémenter le filtrage des profils
-    console.log("Filtres appliqués:", filters);
+  const handleFilterChange = (newFilters: any) => {
+    setFilters(newFilters);
+    // Dans un cas réel, cela déclencherait une nouvelle requête
+    console.log("Filtres appliqués:", newFilters);
   };
 
   if (!user || user.role !== 'project_owner') {
@@ -37,17 +39,17 @@ export default function SearchProfilesPage() {
           <p className="text-gray-600">Trouvez les meilleurs profils pour vos projets</p>
         </div>
 
-        <div className="flex gap-4">
-          <Input
-            type="text"
-            placeholder="Rechercher par nom, compétence..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="max-w-md"
-          />
-        </div>
-
-        <AdvancedProfileFilters onFilterChange={handleFilterChange} isPremium={isPremium} />
+        <Card>
+          <CardContent className="p-6">
+            <AdvancedProfileFilters onFilterChange={handleFilterChange} isPremium={isPremium} />
+            <div className="mt-6 flex justify-end">
+              <Button className="flex items-center gap-2">
+                <Search className="h-4 w-4" />
+                Rechercher
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">

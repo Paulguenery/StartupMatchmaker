@@ -318,6 +318,80 @@ export const SKILLS_BY_CATEGORY: Record<string, string[]> = {
   ]
 };
 
+// Mock profiles for testing
+export const MOCK_PROFILES = [
+  {
+    id: 1,
+    fullName: "Sophie Martin",
+    experienceLevel: "senior",
+    skills: ["React.js", "TypeScript", "Node.js"],
+    location: {
+      city: "Paris",
+      department: "Île-de-France",
+      latitude: 48.8566,
+      longitude: 2.3522
+    },
+    availability: "immediate",
+    collaborationType: "full_time"
+  },
+  {
+    id: 2,
+    fullName: "Thomas Dubois",
+    experienceLevel: "intermediate",
+    skills: ["Python", "Machine Learning", "Data Science"],
+    location: {
+      city: "Lyon",
+      department: "Rhône",
+      latitude: 45.7578,
+      longitude: 4.8320
+    },
+    availability: "one_month",
+    collaborationType: "part_time"
+  },
+  {
+    id: 3,
+    fullName: "Marie Laurent",
+    experienceLevel: "junior",
+    skills: ["UI/UX Design", "Figma", "Adobe XD"],
+    location: {
+      city: "Bordeaux",
+      department: "Gironde",
+      latitude: 44.8378,
+      longitude: -0.5792
+    },
+    availability: "three_months",
+    collaborationType: "full_time"
+  },
+  {
+    id: 4,
+    fullName: "Lucas Bernard",
+    experienceLevel: "senior",
+    skills: ["Java", "Spring Boot", "DevOps"],
+    location: {
+      city: "Toulouse",
+      department: "Haute-Garonne",
+      latitude: 43.6047,
+      longitude: 1.4442
+    },
+    availability: "immediate",
+    collaborationType: "part_time"
+  },
+  {
+    id: 5,
+    fullName: "Emma Petit",
+    experienceLevel: "intermediate",
+    skills: ["Marketing Digital", "SEO", "Social Media"],
+    location: {
+      city: "Nantes",
+      department: "Loire-Atlantique",
+      latitude: 47.2184,
+      longitude: -1.5536
+    },
+    availability: "one_month",
+    collaborationType: "full_time"
+  }
+];
+
 // Ajout du schema de validation du projet sans la durée
 export const projectSchema = z.object({
   title: z.string().min(1, "Le titre est requis"),
