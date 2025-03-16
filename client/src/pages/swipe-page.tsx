@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ThumbsUp, ThumbsDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { matchWithProject, getSuggestedProjects } from "@/lib/matching";
+import { useTranslation } from "react-i18next";
+import { notificationService } from "@/lib/notifications";
 
 interface Filters {
   distance: number;
@@ -22,6 +24,7 @@ export default function SwipePage() {
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
   const [filters, setFilters] = useState<Filters>({ distance: 50 });
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if ("geolocation" in navigator) {
@@ -35,14 +38,17 @@ export default function SwipePage() {
         (error) => {
           console.error("Erreur de géolocalisation:", error);
           toast({
-            title: "Erreur de localisation",
-            description: "Impossible d'obtenir votre position. Certaines fonctionnalités peuvent être limitées.",
+            title: t("error"),
+            description: t("locationError"),
             variant: "destructive",
           });
         }
       );
     }
-  }, [toast]);
+
+    // Initialiser les notifications
+    notificationService.init().catch(console.error);
+  }, [toast, t]);
 
   const {
     data: projects = [],
@@ -70,20 +76,28 @@ export default function SwipePage() {
 
   const handleSwipe = async (projectId: number, action: 'like' | 'pass') => {
     try {
-      await matchWithProject(projectId, action);
+      const result = await matchWithProject(projectId, action);
       setCurrentIndex(prev => prev + 1);
 
       if (action === 'like') {
         toast({
-          title: "Super !",
-          description: "Vous avez liké ce projet. Vous serez notifié si c'est un match !",
+          title: t("matchSuccess"),
+          description: t("matchNotification"),
         });
+
+        // Envoyer une notification push si c'est un match
+        if (result.status === 'matched') {
+          await notificationService.sendNotification(
+            t("notificationTitle"),
+            t("notificationBody")
+          );
+        }
       }
     } catch (error) {
       console.error("Erreur lors du swipe:", error);
       toast({
-        title: "Erreur",
-        description: "Impossible de traiter votre action.",
+        title: t("error"),
+        description: t("swipeError"),
         variant: "destructive",
       });
     }
@@ -95,7 +109,7 @@ export default function SwipePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <LoadingAnimation 
-          message="Récupération de votre position..." 
+          message={t("loadingLocation")}
           size="lg"
         />
       </div>
@@ -106,7 +120,7 @@ export default function SwipePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <LoadingAnimation 
-          message="Recherche des projets près de chez vous..." 
+          message={t("loadingProjects")}
           size="lg"
         />
       </div>
@@ -117,7 +131,7 @@ export default function SwipePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center text-red-500">
-          Une erreur est survenue lors du chargement des projets.
+          {t("projectLoadError")}
         </div>
       </div>
     );
@@ -127,11 +141,11 @@ export default function SwipePage() {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-2xl mx-auto space-y-6">
         <div className="space-y-2">
-          <h1 className="text-3xl font-bold text-gray-900">Découvrir des projets</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t("discoverProjects")}</h1>
           <p className="text-gray-600">
             {userLocation 
-              ? "Swipez à droite pour les projets qui vous intéressent"
-              : "Activez la géolocalisation pour voir les projets près de chez vous"}
+              ? t("swipeInstructions")
+              : t("enableLocation")}
           </p>
         </div>
 
@@ -181,9 +195,9 @@ export default function SwipePage() {
               key="no-projects"
             >
               <Card className="p-6 text-center">
-                <p className="text-gray-600">Plus de projets à afficher pour le moment !</p>
+                <p className="text-gray-600">{t("noMoreProjects")}</p>
                 <p className="text-sm text-gray-500 mt-2">
-                  Revenez plus tard pour découvrir de nouveaux projets.
+                  {t("checkBackLater")}
                 </p>
               </Card>
             </motion.div>
