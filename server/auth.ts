@@ -38,6 +38,16 @@ export function setupAuth(app: Express) {
     store: storage.sessionStore
   };
 
+  // Configuration du CSP
+  app.use((req, res, next) => {
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval';"
+    );
+    next();
+  });
+
+  app.set("trust proxy", 1);
   app.use(session(sessionConfig));
   app.use(passport.initialize());
   app.use(passport.session());

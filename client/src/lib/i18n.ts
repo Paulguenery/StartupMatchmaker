@@ -12,7 +12,21 @@ const resources = {
       password: "Password",
       fullName: "Full Name",
 
-      // Projects
+      // Profile Swipe
+      discoverTalents: "Discover Talents",
+      swipeToFind: "Swipe to find the best profiles",
+      noMoreProfiles: "No more profiles available!",
+      comeBackLater: "Come back later to discover new talents.",
+      restart: "Start Over",
+      swipeRight: "Swipe right to like",
+      swipeLeft: "Swipe left to pass",
+      skills: "Skills",
+      location: "Location",
+      experience: "Experience",
+      profileDetails: "Profile Details",
+      noProfileSelected: "No profile selected",
+
+      // Project Search
       search: "Search",
       searchProjects: "Search Projects",
       projectDetails: "Project Details",
@@ -29,26 +43,48 @@ const resources = {
         medium: "Medium term (3-6 months)",
         long: "Long term (> 6 months)"
       },
-      location: "Location",
       distance: "Distance",
       maxDistance: "Maximum Distance",
       noProjects: "No projects found",
 
-      // Advanced Filters
+      // Profile Search & Filters
+      searchProfiles: "Search Profiles",
+      findTalents: "Find the best talents",
+      experienceLevel: "Experience Level",
+      experienceLevels: {
+        motivated: "Motivated and ready to learn",
+        junior: "Junior",
+        intermediate: "Intermediate",
+        senior: "Senior"
+      },
+      availability: "Availability",
+      availabilityOptions: {
+        immediate: "Immediate",
+        oneMonth: "Within 1 month",
+        threeMonths: "Within 3 months"
+      },
+      collaborationType: "Collaboration Type",
+      collaborationTypes: {
+        all: "All types",
+        fullTime: "Full time",
+        partTime: "Part time"
+      },
+      city: "City",
+      searchCity: "Search for a city...",
+      noCity: "No city found",
+      selectSkills: "Select skills",
+
+      // Filters Actions
       filters: "Filters",
       advancedFilters: "Advanced Filters",
       selectSector: "Select a sector",
       selectDuration: "Select duration",
-      projectsFound: "projects found",
       applyFilters: "Apply Filters",
       resetFilters: "Reset Filters",
-
-      // Actions and Messages
-      apply: "Apply",
-      reset: "Reset",
+      projectsFound: "projects found",
       searching: "Searching...",
       noResults: "No results found",
-      tryAdjusting: "Try adjusting your filters",
+      tryAdjusting: "Try adjusting your filters"
     }
   },
   fr: {
@@ -61,7 +97,21 @@ const resources = {
       password: "Mot de passe",
       fullName: "Nom complet",
 
-      // Projects
+      // Profile Swipe
+      discoverTalents: "Découvrez des talents",
+      swipeToFind: "Swipez pour trouver les meilleurs profils",
+      noMoreProfiles: "Plus de profils disponibles !",
+      comeBackLater: "Revenez plus tard pour découvrir de nouveaux talents.",
+      restart: "Recommencer",
+      swipeRight: "Swipez à droite pour liker",
+      swipeLeft: "Swipez à gauche pour passer",
+      skills: "Compétences",
+      location: "Localisation",
+      experience: "Expérience",
+      profileDetails: "Détails du profil",
+      noProfileSelected: "Aucun profil sélectionné",
+
+      // Project Search
       search: "Rechercher",
       searchProjects: "Rechercher des projets",
       projectDetails: "Détails du projet",
@@ -78,23 +128,45 @@ const resources = {
         medium: "Moyen terme (3-6 mois)",
         long: "Long terme (> 6 mois)"
       },
-      location: "Localisation",
       distance: "Distance",
       maxDistance: "Distance maximale",
       noProjects: "Aucun projet trouvé",
 
-      // Advanced Filters
+      // Profile Search & Filters
+      searchProfiles: "Rechercher des talents",
+      findTalents: "Trouvez les meilleurs talents",
+      experienceLevel: "Niveau d'expérience",
+      experienceLevels: {
+        motivated: "Motivé et prêt à apprendre",
+        junior: "Junior",
+        intermediate: "Intermédiaire",
+        senior: "Senior"
+      },
+      availability: "Disponibilité",
+      availabilityOptions: {
+        immediate: "Immédiate",
+        oneMonth: "Sous 1 mois",
+        threeMonths: "Sous 3 mois"
+      },
+      collaborationType: "Type de collaboration",
+      collaborationTypes: {
+        all: "Tout type",
+        fullTime: "Temps plein",
+        partTime: "Temps partiel"
+      },
+      city: "Ville",
+      searchCity: "Rechercher une ville...",
+      noCity: "Aucune ville trouvée",
+      selectSkills: "Sélectionner des compétences",
+
+      // Filters Actions
       filters: "Filtres",
       advancedFilters: "Filtres avancés",
       selectSector: "Sélectionner un secteur",
       selectDuration: "Sélectionner une durée",
-      projectsFound: "projets trouvés",
       applyFilters: "Appliquer les filtres",
       resetFilters: "Réinitialiser les filtres",
-
-      // Actions and Messages
-      apply: "Appliquer",
-      reset: "Réinitialiser",
+      projectsFound: "projets trouvés",
       searching: "Recherche en cours...",
       noResults: "Aucun résultat trouvé",
       tryAdjusting: "Essayez d'ajuster vos filtres"
