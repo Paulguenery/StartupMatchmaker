@@ -1,46 +1,64 @@
 import nodemailer from 'nodemailer';
 
 // Créer le transporteur avec les options de débogage
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT), // Convert port to number
-  secure: true, // Use SSL/TLS
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  debug: true,
-  logger: true
-});
+let transporter: nodemailer.Transporter | null = null;
 
-// Vérifier la connexion au démarrage
-transporter.verify(function(error, success) {
-  if (error) {
-    console.error('Erreur de configuration SMTP:', error);
-  } else {
-    console.log('Serveur SMTP prêt à envoyer des emails');
-    console.log('Configuration SMTP:', {
+// Initialiser le transporteur de manière asynchrone
+async function initializeTransporter() {
+  try {
+    // En développement, on peut fonctionner sans email
+    if (process.env.NODE_ENV !== 'production' && (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS)) {
+      console.log('Configuration SMTP non fournie en développement, le service d\'email est désactivé');
+      return;
+    }
+
+    transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      user: process.env.SMTP_USER
+      port: Number(process.env.SMTP_PORT),
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      debug: true,
+      logger: true
     });
+
+    // Vérifier la configuration
+    await transporter.verify();
+    console.log('Serveur SMTP prêt à envoyer des emails');
+  } catch (error) {
+    console.error('Erreur de configuration SMTP:', error);
+    // En production, on veut être informé des erreurs SMTP
+    if (process.env.NODE_ENV === 'production') {
+      throw error;
+    }
+    // En développement, on continue sans email
+    transporter = null;
   }
-});
+}
+
+// Initialiser au démarrage
+initializeTransporter();
 
 export async function sendPasswordResetEmail(email: string, resetToken: string) {
   try {
-    console.log('Préparation de l\'envoi d\'email à:', email);
+    // Si pas de transporteur, simuler l'envoi en développement
+    if (!transporter) {
+      console.log('Mode développement : simulation d\'envoi d\'email');
+      console.log('Email destiné à:', email);
+      console.log('Token de réinitialisation:', resetToken);
+      return;
+    }
 
     const resetLink = `${process.env.NODE_ENV === 'production' 
       ? 'https://' + process.env.REPL_SLUG + '.repl.co'
       : 'http://localhost:5000'}/reset-password/${resetToken}`;
 
-    console.log('Lien de réinitialisation généré:', resetLink);
-
     const mailOptions = {
       from: {
         name: 'Mymate Support',
-        address: process.env.SMTP_USER
+        address: process.env.SMTP_USER || 'no-reply@mymate.com'
       },
       to: email,
       subject: 'Réinitialisation de votre mot de passe Mymate',
@@ -68,28 +86,19 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
       `,
     };
 
-    console.log('Tentative d\'envoi avec les options:', {
-      to: mailOptions.to,
-      subject: mailOptions.subject,
-      from: mailOptions.from
-    });
-
     const info = await transporter.sendMail(mailOptions);
-
     console.log('Email envoyé avec succès:', {
       messageId: info.messageId,
-      response: info.response,
-      accepted: info.accepted,
-      rejected: info.rejected
+      response: info.response
     });
 
     return info;
   } catch (error) {
-    console.error('Erreur détaillée lors de l\'envoi de l\'email:', error);
-    if (error instanceof Error) {
-      console.error('Message d\'erreur:', error.message);
-      console.error('Stack trace:', error.stack);
+    console.error('Erreur lors de l\'envoi de l\'email:', error);
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Erreur lors de l\'envoi de l\'email de réinitialisation');
     }
-    throw new Error('Erreur lors de l\'envoi de l\'email de réinitialisation');
+    // En développement, on continue sans email
+    return;
   }
 }

@@ -37,27 +37,44 @@ app.use((req, res, next) => {
   next();
 });
 
-
 (async () => {
-  const server = await registerRoutes(app);
+  try {
+    console.log('Démarrage du serveur...');
+    const server = await registerRoutes(app);
 
-  // Error handling middleware
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    console.error(err);
-    res.status(500).json({ message: err.message });
-  });
+    // Error handling middleware
+    app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+      console.error('Erreur critique:', err);
+      res.status(500).json({ message: err.message });
+    });
 
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+    if (app.get("env") === "development") {
+      console.log('Configuration de Vite pour le développement...');
+      await setupVite(app, server);
+    } else {
+      console.log('Configuration du serveur statique pour la production...');
+      serveStatic(app);
+    }
+
+    const port = 5000;
+    server.listen({
+      port,
+      host: "0.0.0.0",
+    }, () => {
+      log(`Serveur démarré avec succès sur le port ${port}`);
+    });
+
+    // Gestion des erreurs de serveur
+    server.on('error', (error: any) => {
+      console.error('Erreur du serveur:', error);
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Le port ${port} est déjà utilisé`);
+        process.exit(1);
+      }
+    });
+
+  } catch (error) {
+    console.error('Erreur lors du démarrage du serveur:', error);
+    process.exit(1);
   }
-
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-  }, () => {
-    log(`Server running on port ${port}`);
-  });
 })();

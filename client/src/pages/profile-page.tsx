@@ -24,7 +24,7 @@ type Document = {
 };
 
 export default function ProfilePage() {
-  const { user, logoutMutation } = useAuth();
+  const { user, logoutMutation, isProjectOwner, isProjectSeeker } = useAuth();
   const { toast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -95,8 +95,6 @@ export default function ProfilePage() {
     }
   };
 
-  const isProjectOwner = user?.role === "project_owner" || user?.currentRole === "project_owner";
-  const isProjectSeeker = user?.role === "project_seeker" || user?.currentRole === "project_seeker";
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
