@@ -1,5 +1,6 @@
 import { apiRequest } from "./queryClient";
 import { getDistance } from "geolib";
+import { Project } from "@shared/schema";
 
 export interface MatchResult {
   id: number;
@@ -7,21 +8,6 @@ export interface MatchResult {
   projectId: number;
   status: 'pending' | 'matched' | 'passed';
   createdAt: string;
-}
-
-export interface Project {
-  id: number;
-  title: string;
-  description: string;
-  sector: string;
-  location: {
-    latitude: number;
-    longitude: number;
-    city: string;
-    department: string;
-    postalCode?: string;
-  };
-  distance?: number;
 }
 
 // Calcul de distance amélioré utilisant geolib
@@ -46,7 +32,7 @@ export function filterProjectsByLocation(
 ): Project[] {
   return projects
     .map(project => {
-      if (!project.location) return { ...project, distance: null };
+      if (!project.location) return { ...project, distance: undefined };
 
       const distance = calculateDistance(
         filters.userLat,
@@ -64,21 +50,21 @@ export function filterProjectsByLocation(
       }
 
       // Filtrer par ville si spécifié
-      if (filters.city && project.location.city) {
+      if (filters.city && project.location) {
         if (!project.location.city.toLowerCase().includes(filters.city.toLowerCase())) {
           return false;
         }
       }
 
       // Filtrer par code postal si spécifié
-      if (filters.postalCode && project.location.postalCode) {
+      if (filters.postalCode && project.location?.postalCode) {
         if (project.location.postalCode !== filters.postalCode) {
           return false;
         }
       }
 
       // Filtrer par département si spécifié
-      if (filters.department && project.location.department) {
+      if (filters.department && project.location) {
         if (project.location.department !== filters.department) {
           return false;
         }
@@ -87,8 +73,8 @@ export function filterProjectsByLocation(
       return true;
     })
     .sort((a, b) => {
-      if (a.distance === null) return 1;
-      if (b.distance === null) return -1;
+      if (!a.distance) return 1;
+      if (!b.distance) return -1;
       return a.distance - b.distance;
     });
 }

@@ -14,6 +14,7 @@ import { matchWithProject, getSuggestedProjects } from "@/lib/matching";
 interface Filters {
   distance: number;
   city?: string;
+  postalCode?: string;
 }
 
 export default function SwipePage() {
@@ -55,7 +56,8 @@ export default function SwipePage() {
         userLocation.latitude,
         userLocation.longitude,
         filters.distance,
-        filters.city
+        filters.city,
+        filters.postalCode
       );
     },
     enabled: !!userLocation,

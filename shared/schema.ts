@@ -14,6 +14,7 @@ export const users = pgTable("users", {
     longitude: number;
     city: string;
     department: string;
+    postalCode?: string;
   }>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -29,6 +30,7 @@ export const projects = pgTable("projects", {
     longitude: number;
     city: string;
     department: string;
+    postalCode?: string;
   }>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -52,10 +54,12 @@ export const insertUserSchema = z.object({
     longitude: z.number(),
     city: z.string(),
     department: z.string(),
+    postalCode: z.string().optional(),
   }).optional(),
 });
 
 export const insertProjectSchema = z.object({
+  userId: z.number().int().min(1),
   title: z.string().min(1, "Le titre est requis"),
   description: z.string().min(10, "La description doit contenir au moins 10 caractères"),
   sector: z.string().min(1, "Le secteur est requis"),
@@ -64,6 +68,7 @@ export const insertProjectSchema = z.object({
     longitude: z.number(),
     city: z.string(),
     department: z.string(),
+    postalCode: z.string().optional(),
   }).optional(),
 });
 
@@ -83,5 +88,5 @@ export type Project = typeof projects.$inferSelect & {
 };
 export type Match = typeof matches.$inferSelect;
 
-// Stub pour la rétrocompatibilité
+// Ajout du stub manquant à la fin du fichier
 export const insertSuggestionSchema = z.object({});

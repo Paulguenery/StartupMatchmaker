@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { setupWebSocket } from "./websocket";
+import { Project } from "@shared/schema";
 
 // Calculate distance between two points using Haversine formula
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -16,22 +17,62 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-function filterProjectsByDistance(userLat: number, userLon: number, maxDistance: number, projects: any[]) {
-  return projects.map(project => {
-    if (!project.location) return { ...project, distance: null };
+function filterProjectsByLocation(
+  projects: Project[],
+  filters: {
+    userLat: number;
+    userLon: number;
+    maxDistance: number;
+    city?: string;
+    postalCode?: string;
+    department?: string;
+  }
+): Project[] {
+  return projects
+    .map(project => {
+      if (!project.location) return { ...project, distance: undefined };
 
-    const distance = calculateDistance(
-      userLat,
-      userLon,
-      project.location.latitude,
-      project.location.longitude
-    );
+      const distance = calculateDistance(
+        filters.userLat,
+        filters.userLon,
+        project.location.latitude,
+        project.location.longitude
+      );
 
-    return { ...project, distance };
-  }).filter(project => project.distance === null || project.distance <= maxDistance)
+      return { ...project, distance };
+    })
+    .filter(project => {
+      // Filtrer par distance si spécifié
+      if (project.distance && project.distance > filters.maxDistance) {
+        return false;
+      }
+
+      // Filtrer par ville si spécifié
+      if (filters.city && project.location) {
+        if (!project.location.city.toLowerCase().includes(filters.city.toLowerCase())) {
+          return false;
+        }
+      }
+
+      // Filtrer par code postal si spécifié
+      if (filters.postalCode && project.location?.postalCode) {
+        if (!project.location.postalCode.includes(filters.postalCode)) {
+          return false;
+        }
+      }
+
+      // Filtrer par département si spécifié
+      if (filters.department && project.location) {
+        if (!project.location.department.includes(filters.department)) {
+          return false;
+        }
+      }
+
+      return true;
+    })
     .sort((a, b) => {
-      if (a.distance === null) return 1;
-      if (b.distance === null) return -1;
+      if (!a.distance) return 1;
+      if (!b.distance) return -1;
       return a.distance - b.distance;
     });
 }
@@ -44,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const { distance, latitude, longitude, sector, city } = req.query;
+      const { distance, latitude, longitude, sector, city, postalCode, department } = req.query;
       let projects = await storage.getProjects();
 
       // Filtrer par secteur si spécifié
@@ -52,44 +93,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         projects = projects.filter(project => project.sector === sector);
       }
 
-      // Filtrer par ville si spécifiée
-      if (city) {
-        projects = projects.filter(project =>
-          project.location?.city.toLowerCase().includes((city as string).toLowerCase())
-        );
-      }
-
-      // Filtrer par distance si des coordonnées sont fournies
-      if (distance && latitude && longitude) {
-        const maxDistance = parseInt(distance as string);
+      // Appliquer les filtres de localisation
+      if (latitude && longitude) {
         const userLat = parseFloat(latitude as string);
         const userLon = parseFloat(longitude as string);
+        const maxDistance = distance ? parseInt(distance as string) : 50;
 
-        projects = projects
-          .filter(project => {
-            if (!project.location) return false;
-            const dist = calculateDistance(
-              userLat,
-              userLon,
-              project.location.latitude,
-              project.location.longitude
-            );
-            return dist <= maxDistance;
-          })
-          .map(project => ({
-            ...project,
-            distance: project.location ? calculateDistance(
-              userLat,
-              userLon,
-              project.location.latitude,
-              project.location.longitude
-            ) : null
-          }))
-          .sort((a, b) => {
-            if (a.distance === null) return 1;
-            if (b.distance === null) return -1;
-            return a.distance - b.distance;
-          });
+        projects = filterProjectsByLocation(projects, {
+          userLat,
+          userLon,
+          maxDistance,
+          city: city as string,
+          postalCode: postalCode as string,
+          department: department as string
+        });
       }
 
       res.json(projects);
@@ -104,7 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const { latitude, longitude, distance, city } = req.query;
+      const { latitude, longitude, distance, city, postalCode, department } = req.query;
 
       if (!latitude || !longitude) {
         return res.status(400).json({ message: 'Coordonnées requises' });
@@ -122,16 +139,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const matchedProjectIds = userMatches.map(m => m.projectId);
       projects = projects.filter(p => !matchedProjectIds.includes(p.id));
 
-      // Apply distance filter first
-      projects = filterProjectsByDistance(userLat, userLon, maxDistance, projects);
+      // Apply location filters
+      projects = filterProjectsByLocation(projects, {
+        userLat,
+        userLon,
+        maxDistance,
+        city: city as string,
+        postalCode: postalCode as string,
+        department: department as string
+      });
 
-      // Then apply city filter if specified
-      if (city && typeof city === 'string' && city.trim()) {
-        const cityFilter = city.trim().toLowerCase();
-        projects = projects.filter(project =>
-          project.location?.city.toLowerCase().includes(cityFilter)
-        );
-      }
+      console.log('Projets filtrés:', {
+        total: projects.length,
+        filters: {
+          userLat,
+          userLon,
+          maxDistance,
+          city,
+          postalCode,
+          department
+        }
+      });
 
       res.json(projects);
     } catch (error) {

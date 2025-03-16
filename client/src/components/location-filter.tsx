@@ -8,13 +8,18 @@ import { Search } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface LocationFilterProps {
-  onFilterChange: (filters: { distance: number; city?: string }) => void;
+  onFilterChange: (filters: { 
+    distance: number; 
+    city?: string;
+    postalCode?: string;
+  }) => void;
   projectCount?: number;
 }
 
 export function LocationFilter({ onFilterChange, projectCount }: LocationFilterProps) {
   const [distance, setDistance] = useState(50);
   const [city, setCity] = useState("");
+  const [postalCode, setPostalCode] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [isCountUpdating, setIsCountUpdating] = useState(false);
 
@@ -24,7 +29,8 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
     setIsCountUpdating(true);
     onFilterChange({
       distance: newDistance,
-      city: city.trim() || undefined
+      city: city.trim() || undefined,
+      postalCode: postalCode.trim() || undefined
     });
     setTimeout(() => setIsCountUpdating(false), 300);
   };
@@ -33,11 +39,16 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
     setCity(value);
   };
 
+  const handlePostalCodeChange = (value: string) => {
+    setPostalCode(value);
+  };
+
   const handleSearch = () => {
     setIsCountUpdating(true);
     onFilterChange({
       distance,
-      city: city.trim() || undefined
+      city: city.trim() || undefined,
+      postalCode: postalCode.trim() || undefined
     });
     setTimeout(() => setIsCountUpdating(false), 300);
   };
@@ -99,6 +110,7 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
               </motion.div>
             </AnimatePresence>
           </div>
+
           <motion.div
             whileTap={{ scale: 1.02 }}
             whileHover={{ scale: 1.01 }}
@@ -122,7 +134,7 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
                 Faites glisser pour ajuster le rayon
               </motion.div>
             )}
-            {/* Barre de progression principale */}
+            {/* Effets visuels du slider */}
             <motion.div
               className="absolute -bottom-3 left-0 right-0 h-1 bg-primary/10 rounded-full"
               style={{
@@ -131,7 +143,6 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
               }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             />
-            {/* Effet de traînée lors du glissement */}
             <motion.div
               className="absolute -bottom-3 left-0 right-0 h-1 bg-primary/5 rounded-full"
               initial={{ scaleX: 0 }}
@@ -141,7 +152,6 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
               }}
               style={{ transformOrigin: "left" }}
             />
-            {/* Animation d'onde */}
             <motion.div
               className="absolute -bottom-3 left-0 right-0 h-1 bg-primary/20"
               initial={{ scaleX: 0, opacity: 0 }}
@@ -156,7 +166,6 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
               } : { scaleX: 0, opacity: 0 }}
               style={{ transformOrigin: "left" }}
             />
-            {/* Indicateur de progression */}
             <motion.div
               className="absolute -bottom-3 left-0 h-1 bg-primary rounded-full"
               style={{
@@ -176,7 +185,6 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
                 }
               }}
             />
-            {/* Marqueurs de distance */}
             {[0, 50, 100, 150].map((value) => (
               <motion.div
                 key={value}
@@ -212,27 +220,27 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
           </motion.div>
         </div>
 
-        {/* Section Ville */}
+        {/* Section Recherche par localisation */}
         <div className="space-y-4">
-          <Label>Rechercher par ville</Label>
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <Input 
-                type="text" 
-                placeholder="Saisissez le nom d'une ville"
-                value={city}
-                onChange={(e) => handleCityChange(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleSearch();
-                  }
-                }}
-              />
-            </div>
+          <Label>Recherche par localisation</Label>
+          <div className="grid gap-4">
+            <Input 
+              type="text" 
+              placeholder="Saisissez le nom d'une ville"
+              value={city}
+              onChange={(e) => handleCityChange(e.target.value)}
+            />
+            <Input 
+              type="text" 
+              placeholder="Code postal"
+              value={postalCode}
+              onChange={(e) => handlePostalCodeChange(e.target.value)}
+              maxLength={5}
+              pattern="[0-9]*"
+            />
             <Button 
               onClick={handleSearch}
-              className="px-6"
+              className="w-full"
             >
               <Search className="h-4 w-4 mr-2" />
               Rechercher
