@@ -17,7 +17,6 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
   const [city, setCity] = useState("");
   const [isDragging, setIsDragging] = useState(false);
 
-  // Appliquer les filtres de manière indépendante
   const handleDistanceChange = (values: number[]) => {
     const newDistance = values[0];
     setDistance(newDistance);
@@ -47,22 +46,43 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
         {/* Section Distance */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label>Distance maximale</Label>
-            <AnimatePresence>
+            <Label>Rayon de recherche</Label>
+            <AnimatePresence mode="wait">
               <motion.div
-                key={distance}
+                key={`${distance}-${projectCount}`}
                 initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
+                animate={{ 
+                  scale: 1, 
+                  opacity: 1,
+                  transition: { type: "spring", stiffness: 200, damping: 20 }
+                }}
                 exit={{ scale: 0.8, opacity: 0 }}
                 className="flex items-center gap-2"
               >
-                <span className="text-sm font-medium text-muted-foreground">
+                <motion.span 
+                  className="text-sm font-medium"
+                  key={distance}
+                  initial={{ y: -10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
                   {distance} km
-                </span>
+                </motion.span>
                 {projectCount !== undefined && (
-                  <span className="text-sm text-muted-foreground">
-                    ({projectCount} projet{projectCount !== 1 ? 's' : ''})
-                  </span>
+                  <motion.div
+                    key={projectCount}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ 
+                      opacity: 1, 
+                      scale: 1,
+                      transition: { delay: 0.1 }
+                    }}
+                    className="px-2 py-1 bg-secondary rounded-full"
+                  >
+                    <span className="text-sm text-secondary-foreground">
+                      {projectCount} projet{projectCount !== 1 ? 's' : ''}
+                    </span>
+                  </motion.div>
                 )}
               </motion.div>
             </AnimatePresence>
@@ -70,6 +90,7 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
           <motion.div
             whileTap={{ scale: 1.02 }}
             whileHover={{ scale: 1.01 }}
+            className="relative"
           >
             <Slider
               value={[distance]}
@@ -78,8 +99,17 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
               onValueChange={handleDistanceChange}
               onValueCommit={() => setIsDragging(false)}
               onPointerDown={() => setIsDragging(true)}
-              className={isDragging ? "cursor-grabbing" : "cursor-grab"}
+              className={`${isDragging ? "cursor-grabbing" : "cursor-grab"} transition-all duration-200`}
             />
+            {isDragging && (
+              <motion.div
+                className="absolute -bottom-6 left-0 right-0 text-center text-sm text-muted-foreground"
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                Faites glisser pour ajuster le rayon
+              </motion.div>
+            )}
           </motion.div>
         </div>
 
@@ -90,7 +120,7 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
             <div className="flex-1">
               <Input 
                 type="text" 
-                placeholder="Entrez une ville"
+                placeholder="Saisissez le nom d'une ville"
                 value={city}
                 onChange={(e) => handleCityChange(e.target.value)}
                 onKeyDown={(e) => {
