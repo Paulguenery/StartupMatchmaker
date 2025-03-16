@@ -14,27 +14,34 @@ console.log('Démarrage du serveur MyMate...');
 console.log('Initialisation de l\'authentification...');
 setupAuth(app);
 
-// Content Security Policy mise à jour pour autoriser Stripe et les styles
+// Configuration CORS et sécurité
 app.use((req, res, next) => {
+  // Permettre les requêtes du serveur de développement
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5000');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  // Content Security Policy de base pour le développement
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; " +
     "style-src 'self' 'unsafe-inline'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com; " +
-    "connect-src 'self' http://localhost:* https://*.stripe.com https://api.stripe.com https://api-adresse.data.gouv.fr; " +
-    "frame-src 'self' https://*.stripe.com; " +
-    "img-src 'self' data: blob: https:; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+    "connect-src 'self' http://localhost:* https://api-adresse.data.gouv.fr; " +
+    "img-src 'self' data: blob:; " +
     "font-src 'self' data:;"
   );
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
   next();
 });
 
-// Logging middleware pour le debugging
+// Logging minimal pour le debugging
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
-  console.log('Session:', req.session);
-  console.log('Authenticated:', req.isAuthenticated());
-  console.log('User:', req.user);
   next();
 });
 
@@ -51,13 +58,7 @@ app.use((req, res, next) => {
 
     if (app.get("env") === "development") {
       console.log('Configuration de Vite pour le développement...');
-      try {
-        await setupVite(app, server);
-        console.log('Configuration Vite terminée avec succès');
-      } catch (viteError) {
-        console.error('Erreur lors de la configuration de Vite:', viteError);
-        throw viteError;
-      }
+      await setupVite(app, server);
     } else {
       console.log('Configuration du serveur statique pour la production...');
       serveStatic(app);
@@ -69,15 +70,6 @@ app.use((req, res, next) => {
       host: "0.0.0.0",
     }, () => {
       console.log(`✅ Serveur démarré avec succès sur le port ${port}`);
-    });
-
-    // Gestion des erreurs de serveur
-    server.on('error', (error: any) => {
-      console.error('❌ Erreur du serveur:', error);
-      if (error.code === 'EADDRINUSE') {
-        console.error(`Le port ${port} est déjà utilisé`);
-        process.exit(1);
-      }
     });
 
   } catch (error) {

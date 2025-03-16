@@ -1,18 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import Stripe from "stripe";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { setupWebSocket } from "./websocket";
-import { insertProjectSchema, insertMatchSchema, insertRatingSchema, insertSuggestionSchema } from "@shared/schema";
-
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Clé secrète Stripe manquante: STRIPE_SECRET_KEY');
-}
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-02-24",
-});
+import { calculateDistance } from "@/lib/geocoding";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   setupAuth(app);
@@ -21,37 +12,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/projects", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
-    const { category, distance, duration } = req.query;
+    const { distance, latitude, longitude } = req.query;
     let projects = await storage.getProjects();
 
-    // Appliquer les filtres
-    if (category) {
-      projects = projects.filter(p => p.category === category);
-    }
-
-    if (duration) {
-      projects = projects.filter(p => p.duration === duration);
-    }
-
-    if (distance && req.user?.location) {
+    // Filtrer par distance si des coordonnées sont fournies
+    if (distance && latitude && longitude) {
       const maxDistance = parseInt(distance as string);
-      projects = projects.filter(p => {
-        if (!p.location || !req.user?.location) return false;
+      const userLat = parseFloat(latitude as string);
+      const userLon = parseFloat(longitude as string);
 
-        // Calcul de la distance (en km) entre deux points
-        const R = 6371; // Rayon de la Terre en km
-        const lat1 = req.user.location.latitude * Math.PI / 180;
-        const lat2 = p.location.latitude * Math.PI / 180;
-        const dLat = (p.location.latitude - req.user.location.latitude) * Math.PI / 180;
-        const dLon = (p.location.longitude - req.user.location.longitude) * Math.PI / 180;
+      projects = projects.filter(project => {
+        if (!project.location) return false;
 
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                 Math.cos(lat1) * Math.cos(lat2) *
-                 Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        const distance = R * c;
-
-        return distance <= maxDistance;
+        const dist = calculateDistance(
+          userLat,
+          userLon,
+          project.location.latitude,
+          project.location.longitude
+        );
+        return dist <= maxDistance;
       });
     }
 
@@ -60,76 +39,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/projects", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const validation = insertProjectSchema.safeParse(req.body);
-    if (!validation.success) {
-      return res.status(400).json(validation.error);
-    }
-    const project = await storage.createProject({
-      ...validation.data,
-      userId: req.user!.id,
-    });
-    res.status(201).json(project);
-  });
-
-  app.post("/api/projects", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      // Exemples d'offres autour de Rouen
-      const exampleProjects = [
-        {
-          title: "Développement d'une application mobile",
-          description: "Recherche développeur React Native pour une application de livraison locale",
-          category: "Informatique et technologie",
-          collaborationType: "full_time",
-          location: {
-            city: "Rouen",
-            department: "Seine-Maritime (76)",
-            latitude: 49.443232,
-            longitude: 1.099971
-          },
-          requiredSkills: ["React Native", "TypeScript", "Mobile Development"],
-          userId: req.user!.id,
-        },
-        {
-          title: "Création site e-commerce",
-          description: "Création d'un site e-commerce pour une boutique locale",
-          category: "Informatique et technologie",
-          collaborationType: "part_time",
-          location: {
-            city: "Le Havre",
-            department: "Seine-Maritime (76)",
-            latitude: 49.494370,
-            longitude: 0.107929
-          },
-          requiredSkills: ["React", "Node.js", "E-commerce"],
-          userId: req.user!.id,
-        },
-        {
-          title: "Développement backend Python",
-          description: "Développement d'une API REST pour une startup",
-          category: "Informatique et technologie",
-          collaborationType: "full_time",
-          location: {
-            city: "Évreux",
-            department: "Eure (27)",
-            latitude: 49.027013,
-            longitude: 1.151361
-          },
-          requiredSkills: ["Python", "Django", "API REST"],
-          userId: req.user!.id,
-        }
-      ];
-
-      // Créer tous les projets
-      const projects = await Promise.all(
-        exampleProjects.map(project => storage.createProject(project))
-      );
-
-      res.status(201).json(projects);
+      const project = await storage.createProject({
+        ...req.body,
+        userId: req.user!.id,
+      });
+      res.status(201).json(project);
     } catch (error) {
-      console.error('Erreur lors de la création des projets:', error);
-      res.status(500).json({ message: 'Erreur lors de la création des projets' });
+      console.error('Erreur lors de la création du projet:', error);
+      res.status(500).json({ message: 'Erreur lors de la création du projet' });
     }
   });
 
@@ -137,21 +56,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Matches
   app.post("/api/matches", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    const validation = insertMatchSchema.safeParse(req.body);
-    if (!validation.success) {
-      return res.status(400).json(validation.error);
+
+    try {
+      const match = await storage.createMatch({
+        ...req.body,
+        userId: req.user!.id,
+      });
+      res.status(201).json(match);
+    } catch (error) {
+      console.error('Erreur lors de la création du match:', error);
+      res.status(500).json({ message: 'Erreur lors de la création du match' });
     }
-    const match = await storage.createMatch({
-      ...validation.data,
-      userId: req.user!.id,
-    });
-    res.status(201).json(match);
   });
 
   app.get("/api/matches", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     const matches = await storage.getMatchesByUserId(req.user!.id);
     res.json(matches);
+  });
+
+  // Recherche de profils
+  app.get("/api/users/search", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+
+    const { distance, latitude, longitude } = req.query;
+    let users = await storage.getUsers();
+
+    // Filtrer par distance si des coordonnées sont fournies
+    if (distance && latitude && longitude) {
+      const maxDistance = parseInt(distance as string);
+      const userLat = parseFloat(latitude as string);
+      const userLon = parseFloat(longitude as string);
+
+      users = users.filter(user => {
+        if (!user.location) return false;
+
+        const dist = calculateDistance(
+          userLat,
+          userLon,
+          user.location.latitude,
+          user.location.longitude
+        );
+        return dist <= maxDistance;
+      });
+    }
+
+    res.json(users);
   });
 
   // Ratings
@@ -271,72 +221,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Ajouter cette nouvelle route pour la recherche de profils
-  app.get("/api/users/search", async (req, res) => {
-    if (!req.isAuthenticated()) return res.sendStatus(401);
-
-    const {
-      skills,
-      distance,
-      experienceLevel,
-      availability,
-      collaborationType,
-      isVerified
-    } = req.query;
-
-    let users = await storage.getUsers();
-
-    // Appliquer les filtres
-    if (skills) {
-      const requiredSkills = (skills as string).split(',');
-      users = users.filter(user => 
-        user.skills?.some(skill => 
-          requiredSkills.includes(skill.toLowerCase())
-        )
-      );
-    }
-
-    if (experienceLevel) {
-      users = users.filter(user => user.experienceLevel === experienceLevel);
-    }
-
-    if (availability) {
-      users = users.filter(user => user.availability === availability);
-    }
-
-    if (collaborationType) {
-      users = users.filter(user => user.collaborationType === collaborationType);
-    }
-
-    if (isVerified === 'true') {
-      users = users.filter(user => user.isVerified);
-    }
-
-    if (distance && req.user?.location) {
-      const maxDistance = parseInt(distance as string);
-      users = users.filter(user => {
-        if (!user.location || !req.user?.location) return false;
-
-        // Calcul de la distance (en km) entre deux points
-        const R = 6371; // Rayon de la Terre en km
-        const lat1 = req.user.location.latitude * Math.PI / 180;
-        const lat2 = user.location.latitude * Math.PI / 180;
-        const dLat = (user.location.latitude - req.user.location.latitude) * Math.PI / 180;
-        const dLon = (user.location.longitude - req.user.location.longitude) * Math.PI / 180;
-
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                 Math.cos(lat1) * Math.cos(lat2) *
-                 Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        const distance = R * c;
-
-        return distance <= maxDistance;
-      });
-    }
-
-    res.json(users);
-  });
-
   // Suggestions
   app.get("/api/suggestions", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
@@ -366,7 +250,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(400).json({ error: error.message });
     }
   });
-
 
   const httpServer = createServer(app);
   setupWebSocket(httpServer);
