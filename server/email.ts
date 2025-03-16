@@ -6,12 +6,13 @@ let transporter: nodemailer.Transporter | null = null;
 // Initialiser le transporteur de manière asynchrone
 async function initializeTransporter() {
   try {
-    // En développement, on peut fonctionner sans email
-    if (process.env.NODE_ENV !== 'production' && (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS)) {
-      console.log('Configuration SMTP non fournie en développement, le service d\'email est désactivé');
+    // En développement, désactiver l'email
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('Mode développement : service d\'email désactivé');
       return;
     }
 
+    // En production, configurer le transporteur
     transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -29,21 +30,16 @@ async function initializeTransporter() {
     console.log('Serveur SMTP prêt à envoyer des emails');
   } catch (error) {
     console.error('Erreur de configuration SMTP:', error);
-    // En production, on veut être informé des erreurs SMTP
-    if (process.env.NODE_ENV === 'production') {
-      throw error;
-    }
-    // En développement, on continue sans email
     transporter = null;
   }
 }
 
 // Initialiser au démarrage
-initializeTransporter();
+initializeTransporter().catch(console.error);
 
 export async function sendPasswordResetEmail(email: string, resetToken: string) {
   try {
-    // Si pas de transporteur, simuler l'envoi en développement
+    // Simuler l'envoi en développement
     if (!transporter) {
       console.log('Mode développement : simulation d\'envoi d\'email');
       console.log('Email destiné à:', email);
@@ -87,18 +83,10 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email envoyé avec succès:', {
-      messageId: info.messageId,
-      response: info.response
-    });
-
+    console.log('Email envoyé avec succès:', info.messageId);
     return info;
   } catch (error) {
     console.error('Erreur lors de l\'envoi de l\'email:', error);
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('Erreur lors de l\'envoi de l\'email de réinitialisation');
-    }
-    // En développement, on continue sans email
     return;
   }
 }

@@ -73,18 +73,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isProjectSeeker = effectiveRole === "project_seeker";
   const isAdmin = user?.role === "admin";
 
-  const value = {
-    user,
-    isProjectOwner,
-    isProjectSeeker,
-    isAdmin,
-    loginMutation,
-    logoutMutation,
-    registerMutation,
-    updateRoleMutation,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider 
+      value={{
+        user,
+        isProjectOwner,
+        isProjectSeeker,
+        isAdmin,
+        loginMutation,
+        logoutMutation,
+        registerMutation,
+        updateRoleMutation,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

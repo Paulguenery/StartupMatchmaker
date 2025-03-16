@@ -10,6 +10,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Initialiser l'authentification avant les autres middlewares
+console.log('Initialisation de l\'authentification...');
 setupAuth(app);
 
 // Content Security Policy
@@ -50,7 +51,13 @@ app.use((req, res, next) => {
 
     if (app.get("env") === "development") {
       console.log('Configuration de Vite pour le développement...');
-      await setupVite(app, server);
+      try {
+        await setupVite(app, server);
+        console.log('Configuration Vite terminée avec succès');
+      } catch (viteError) {
+        console.error('Erreur lors de la configuration de Vite:', viteError);
+        throw viteError;
+      }
     } else {
       console.log('Configuration du serveur statique pour la production...');
       serveStatic(app);
