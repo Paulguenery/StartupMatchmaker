@@ -16,14 +16,17 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
   const [distance, setDistance] = useState(50);
   const [city, setCity] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [isCountUpdating, setIsCountUpdating] = useState(false);
 
   const handleDistanceChange = (values: number[]) => {
     const newDistance = values[0];
     setDistance(newDistance);
+    setIsCountUpdating(true);
     onFilterChange({
       distance: newDistance,
       city: city.trim() || undefined
     });
+    setTimeout(() => setIsCountUpdating(false), 300);
   };
 
   const handleCityChange = (value: string) => {
@@ -31,10 +34,12 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
   };
 
   const handleSearch = () => {
+    setIsCountUpdating(true);
     onFilterChange({
       distance,
       city: city.trim() || undefined
     });
+    setTimeout(() => setIsCountUpdating(false), 300);
   };
 
   return (
@@ -74,8 +79,15 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ 
                       opacity: 1, 
-                      scale: 1,
-                      transition: { delay: 0.1 }
+                      scale: isCountUpdating ? 1.1 : 1,
+                      transition: { 
+                        scale: {
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 20
+                        },
+                        opacity: { duration: 0.2 }
+                      }
                     }}
                     className="px-2 py-1 bg-secondary rounded-full"
                   >
@@ -110,6 +122,23 @@ export function LocationFilter({ onFilterChange, projectCount }: LocationFilterP
                 Faites glisser pour ajuster le rayon
               </motion.div>
             )}
+            <motion.div
+              className="absolute -bottom-3 left-0 right-0 h-1 bg-primary/10 rounded-full"
+              style={{
+                scaleX: distance / 150,
+                transformOrigin: "left"
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            />
+            <motion.div
+              className="absolute -bottom-3 left-0 right-0 h-1 bg-primary/5 rounded-full"
+              initial={{ scaleX: 0 }}
+              animate={{ 
+                scaleX: isDragging ? distance / 150 : 0,
+                transition: { type: "spring", stiffness: 400, damping: 40 }
+              }}
+              style={{ transformOrigin: "left" }}
+            />
           </motion.div>
         </div>
 
