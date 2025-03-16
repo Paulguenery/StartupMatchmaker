@@ -12,7 +12,7 @@ import { matchWithProject, getSuggestedProjects } from "@/lib/matching";
 
 interface Filters {
   distance: number;
-  city: string;
+  city?: string;
 }
 
 export default function SwipePage() {
@@ -44,16 +44,24 @@ export default function SwipePage() {
   }, [toast]);
 
   // Fetch suggested projects
-  const { data: projects = [], isLoading } = useQuery<Project[]>({
+  const { data: projects = [], isLoading, error } = useQuery<Project[]>({
     queryKey: ["/api/projects/suggestions", userLocation, filters],
     queryFn: async () => {
       if (!userLocation) return [];
-      return getSuggestedProjects(
-        userLocation.latitude,
-        userLocation.longitude,
-        filters.distance,
-        filters.city
-      );
+      console.log("Appel API avec les filtres:", filters);
+      try {
+        const results = await getSuggestedProjects(
+          userLocation.latitude,
+          userLocation.longitude,
+          filters.distance,
+          filters.city
+        );
+        console.log("Résultats de l'API:", results);
+        return results;
+      } catch (error) {
+        console.error("Erreur API:", error);
+        throw error;
+      }
     },
     enabled: !!userLocation,
   });
@@ -87,6 +95,17 @@ export default function SwipePage() {
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
           <p className="text-gray-600">Chargement des projets...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Erreur de chargement:", error);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center text-red-500">
+          Une erreur est survenue lors du chargement des projets.
         </div>
       </div>
     );

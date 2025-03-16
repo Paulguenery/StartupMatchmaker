@@ -14,6 +14,7 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
   const [city, setCity] = useState("");
 
   const debouncedFilterChange = useDebouncedCallback((newFilters: { distance: number; city?: string }) => {
+    console.log("Filtre débounced appliqué:", newFilters);
     onFilterChange(newFilters);
   }, 300);
 
@@ -26,8 +27,13 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
   const handleCityChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
     const newCity = event.target.value;
+    console.log("Nouvelle ville saisie:", newCity);
     setCity(newCity);
-    debouncedFilterChange({ distance, city: newCity });
+    if (newCity.length > 0) {
+      debouncedFilterChange({ distance, city: newCity });
+    } else {
+      debouncedFilterChange({ distance, city: undefined });
+    }
   };
 
   return (
