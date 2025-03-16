@@ -25,6 +25,7 @@ export const projects = pgTable("projects", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   sector: text("sector").notNull(),
+  duration: text("duration"), // Ajout du champ duration
   location: json("location").$type<{
     latitude: number;
     longitude: number;
@@ -63,6 +64,7 @@ export const insertProjectSchema = z.object({
   title: z.string().min(1, "Le titre est requis"),
   description: z.string().min(10, "La description doit contenir au moins 10 caractères"),
   sector: z.string().min(1, "Le secteur est requis"),
+  duration: z.enum(["court", "moyen", "long"]).optional(),
   location: z.object({
     latitude: z.number(),
     longitude: z.number(),
