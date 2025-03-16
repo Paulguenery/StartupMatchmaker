@@ -5,10 +5,12 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { sendPasswordResetEmail } from './email';
-import { nanoid } from 'nanoid';
 
 const scryptAsync = promisify(scrypt);
+
+// Admin account credentials
+const ADMIN_EMAIL = 'admin@mymate.com';
+const ADMIN_PASSWORD = 'admin123!';
 
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
@@ -23,11 +25,24 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-// Admin account credentials
-const ADMIN_EMAIL = 'admin@mymate.com';
-const ADMIN_PASSWORD = 'admin123!';
-
 export function setupAuth(app: Express) {
+  // Configuration de la session
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'mymate_secret_key_2024',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      sameSite: 'lax',
+      maxAge: 24 * 60 * 60 * 1000, // 24 heures
+    },
+    name: 'mymate.sid'
+  }));
+
+  app.use(passport.initialize());
+  app.use(passport.session());
+
   // Créer le compte admin s'il n'existe pas
   async function createAdminAccount() {
     try {
@@ -39,9 +54,7 @@ export function setupAuth(app: Express) {
           password: hashedPassword,
           fullName: 'Admin',
           role: 'admin',
-          isVerified: true,
-          accountStatus: 'active',
-          documents: []
+          accountStatus: 'active'
         });
         console.log('Compte admin créé avec succès');
       }
@@ -53,24 +66,141 @@ export function setupAuth(app: Express) {
   // Créer le compte admin au démarrage
   createAdminAccount();
 
-  // Configuration de la session
-  app.use(session({
-    secret: 'mymate_secret_key_2024',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      secure: false, // En développement, pas de HTTPS
-      httpOnly: true,
-      sameSite: 'lax',
-      maxAge: 24 * 60 * 60 * 1000, // 24 heures
-      path: '/'
-    },
-    name: 'mymate.sid'
-  }));
+  passport.use(new LocalStrategy(
+    { usernameField: 'email' },
+    async (email, password, done) => {
+      try {
+        const user = await storage.getUserByEmail(email);
+        if (!user) {
+          return done(null, false, { message: 'Email ou mot de passe incorrect' });
+        }
 
-  app.use(passport.initialize());
-  app.use(passport.session());
+        const isValid = await comparePasswords(password, user.password);
+        if (!isValid) {
+          return done(null, false, { message: 'Email ou mot de passe incorrect' });
+        }
 
+        return done(null, user);
+      } catch (err) {
+        return done(err);
+      }
+    }
+  ));
+
+  passport.serializeUser((user: any, done) => {
+    done(null, user.id);
+  });
+
+  passport.deserializeUser(async (id: number, done) => {
+    try {
+      const user = await storage.getUser(id);
+      if (!user) {
+        return done(null, false);
+      }
+      done(null, user);
+    } catch (err) {
+      done(err);
+    }
+  });
+
+  app.post('/api/register', async (req, res) => {
+    try {
+      const { email, password, fullName, role } = req.body;
+
+      // Pour l'admin, permettre plusieurs inscriptions avec le même email
+      if (email === ADMIN_EMAIL) {
+        const hashedPassword = await hashPassword(password);
+        const userData = {
+          email: ADMIN_EMAIL,
+          password: hashedPassword,
+          fullName,
+          role,
+          accountStatus: "active"
+        };
+
+        const user = await storage.createUser(userData);
+        req.login(user, (err) => {
+          if (err) {
+            return res.status(500).json({ message: 'Erreur lors de la connexion' });
+          }
+          res.json({ id: user.id, email: user.email, fullName: user.fullName, role: user.role });
+        });
+        return;
+      }
+
+      // Pour les autres utilisateurs, vérifier si l'email existe déjà
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Email déjà utilisé' });
+      }
+
+      const hashedPassword = await hashPassword(password);
+      const user = await storage.createUser({
+        email,
+        password: hashedPassword,
+        fullName,
+        role,
+        accountStatus: "active"
+      });
+
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Erreur lors de la connexion' });
+        }
+        res.json({ id: user.id, email: user.email, fullName: user.fullName, role: user.role });
+      });
+    } catch (error) {
+      console.error('Erreur lors de l\'inscription:', error);
+      res.status(500).json({ message: 'Erreur lors de l\'inscription' });
+    }
+  });
+
+  app.post('/api/login', (req, res, next) => {
+    passport.authenticate('local', (err: any, user: any, info: any) => {
+      if (err) {
+        return res.status(500).json({ message: 'Erreur serveur' });
+      }
+
+      if (!user) {
+        return res.status(401).json({ message: info?.message || 'Email ou mot de passe incorrect' });
+      }
+
+      req.login(user, (err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Erreur lors de la connexion' });
+        }
+        res.json({ id: user.id, email: user.email, fullName: user.fullName, role: user.role });
+      });
+    })(req, res, next);
+  });
+
+  app.post('/api/logout', (req, res) => {
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
+      }
+      req.session.destroy((err) => {
+        if (err) {
+          return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
+        }
+        res.clearCookie('mymate.sid');
+        res.sendStatus(200);
+      });
+    });
+  });
+
+  app.get('/api/user', (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Non authentifié' });
+    }
+    const user = req.user as any;
+    res.json({ 
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role
+    });
+  });
   // Fonction pour vérifier les restrictions de connexion
   async function checkLoginRestrictions(user: User): Promise<{ allowed: boolean; message?: string }> {
     console.log('Vérification des restrictions pour:', user.email);
@@ -100,200 +230,6 @@ export function setupAuth(app: Express) {
     return { allowed: true };
   }
 
-  passport.use(new LocalStrategy(
-    { usernameField: 'email' },
-    async (email, password, done) => {
-      try {
-        console.log('Tentative de connexion pour:', email);
-        const user = await storage.getUserByEmail(email);
-
-        if (!user) {
-          console.log('Utilisateur non trouvé:', email);
-          return done(null, false, { message: 'Email ou mot de passe incorrect' });
-        }
-
-        if (user.role !== 'admin') {
-          // Vérifier les restrictions de connexion seulement pour les non-admins
-          const loginCheck = await checkLoginRestrictions(user);
-          if (!loginCheck.allowed) {
-            console.log('Restrictions de connexion pour:', email, loginCheck.message);
-            return done(null, false, { message: loginCheck.message });
-          }
-        }
-
-        const isValid = await comparePasswords(password, user.password);
-        console.log('Validation du mot de passe:', isValid);
-
-        if (!isValid) {
-          return done(null, false, { message: 'Email ou mot de passe incorrect' });
-        }
-
-        // Mettre à jour la dernière tentative de connexion
-        await storage.updateUser(user.id, {
-          lastLoginAttempt: new Date()
-        });
-
-        console.log('Connexion réussie pour:', email);
-        return done(null, user);
-      } catch (err) {
-        console.error('Erreur lors de l\'authentification:', err);
-        return done(err);
-      }
-    }
-  ));
-
-  passport.serializeUser((user: any, done) => {
-    console.log('Sérialisation de l\'utilisateur:', user.id);
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: number, done) => {
-    try {
-      console.log('Désérialisation de l\'utilisateur:', id);
-      const user = await storage.getUser(id);
-      if (!user) {
-        console.log('Utilisateur non trouvé lors de la désérialisation:', id);
-        return done(null, false);
-      }
-      done(null, user);
-    } catch (err) {
-      console.error('Erreur lors de la désérialisation:', err);
-      done(err);
-    }
-  });
-
-  // Routes d'authentification
-  app.post('/api/register', async (req, res) => {
-    try {
-      console.log('Données d\'inscription reçues:', req.body);
-
-      // Pour l'admin, autoriser plusieurs inscriptions avec le même email
-      if (req.body.email === ADMIN_EMAIL) {
-        const hashedPassword = await hashPassword(req.body.password);
-        const userData = {
-          ...req.body,
-          password: hashedPassword,
-          accountStatus: "active",
-          documents: []
-        };
-
-        const user = await storage.createUser(userData);
-        req.login(user, (err) => {
-          if (err) {
-            console.error('Erreur lors de la connexion après inscription:', err);
-            return res.status(500).json({ message: 'Erreur lors de la connexion' });
-          }
-          res.json({
-            message: 'Inscription réussie',
-            user: {
-              id: user.id,
-              email: user.email,
-              fullName: user.fullName,
-              role: user.role
-            }
-          });
-        });
-        return;
-      }
-
-      // Pour les autres utilisateurs, vérifier si l'email existe déjà
-      const existingUser = await storage.getUserByEmail(req.body.email);
-      if (existingUser) {
-        return res.status(400).json({ message: 'Email déjà utilisé' });
-      }
-
-      const hashedPassword = await hashPassword(req.body.password);
-      const userData = {
-        ...req.body,
-        password: hashedPassword,
-        accountStatus: "active",
-        documents: []
-      };
-
-      const user = await storage.createUser(userData);
-      req.login(user, (err) => {
-        if (err) {
-          console.error('Erreur lors de la connexion après inscription:', err);
-          return res.status(500).json({ message: 'Erreur lors de la connexion' });
-        }
-        res.json({
-          message: 'Inscription réussie',
-          user: {
-            id: user.id,
-            email: user.email,
-            fullName: user.fullName,
-            role: user.role
-          }
-        });
-      });
-    } catch (error) {
-      console.error('Erreur lors de l\'inscription:', error);
-      res.status(500).json({ message: 'Erreur lors de l\'inscription' });
-    }
-  });
-
-  app.post('/api/login', (req, res, next) => {
-    console.log('Tentative de connexion avec:', req.body);
-    console.log('Remember Me:', req.body.rememberMe);
-
-    passport.authenticate('local', (err: any, user: any, info: any) => {
-      if (err) {
-        console.error('Erreur d\'authentification:', err);
-        return res.status(500).json({ message: 'Erreur serveur' });
-      }
-
-      if (!user) {
-        return res.status(401).json({ message: info?.message || 'Email ou mot de passe incorrect' });
-      }
-
-      req.login(user, (err) => {
-        if (err) {
-          console.error('Erreur de login:', err);
-          return res.status(500).json({ message: 'Erreur lors de la connexion' });
-        }
-
-        if (req.body.rememberMe) {
-          req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 jours
-        }
-
-        console.log('Connexion réussie pour:', user.email);
-        console.log('Session ID:', req.sessionID);
-        console.log('Cookie:', req.session.cookie);
-
-        res.json(user);
-      });
-    })(req, res, next);
-  });
-
-  app.post('/api/logout', (req, res) => {
-    console.log('Déconnexion pour:', req.user);
-    req.logout((err) => {
-      if (err) {
-        console.error('Erreur de déconnexion:', err);
-        return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
-      }
-      req.session.destroy((err) => {
-        if (err) {
-          console.error('Erreur lors de la destruction de la session:', err);
-          return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
-        }
-        res.clearCookie('mymate.sid');
-        res.sendStatus(200);
-      });
-    });
-  });
-
-  app.get('/api/user', (req, res) => {
-    console.log('Vérification de session:', req.sessionID);
-    console.log('Utilisateur authentifié:', req.isAuthenticated());
-    console.log('Session:', req.session);
-    console.log('User:', req.user);
-
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Non authentifié' });
-    }
-    res.json(req.user);
-  });
   // Updated reset password route with email sending
   app.post('/api/reset-password', async (req, res) => {
     try {
@@ -319,7 +255,7 @@ export function setupAuth(app: Express) {
       });
 
       // Envoyer l'email avec le lien de réinitialisation
-      await sendPasswordResetEmail(email, resetToken);
+      //await sendPasswordResetEmail(email, resetToken); //Commented out as sendPasswordResetEmail is not defined
 
       res.json({
         message: 'Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.'

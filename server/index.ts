@@ -14,15 +14,14 @@ console.log('Démarrage du serveur MyMate...');
 console.log('Initialisation de l\'authentification...');
 setupAuth(app);
 
-// Content Security Policy
+// Content Security Policy plus permissive pour le développement
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; " +
     "style-src 'self' 'unsafe-inline'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com; " +
-    "connect-src 'self' https://api.stripe.com; " +
-    "frame-src 'self' https://*.stripe.com; " +
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+    "connect-src 'self' http://localhost:* https://*; " + // Permettre les connexions locales et HTTPS
     "img-src 'self' data: blob: https:; " +
     "font-src 'self' data:;"
   );

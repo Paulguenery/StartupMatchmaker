@@ -9,8 +9,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Shield, Star, LogOut, FileText, Image as ImageIcon, Award, BriefcaseIcon, GraduationCap, MapPin, Camera } from "lucide-react";
+import { FileText, Image as ImageIcon, Award, BriefcaseIcon, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
@@ -32,7 +31,6 @@ export default function ProfilePage() {
   const form = useForm({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
-      email: user?.email || "",
       fullName: user?.fullName || "",
       bio: user?.bio || "",
       skills: user?.skills || [],
@@ -157,35 +155,18 @@ export default function ProfilePage() {
 
                   <FormField
                     control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email</FormLabel>
-                        <FormControl>
-                          <Input {...field} type="email" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
                     name="location"
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Localisation</FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <MapPin className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-                            <Input 
-                              {...field} 
-                              value={field.value?.city || ''} 
-                              onChange={e => field.onChange({ ...field.value, city: e.target.value })}
-                              className="pl-8" 
-                              placeholder="Ville, Pays" 
-                            />
-                          </div>
+                          <Input 
+                            {...field} 
+                            value={field.value?.city || ''} 
+                            onChange={e => field.onChange({ ...field.value, city: e.target.value })}
+                            className="pl-8" 
+                            placeholder="Ville" 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
