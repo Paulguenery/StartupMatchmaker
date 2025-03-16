@@ -31,15 +31,21 @@ export function useAuth() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      const res = await apiRequest("POST", "/api/logout");
+      if (!res.ok) {
+        throw new Error('Échec de la déconnexion');
+      }
+      return res;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      // Invalider toutes les requêtes
+      queryClient.clear();
+      // Rediriger vers la page d'authentification
       setLocation("/auth");
     },
-    onError: (error) => {
-      console.error("Erreur lors de la déconnexion:", error);
-      // En cas d'erreur, on redirige quand même vers la page d'auth
+    onError: () => {
+      // En cas d'erreur, rediriger quand même vers la page d'auth
+      queryClient.clear();
       setLocation("/auth");
     },
   });

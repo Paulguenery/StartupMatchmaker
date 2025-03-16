@@ -350,12 +350,15 @@ export default function ProfilePage() {
 
                   <Button 
                     variant="destructive" 
-                    onClick={() => logoutMutation.mutate()}
+                    type="button"
+                    onClick={() => {
+                      logoutMutation.mutate();
+                    }}
                     disabled={logoutMutation.isPending}
                     className="gap-2"
                   >
                     <LogOut className="h-4 w-4" />
-                    Se déconnecter
+                    {logoutMutation.isPending ? "Déconnexion..." : "Se déconnecter"}
                   </Button>
                 </div>
               </form>
