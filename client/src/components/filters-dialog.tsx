@@ -26,7 +26,6 @@ interface FiltersDialogProps {
   filters: {
     category: string;
     distance: number;
-    duration: string;
     city: string;
     latitude?: number;
     longitude?: number;
@@ -43,12 +42,6 @@ type City = {
   department: string;
   postalCode: string;
 };
-
-const durations = [
-  { value: "short", label: "Court terme (< 3 mois)" },
-  { value: "medium", label: "Moyen terme (3-6 mois)" },
-  { value: "long", label: "Long terme (> 6 mois)" },
-];
 
 export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -173,31 +166,6 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
                 <SelectItem value="50">50 km</SelectItem>
                 <SelectItem value="100">100 km</SelectItem>
                 <SelectItem value="200">200 km</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Durée du projet</Label>
-            <Select
-              value={tempFilters.duration || "all"}
-              onValueChange={(value) =>
-                setTempFilters({
-                  ...tempFilters,
-                  duration: value === "all" ? "" : value,
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez une durée" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les durées</SelectItem>
-                {durations.map((duration) => (
-                  <SelectItem key={duration.value} value={duration.value}>
-                    {duration.label}
-                  </SelectItem>
-                ))}
               </SelectContent>
             </Select>
           </div>

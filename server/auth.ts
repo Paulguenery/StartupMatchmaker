@@ -8,10 +8,6 @@ import { storage } from "./storage";
 
 const scryptAsync = promisify(scrypt);
 
-// Admin account credentials
-const ADMIN_EMAIL = 'admin@mymate.com';
-const ADMIN_PASSWORD = 'admin123!';
-
 async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
@@ -26,7 +22,6 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Configuration de la session
   app.use(session({
     secret: process.env.SESSION_SECRET || 'mymate_secret_key_2024',
     resave: false,
@@ -151,12 +146,30 @@ export function setupAuth(app: Express) {
           id: user.id, 
           email: user.email, 
           fullName: user.fullName, 
-          role: user.role 
+          role: user.role,
+          isPremium: user.isPremium || user.role === 'project_owner' || user.role === 'admin'
         });
       });
     })(req, res, next);
   });
 
+  app.get('/api/user', (req, res) => {
+    console.log('Requête /api/user - Authentifié:', req.isAuthenticated());
+    console.log('Session:', req.session);
+    console.log('Utilisateur:', req.user);
+
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Non authentifié' });
+    }
+    const user = req.user as any;
+    res.json({ 
+      id: user.id,
+      email: user.email,
+      fullName: user.fullName,
+      role: user.role,
+      isPremium: user.isPremium || user.role === 'project_owner' || user.role === 'admin'
+    });
+  });
   app.post('/api/logout', (req, res) => {
     const userEmail = (req.user as any)?.email;
     console.log('Tentative de déconnexion pour:', userEmail);
@@ -176,53 +189,6 @@ export function setupAuth(app: Express) {
       });
     });
   });
-
-  app.get('/api/user', (req, res) => {
-    console.log('Requête /api/user - Authentifié:', req.isAuthenticated());
-    console.log('Session:', req.session);
-    console.log('Utilisateur:', req.user);
-
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: 'Non authentifié' });
-    }
-    const user = req.user as any;
-    res.json({ 
-      id: user.id,
-      email: user.email,
-      fullName: user.fullName,
-      role: user.role
-    });
-  });
-  // Fonction pour vérifier les restrictions de connexion
-  async function checkLoginRestrictions(user: User): Promise<{ allowed: boolean; message?: string }> {
-    console.log('Vérification des restrictions pour:', user.email);
-
-    // Les admins contournent toutes les restrictions
-    if (user.role === 'admin') {
-      console.log('Utilisateur admin, pas de restrictions');
-      return { allowed: true };
-    }
-
-    // Vérifier le statut du compte
-    if (user.accountStatus === "suspended") {
-      return { allowed: false, message: "Votre compte est suspendu. Contactez le support." };
-    }
-    if (user.accountStatus === "rejected") {
-      return { allowed: false, message: "Votre compte n'a pas été approuvé." };
-    }
-
-    // Restrictions spécifiques pour les freelances (project_seeker)
-    if (user.role === "project_seeker" && !user.isAdult) {
-      return {
-        allowed: false,
-        message: "Vous devez certifier être majeur pour accéder à la plateforme."
-      };
-    }
-
-    return { allowed: true };
-  }
-
-  // Updated reset password route with email sending
   app.post('/api/reset-password', async (req, res) => {
     try {
       const { email } = req.body;
@@ -372,9 +338,4 @@ interface User {
   freeConversationCredits?: number;
   referralCode?: string;
   isAdult?: boolean;
-}
-
-// Fonction pour générer un code de parrainage unique
-function generateReferralCode() {
-  return nanoid(8).toUpperCase();
 }
