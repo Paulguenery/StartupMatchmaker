@@ -46,10 +46,25 @@ export async function matchWithProject(projectId: number, action: 'like' | 'pass
 }
 
 // Fonction pour obtenir les suggestions de projets basées sur la localisation
-export async function getSuggestedProjects(latitude: number, longitude: number): Promise<Project[]> {
+export async function getSuggestedProjects(
+  latitude: number, 
+  longitude: number, 
+  distance: number,
+  city?: string
+): Promise<Project[]> {
+  const params = new URLSearchParams({
+    latitude: latitude.toString(),
+    longitude: longitude.toString(),
+    distance: distance.toString()
+  });
+
+  if (city) {
+    params.append('city', city);
+  }
+
   const response = await apiRequest(
     "GET", 
-    `/api/projects/suggestions?latitude=${latitude}&longitude=${longitude}`
+    `/api/projects/suggestions?${params.toString()}`
   );
   return response.json();
 }
@@ -64,12 +79,14 @@ export async function getUserMatches(): Promise<MatchResult[]> {
 export async function searchProjects(params: {
   sector?: string;
   distance?: number;
+  city?: string;
   latitude?: number;
   longitude?: number;
 }): Promise<Project[]> {
   const searchParams = new URLSearchParams();
   if (params.sector) searchParams.append('sector', params.sector);
   if (params.distance) searchParams.append('distance', params.distance.toString());
+  if (params.city) searchParams.append('city', params.city);
   if (params.latitude) searchParams.append('latitude', params.latitude.toString());
   if (params.longitude) searchParams.append('longitude', params.longitude.toString());
 

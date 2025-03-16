@@ -24,12 +24,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const { distance, latitude, longitude, sector } = req.query;
+      const { distance, latitude, longitude, sector, city } = req.query;
       let projects = await storage.getProjects();
 
       // Filtrer par secteur si spécifié
       if (sector) {
         projects = projects.filter(project => project.sector === sector);
+      }
+
+      // Filtrer par ville si spécifiée
+      if (city) {
+        projects = projects.filter(project => 
+          project.location?.city.toLowerCase().includes((city as string).toLowerCase())
+        );
       }
 
       // Filtrer par distance si des coordonnées sont fournies
@@ -77,15 +84,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
     try {
-      const { latitude, longitude } = req.query;
+      const { latitude, longitude, distance, city } = req.query;
       if (!latitude || !longitude) {
         return res.status(400).json({ message: 'Coordonnées requises' });
       }
 
       const userLat = parseFloat(latitude as string);
       const userLon = parseFloat(longitude as string);
+      const maxDistance = distance ? parseInt(distance as string) : 50;
 
       let projects = await storage.getProjects();
+
+      // Filtrer par ville si spécifiée
+      if (city) {
+        projects = projects.filter(project => 
+          project.location?.city.toLowerCase().includes((city as string).toLowerCase())
+        );
+      }
 
       // Filtrer les projets déjà matchés ou passés
       const userMatches = await storage.getMatchesByUserId(req.user!.id);
@@ -105,6 +120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           return { ...project, distance };
         })
+        .filter(project => project.distance === null || project.distance <= maxDistance)
         .sort((a, b) => {
           if (a.distance === null) return 1;
           if (b.distance === null) return -1;

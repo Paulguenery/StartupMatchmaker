@@ -13,7 +13,7 @@ import { matchWithProject, getSuggestedProjects } from "@/lib/matching";
 export default function SwipePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
-  const [filters, setFilters] = useState({ distance: 50 });
+  const [filters, setFilters] = useState({ distance: 50, city: "" });
   const { toast } = useToast();
 
   // Get user's location
@@ -46,7 +46,8 @@ export default function SwipePage() {
       return getSuggestedProjects(
         userLocation.latitude,
         userLocation.longitude,
-        filters.distance
+        filters.distance,
+        filters.city
       );
     },
     enabled: !!userLocation,
