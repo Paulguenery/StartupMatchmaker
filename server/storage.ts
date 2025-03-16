@@ -1,32 +1,16 @@
 import { users, projects, matches, type User, type Project, type Match, type InsertUser, type InsertProject, type InsertMatch } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
 
 const MemoryStore = createMemoryStore(session);
+const scryptAsync = promisify(scrypt);
 
-export interface IStorage {
-  // User operations
-  getUser(id: number): Promise<User | undefined>;
-  getUserByEmail(email: string): Promise<User | undefined>;
-  getUsers(): Promise<User[]>;
-  createUser(user: InsertUser): Promise<User>;
-  deleteUserByEmail(email: string): Promise<void>;
-  verifyUser(userId: number): Promise<User>;
-  upgradeToPremium(userId: number): Promise<User>;
-  updateUser(userId: number, updates: Partial<User>): Promise<User>;
-
-  // Project operations
-  createProject(project: InsertProject): Promise<Project>;
-  getProjects(): Promise<Project[]>;
-  getProjectById(id: number): Promise<Project | undefined>;
-
-  // Match operations
-  createMatch(match: InsertMatch): Promise<Match>;
-  getMatchesByUserId(userId: number): Promise<Match[]>;
-  getMatchByProjectAndUser(projectId: number, userId: number): Promise<Match | undefined>;
-  updateMatch(matchId: number, updates: Partial<Match>): Promise<Match>;
-
-  sessionStore: session.Store;
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
 }
 
 export class MemStorage implements IStorage {
@@ -48,6 +32,70 @@ export class MemStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
+
+    // Ajouter des utilisateurs de test
+    this.initializeTestData();
+  }
+
+  private async initializeTestData() {
+    // Utilisateur chercheur de projet
+    const seeker: InsertUser = {
+      email: "seeker@test.com",
+      password: await hashPassword("password123"),
+      fullName: "John Doe",
+      role: "project_seeker",
+      location: {
+        latitude: 48.8566,
+        longitude: 2.3522,
+        city: "Paris",
+        department: "75"
+      }
+    };
+    await this.createUser(seeker);
+
+    // Utilisateur porteur de projet
+    const owner: InsertUser = {
+      email: "owner@test.com",
+      password: await hashPassword("password123"),
+      fullName: "Jane Smith",
+      role: "project_owner",
+      location: {
+        latitude: 45.7640,
+        longitude: 4.8357,
+        city: "Lyon",
+        department: "69"
+      }
+    };
+    await this.createUser(owner);
+
+    // Créer quelques projets de test
+    const project1: InsertProject = {
+      title: "Projet Innovant Tech",
+      description: "Un projet innovant dans le domaine de la technologie",
+      sector: "Technologie",
+      userId: 2, // Lié à l'utilisateur owner
+      location: {
+        latitude: 45.7640,
+        longitude: 4.8357,
+        city: "Lyon",
+        department: "69"
+      }
+    };
+    await this.createProject(project1);
+
+    const project2: InsertProject = {
+      title: "Projet Développement Durable",
+      description: "Un projet écologique et durable",
+      sector: "Environnement",
+      userId: 2,
+      location: {
+        latitude: 43.2965,
+        longitude: 5.3698,
+        city: "Marseille",
+        department: "13"
+      }
+    };
+    await this.createProject(project2);
   }
 
   async deleteUserByEmail(email: string): Promise<void> {
@@ -62,25 +110,31 @@ export class MemStorage implements IStorage {
   }
 
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    console.log('Recherche de l\'utilisateur avec l\'ID:', id);
+    const user = this.users.get(id);
+    console.log('Utilisateur trouvé:', user);
+    return user;
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
+    console.log('Recherche de l\'utilisateur avec l\'email:', email);
+    const user = Array.from(this.users.values()).find(
       (user) => user.email === email,
     );
+    console.log('Utilisateur trouvé:', user);
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
     const user: User = {
       id,
-      isVerified: false,
-      isPremium: false,
       createdAt: new Date(),
+      isPremium: false,
       ...insertUser,
     };
     this.users.set(id, user);
+    console.log('Nouvel utilisateur créé:', user);
     return user;
   }
 

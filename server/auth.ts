@@ -45,32 +45,41 @@ export function setupAuth(app: Express) {
     { usernameField: 'email' },
     async (email, password, done) => {
       try {
+        console.log('Tentative de connexion pour:', email);
         const user = await storage.getUserByEmail(email);
         if (!user) {
+          console.log('Utilisateur non trouvé:', email);
           return done(null, false, { message: 'Email ou mot de passe incorrect' });
         }
 
         const isValid = await comparePasswords(password, user.password);
+        console.log('Validation du mot de passe:', isValid);
         if (!isValid) {
           return done(null, false, { message: 'Email ou mot de passe incorrect' });
         }
 
+        console.log('Connexion réussie pour:', email);
         return done(null, user);
       } catch (err) {
+        console.error('Erreur lors de l\'authentification:', err);
         return done(err);
       }
     }
   ));
 
   passport.serializeUser((user: any, done) => {
+    console.log('Sérialisation de l\'utilisateur:', user.id);
     done(null, user.id);
   });
 
   passport.deserializeUser(async (id: number, done) => {
     try {
+      console.log('Désérialisation de l\'utilisateur:', id);
       const user = await storage.getUser(id);
+      console.log('Utilisateur désérialisé:', user);
       done(null, user);
     } catch (err) {
+      console.error('Erreur lors de la désérialisation:', err);
       done(err);
     }
   });
@@ -101,6 +110,7 @@ export function setupAuth(app: Express) {
         res.json(user);
       });
     } catch (error) {
+      console.error('Erreur lors de l\'inscription:', error);
       res.status(500).json({ message: 'Erreur lors de l\'inscription' });
     }
   });
@@ -108,6 +118,7 @@ export function setupAuth(app: Express) {
   app.post('/api/login', (req, res, next) => {
     passport.authenticate('local', (err: any, user: any, info: any) => {
       if (err) {
+        console.error('Erreur lors de la connexion:', err);
         return res.status(500).json({ message: 'Erreur serveur' });
       }
 
@@ -117,8 +128,10 @@ export function setupAuth(app: Express) {
 
       req.login(user, (err) => {
         if (err) {
+          console.error('Erreur lors de la connexion après authentification:', err);
           return res.status(500).json({ message: 'Erreur lors de la connexion' });
         }
+        console.log('Connexion réussie pour:', user.email);
         res.json(user);
       });
     })(req, res, next);
