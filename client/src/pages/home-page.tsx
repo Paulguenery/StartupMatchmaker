@@ -9,7 +9,7 @@ import { UserCircle, SearchCode, Briefcase, Star, PlusCircle } from "lucide-reac
 import { AdvancedProfileFilters } from "@/components/advanced-profile-filters";
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const { user, isPremium } = useAuth();
 
   const { data: matches = [], isLoading: isLoadingMatches } = useQuery<Match[]>({
     queryKey: ["/api/matches"],
@@ -38,25 +38,16 @@ export default function HomePage() {
               <p className="text-gray-600">Trouvez les meilleurs talents pour vos projets</p>
             </div>
             <div className="flex gap-4">
-              {user.role === 'project_owner' && (
-                <>
-                  <Button variant="outline" asChild>
-                    <Link href="/new-project" className="flex items-center gap-2">
-                      <PlusCircle className="h-4 w-4" />
-                      Nouvelle annonce
-                    </Link>
-                  </Button>
-                  {!user.isPremium && (
-                    <Button variant="outline" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700" asChild>
-                      <Link href="/subscribe">Devenir Premium</Link>
-                    </Button>
-                  )}
-                </>
-              )}
+              <Button variant="outline" asChild>
+                <Link href="/new-project" className="flex items-center gap-2">
+                  <PlusCircle className="h-4 w-4" />
+                  Nouvelle annonce
+                </Link>
+              </Button>
             </div>
           </div>
 
-          <AdvancedProfileFilters onFilterChange={() => {}} isPremium={user.isPremium || false} />
+          <AdvancedProfileFilters onFilterChange={() => {}} isPremium={true} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
@@ -65,7 +56,7 @@ export default function HomePage() {
                 <UserCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">0</div>
+                <div className="text-2xl font-bold">{profiles?.length || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -83,7 +74,7 @@ export default function HomePage() {
                 <Star className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{user?.isPremium ? "Premium" : "Basic"}</div>
+                <div className="text-2xl font-bold">Premium</div>
               </CardContent>
             </Card>
             <Card>
@@ -95,6 +86,47 @@ export default function HomePage() {
                 <div className="text-2xl font-bold">{profiles?.length || 0}</div>
               </CardContent>
             </Card>
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold text-gray-900">Profils suggérés</h2>
+            {profiles && profiles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {profiles.map(profile => (
+                  <Card key={profile.id} className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="font-semibold">{profile.fullName}</h3>
+                        <p className="text-sm text-gray-500">{profile.experienceLevel}</p>
+                      </div>
+                    </div>
+                    {profile.skills && profile.skills.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-sm font-medium">Compétences:</p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {profile.skills.map(skill => (
+                            <span key={skill} className="px-2 py-1 text-xs bg-gray-100 rounded-full">
+                              {skill}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-4">
+                      <Button className="w-full" variant="outline">
+                        Voir le profil
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-center text-gray-600">
+                  <p>Aucun profil correspondant trouvé. Ajustez vos critères de recherche.</p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
@@ -114,7 +146,7 @@ export default function HomePage() {
             <Button asChild>
               <Link href="/swipe">Commencer à matcher</Link>
             </Button>
-            {!user?.isPremium && (
+            {!isPremium && (
               <Button variant="outline" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white hover:from-yellow-500 hover:to-yellow-700" asChild>
                 <Link href="/subscribe">Devenir Premium</Link>
               </Button>
@@ -130,24 +162,6 @@ export default function HomePage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{matchedProjects?.length || 0}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Statut du profil</CardTitle>
-              <UserCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{user?.isVerified ? "Vérifié" : "Non vérifié"}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Type de compte</CardTitle>
-              <SearchCode className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{user?.isPremium ? "Premium" : "Basic"}</div>
             </CardContent>
           </Card>
           <Card>

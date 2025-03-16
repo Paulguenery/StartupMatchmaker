@@ -17,11 +17,10 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Check, Loader2 } from "lucide-react";
 import { searchCity } from "@/lib/geocoding";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
-import { Check, Loader2 } from "lucide-react";
 
 interface FiltersDialogProps {
   filters: {
@@ -32,6 +31,7 @@ interface FiltersDialogProps {
     latitude?: number;
     longitude?: number;
     department?: string;
+    postalCode?: string;
   };
   onFiltersChange: (filters: FiltersDialogProps["filters"]) => void;
 }
@@ -41,28 +41,8 @@ type City = {
   latitude: number;
   longitude: number;
   department: string;
+  postalCode: string;
 };
-
-const categories = [
-  "Informatique et technologie",
-  "Marketing et Publicité",
-  "Design et Création",
-  "Ressources humaines",
-  "Finance et Comptabilité",
-  "Vente et Développement Commercial",
-  "Santé",
-  "Ingénierie",
-  "Éducation",
-  "Droit",
-  "Entrepreneuriat",
-  "Architecture",
-  "Médias et Communication",
-  "Logistique et Transport",
-  "Recherche et développement",
-  "Gestion de projet",
-  "Industrie et Production",
-  "Services Financiers"
-];
 
 const durations = [
   { value: "short", label: "Court terme (< 3 mois)" },
@@ -89,6 +69,8 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
         } finally {
           setIsLoading(false);
         }
+      } else {
+        setCities([]);
       }
     }, 300);
 
@@ -101,8 +83,10 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
       city: city.city,
       latitude: city.latitude,
       longitude: city.longitude,
-      department: city.department
+      department: city.department,
+      postalCode: city.postalCode
     });
+    setCitySearch(`${city.city} (${city.postalCode})`);
   };
 
   const handleApplyFilters = () => {
@@ -143,11 +127,14 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
                     ) : cities.length > 0 ? (
                       cities.map((city) => (
                         <CommandItem
-                          key={`${city.city}-${city.department}`}
+                          key={`${city.city}-${city.postalCode}`}
+                          value={`${city.city} (${city.postalCode})`}
                           onSelect={() => handleCitySelect(city)}
-                          className="flex items-center justify-between"
+                          className="flex items-center justify-between cursor-pointer"
                         >
-                          <span>{city.city} ({city.department})</span>
+                          <span>
+                            {city.city} ({city.postalCode}) - {city.department}
+                          </span>
                           {tempFilters.city === city.city && (
                             <Check className="h-4 w-4" />
                           )}
@@ -164,31 +151,6 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
                 </Command>
               </PopoverContent>
             </Popover>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Catégorie</Label>
-            <Select
-              value={tempFilters.category || "all"}
-              onValueChange={(value) =>
-                setTempFilters({
-                  ...tempFilters,
-                  category: value === "all" ? "" : value,
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez une catégorie" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les catégories</SelectItem>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">

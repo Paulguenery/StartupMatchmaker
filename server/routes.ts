@@ -204,35 +204,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.sendStatus(401);
     }
 
-    if (!process.env.STRIPE_PRICE_ID || !process.env.STRIPE_PRICE_ID.startsWith('price_')) {
-      console.error('ID de prix Stripe invalide:', process.env.STRIPE_PRICE_ID);
-      return res.status(400).json({ 
-        error: { message: "L'ID de prix doit commencer par 'price_'. Veuillez configurer un ID de prix valide dans les paramètres Stripe." }
-      });
+    // Les porteurs de projet et les admins ont automatiquement accès premium
+    const user = req.user as any;
+    if (user.role === 'project_owner' || user.role === 'admin') {
+      await storage.upgradeToPremium(user.id);
+      return res.json({ isPremium: true });
     }
 
     try {
       // Créer un client Stripe s'il n'existe pas déjà
-      let user = req.user;
-
-      console.log('Création du client Stripe avec ID de prix:', process.env.STRIPE_PRICE_ID);
-
       const customer = await stripe.customers.create({
         email: user.email,
         name: user.fullName,
       });
 
-      // Créer l'abonnement
       const subscription = await stripe.subscriptions.create({
         customer: customer.id,
         items: [{
-          price: process.env.STRIPE_PRICE_ID.trim(),
+          price: process.env.STRIPE_PRICE_ID!,
         }],
         payment_behavior: 'default_incomplete',
         expand: ['latest_invoice.payment_intent'],
       });
 
-      // Mettre à jour l'utilisateur avec les informations Stripe
       await storage.upgradeToPremium(user.id);
 
       res.json({
@@ -242,11 +236,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Erreur Stripe:', error);
       res.status(400).json({ 
-        error: { 
-          message: error.message === "No such price" 
-            ? "L'ID de prix Stripe n'existe pas. Veuillez vérifier la configuration."
-            : error.message 
-        } 
+        error: { message: error.message } 
       });
     }
   });

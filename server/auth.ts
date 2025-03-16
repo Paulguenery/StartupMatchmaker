@@ -33,7 +33,7 @@ export function setupAuth(app: Express) {
     saveUninitialized: false,
     name: 'mymate.sid',
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: false, // Pour le développement
       httpOnly: true,
       sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000, // 24 heures
@@ -47,35 +47,45 @@ export function setupAuth(app: Express) {
     { usernameField: 'email' },
     async (email, password, done) => {
       try {
+        console.log('Tentative de connexion pour:', email);
         const user = await storage.getUserByEmail(email);
         if (!user) {
+          console.log('Utilisateur non trouvé:', email);
           return done(null, false, { message: 'Email ou mot de passe incorrect' });
         }
 
         const isValid = await comparePasswords(password, user.password);
+        console.log('Validation du mot de passe:', isValid);
         if (!isValid) {
           return done(null, false, { message: 'Email ou mot de passe incorrect' });
         }
 
+        console.log('Connexion réussie pour:', email);
         return done(null, user);
       } catch (err) {
+        console.error('Erreur lors de l\'authentification:', err);
         return done(err);
       }
     }
   ));
 
   passport.serializeUser((user: any, done) => {
+    console.log('Sérialisation de l\'utilisateur:', user.id);
     done(null, user.id);
   });
 
   passport.deserializeUser(async (id: number, done) => {
     try {
+      console.log('Désérialisation de l\'utilisateur:', id);
       const user = await storage.getUser(id);
       if (!user) {
+        console.log('Utilisateur non trouvé lors de la désérialisation:', id);
         return done(null, false);
       }
+      console.log('Utilisateur désérialisé avec succès:', user.email);
       done(null, user);
     } catch (err) {
+      console.error('Erreur lors de la désérialisation:', err);
       done(err);
     }
   });
@@ -83,34 +93,8 @@ export function setupAuth(app: Express) {
   app.post('/api/register', async (req, res) => {
     try {
       const { email, password, fullName, role } = req.body;
+      console.log('Tentative d\'inscription:', email);
 
-      // Pour l'admin, permettre l'utilisation du même email
-      if (email === ADMIN_EMAIL) {
-        const hashedPassword = await hashPassword(password);
-        const userData = {
-          email: ADMIN_EMAIL,
-          password: hashedPassword,
-          fullName,
-          role,
-          accountStatus: "active"
-        };
-
-        const user = await storage.createUser(userData);
-        req.login(user, (err) => {
-          if (err) {
-            return res.status(500).json({ message: 'Erreur lors de la connexion' });
-          }
-          res.json({ 
-            id: user.id, 
-            email: user.email, 
-            fullName: user.fullName, 
-            role: user.role 
-          });
-        });
-        return;
-      }
-
-      // Pour les autres utilisateurs, vérifier si l'email existe déjà
       const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: 'Email déjà utilisé' });
@@ -127,8 +111,10 @@ export function setupAuth(app: Express) {
 
       req.login(user, (err) => {
         if (err) {
+          console.error('Erreur lors de la connexion après inscription:', err);
           return res.status(500).json({ message: 'Erreur lors de la connexion' });
         }
+        console.log('Inscription et connexion réussies pour:', email);
         res.json({ 
           id: user.id, 
           email: user.email, 
@@ -143,19 +129,24 @@ export function setupAuth(app: Express) {
   });
 
   app.post('/api/login', (req, res, next) => {
+    console.log('Tentative de connexion reçue:', req.body.email);
     passport.authenticate('local', (err: any, user: any, info: any) => {
       if (err) {
+        console.error('Erreur lors de l\'authentification:', err);
         return res.status(500).json({ message: 'Erreur serveur' });
       }
 
       if (!user) {
+        console.log('Échec de l\'authentification:', info?.message);
         return res.status(401).json({ message: info?.message || 'Email ou mot de passe incorrect' });
       }
 
       req.login(user, (err) => {
         if (err) {
+          console.error('Erreur lors de la connexion:', err);
           return res.status(500).json({ message: 'Erreur lors de la connexion' });
         }
+        console.log('Connexion réussie pour:', user.email);
         res.json({ 
           id: user.id, 
           email: user.email, 
@@ -167,14 +158,19 @@ export function setupAuth(app: Express) {
   });
 
   app.post('/api/logout', (req, res) => {
+    const userEmail = (req.user as any)?.email;
+    console.log('Tentative de déconnexion pour:', userEmail);
     req.logout((err) => {
       if (err) {
+        console.error('Erreur lors de la déconnexion:', err);
         return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
       }
       req.session.destroy((err) => {
         if (err) {
+          console.error('Erreur lors de la destruction de la session:', err);
           return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
         }
+        console.log('Déconnexion réussie pour:', userEmail);
         res.clearCookie('mymate.sid');
         res.sendStatus(200);
       });
@@ -182,6 +178,10 @@ export function setupAuth(app: Express) {
   });
 
   app.get('/api/user', (req, res) => {
+    console.log('Requête /api/user - Authentifié:', req.isAuthenticated());
+    console.log('Session:', req.session);
+    console.log('Utilisateur:', req.user);
+
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: 'Non authentifié' });
     }

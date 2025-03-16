@@ -1,6 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite, serveStatic } from "./vite";
 import { setupAuth } from "./auth";
 
 const app = express();
@@ -14,14 +14,14 @@ console.log('Démarrage du serveur MyMate...');
 console.log('Initialisation de l\'authentification...');
 setupAuth(app);
 
-// Content Security Policy plus permissive pour le développement
+// Content Security Policy mise à jour pour autoriser Stripe et les styles
 app.use((req, res, next) => {
   res.setHeader(
     'Content-Security-Policy',
     "default-src 'self'; " +
     "style-src 'self' 'unsafe-inline'; " +
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://*.stripe.com; " +
-    "connect-src 'self' http://localhost:* https://*.stripe.com https://api.stripe.com; " +
+    "connect-src 'self' http://localhost:* https://*.stripe.com https://api.stripe.com https://api-adresse.data.gouv.fr; " +
     "frame-src 'self' https://*.stripe.com; " +
     "img-src 'self' data: blob: https:; " +
     "font-src 'self' data:;"
