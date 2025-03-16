@@ -1,10 +1,22 @@
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
+// Types de notifications supportés
+export type NotificationType = 'match' | 'message' | 'project' | 'system';
+
+export interface NotificationPayload {
+  title: string;
+  body: string;
+  type: NotificationType;
+  data?: Record<string, string>;
+}
+
 // Service de notifications
 export class NotificationService {
   private static instance: NotificationService;
   private messaging: any;
   private token: string | null = null;
+  private notificationQueue: NotificationPayload[] = [];
+  private isInitialized = false;
 
   private constructor() {
     // La configuration sera faite plus tard
@@ -30,26 +42,64 @@ export class NotificationService {
         return;
       }
 
-      // La configuration Firebase sera faite plus tard
-      // this.messaging = getMessaging();
-      // this.token = await getToken(this.messaging, { vapidKey: process.env.FIREBASE_VAPID_KEY });
+      this.isInitialized = true;
+
+      // Traiter les notifications en attente
+      while (this.notificationQueue.length > 0) {
+        const notification = this.notificationQueue.shift();
+        if (notification) {
+          await this.sendNotification(notification.title, notification.body, notification.type, notification.data);
+        }
+      }
     } catch (error) {
       console.error("Erreur lors de l'initialisation des notifications:", error);
     }
   }
 
-  async sendNotification(title: string, body: string) {
-    if (!this.token) {
-      console.log("Token FCM non disponible");
+  async sendNotification(title: string, body: string, type: NotificationType = 'system', data?: Record<string, string>) {
+    if (!this.isInitialized) {
+      // Mettre en file d'attente si pas encore initialisé
+      this.notificationQueue.push({ title, body, type, data });
       return;
     }
 
     try {
-      // L'envoi de notifications sera configuré plus tard avec la clé serveur
-      console.log("Envoi de notification (à implémenter):", { title, body });
+      // Notification native du navigateur en attendant Firebase
+      new Notification(title, {
+        body,
+        icon: '/logo.png', // Assurez-vous d'avoir un logo
+        tag: type,
+        data
+      });
+
+      console.log("Notification envoyée:", { title, body, type, data });
     } catch (error) {
       console.error("Erreur lors de l'envoi de la notification:", error);
     }
+  }
+
+  // Méthodes spécifiques pour différents types de notifications
+  async sendMatchNotification(projectTitle: string, matchType: 'new' | 'mutual') {
+    const title = matchType === 'mutual' ? "Match mutuel !" : "Nouveau like !";
+    const body = matchType === 'mutual' 
+      ? `Vous avez un nouveau match pour le projet "${projectTitle}"`
+      : `Quelqu'un a aimé votre projet "${projectTitle}"`;
+
+    await this.sendNotification(title, body, 'match', { projectTitle });
+  }
+
+  async sendNewProjectNotification(projectTitle: string, distance: number) {
+    const body = `Nouveau projet "${projectTitle}" à ${Math.round(distance)}km de chez vous`;
+    await this.sendNotification("Nouveau projet !", body, 'project');
+  }
+
+  async sendMessageNotification(senderName: string, messagePreview: string) {
+    await this.sendNotification(
+      `Message de ${senderName}`,
+      messagePreview,
+      'message',
+      { sender: senderName }
+    );
   }
 
   // Écouter les notifications entrantes

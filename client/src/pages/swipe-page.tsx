@@ -85,11 +85,17 @@ export default function SwipePage() {
           description: t("matchNotification"),
         });
 
-        // Envoyer une notification push si c'est un match
+        // Utiliser la nouvelle méthode spécifique pour les notifications de match
+        const currentProject = projects[currentIndex];
         if (result.status === 'matched') {
-          await notificationService.sendNotification(
-            t("notificationTitle"),
-            t("notificationBody")
+          await notificationService.sendMatchNotification(
+            currentProject.title,
+            'mutual'
+          );
+        } else {
+          await notificationService.sendMatchNotification(
+            currentProject.title,
+            'new'
           );
         }
       }
