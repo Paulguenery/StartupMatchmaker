@@ -2,8 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Search, X } from "lucide-react";
 import { PROJECT_CATEGORIES, SKILLS_BY_CATEGORY } from "@/lib/constants";
 import { useState, useEffect } from "react";
 
@@ -15,6 +13,7 @@ interface FiltersProps {
 export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [availableSkills, setAvailableSkills] = useState<string[]>([]);
+  const [city, setCity] = useState<string>("");
 
   useEffect(() => {
     if (selectedCategory) {
@@ -23,6 +22,11 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
       setAvailableSkills([]);
     }
   }, [selectedCategory]);
+
+  const handleCityChange = (newCity: string) => {
+    setCity(newCity);
+    onFilterChange({ city: newCity });
+  };
 
   if (!isPremium) {
     return (
@@ -45,6 +49,16 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
     <Card className="mb-6">
       <CardContent className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Ville</label>
+            <Input
+              type="text"
+              placeholder="Entrez une ville"
+              value={city}
+              onChange={(e) => handleCityChange(e.target.value)}
+            />
+          </div>
+
           <div className="space-y-2">
             <label className="text-sm font-medium">Spécialité</label>
             <Select 
@@ -82,10 +96,9 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
               </SelectContent>
             </Select>
           </div>
-
           <div className="space-y-2">
             <label className="text-sm font-medium">Distance maximale</label>
-            <Select onValueChange={(value) => onFilterChange({ distance: value })}>
+            <Select onValueChange={(value) => onFilterChange({ distance: parseInt(value, 10) })}>
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionnez une distance" />
               </SelectTrigger>
@@ -94,10 +107,10 @@ export function AdvancedProfileFilters({ onFilterChange, isPremium }: FiltersPro
                 <SelectItem value="25">25 km</SelectItem>
                 <SelectItem value="50">50 km</SelectItem>
                 <SelectItem value="100">100 km</SelectItem>
+                <SelectItem value="200">200 km</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
           <div className="space-y-2">
             <label className="text-sm font-medium">Niveau d'expérience</label>
             <Select onValueChange={(value) => onFilterChange({ experienceLevel: value })}>

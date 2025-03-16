@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SlidersHorizontal } from "lucide-react";
 
@@ -24,6 +24,7 @@ interface FiltersDialogProps {
     category: string;
     distance: number;
     duration: string;
+    city: string;
   };
   onFiltersChange: (filters: FiltersDialogProps["filters"]) => void;
 }
@@ -78,6 +79,20 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
         </DialogHeader>
         <div className="space-y-6 py-4">
           <div className="space-y-2">
+            <Label>Ville</Label>
+            <Input
+              placeholder="Entrez une ville"
+              value={tempFilters.city}
+              onChange={(e) =>
+                setTempFilters({
+                  ...tempFilters,
+                  city: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
             <Label>Catégorie</Label>
             <Select
               value={tempFilters.category || "all"}
@@ -104,17 +119,26 @@ export function FiltersDialog({ filters, onFiltersChange }: FiltersDialogProps) 
 
           <div className="space-y-2">
             <Label>Distance maximale (km)</Label>
-            <div className="pt-2">
-              <Slider
-                value={[tempFilters.distance]}
-                onValueChange={(value) =>
-                  setTempFilters({ ...tempFilters, distance: value[0] })
-                }
-                max={100}
-                step={5}
-              />
-              <div className="mt-1 text-sm text-gray-500">{tempFilters.distance} km</div>
-            </div>
+            <Select
+              value={tempFilters.distance?.toString() || "50"}
+              onValueChange={(value) =>
+                setTempFilters({
+                  ...tempFilters,
+                  distance: parseInt(value),
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Sélectionnez une distance" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10 km</SelectItem>
+                <SelectItem value="25">25 km</SelectItem>
+                <SelectItem value="50">50 km</SelectItem>
+                <SelectItem value="100">100 km</SelectItem>
+                <SelectItem value="200">200 km</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
