@@ -10,6 +10,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Initialiser l'authentification avant les autres middlewares
+console.log('Démarrage du serveur MyMate...');
 console.log('Initialisation de l\'authentification...');
 setupAuth(app);
 
@@ -40,7 +41,7 @@ app.use((req, res, next) => {
 
 (async () => {
   try {
-    console.log('Démarrage du serveur...');
+    console.log('Configuration des routes...');
     const server = await registerRoutes(app);
 
     // Error handling middleware
@@ -64,16 +65,19 @@ app.use((req, res, next) => {
     }
 
     const port = 5000;
+    console.log(`Tentative de démarrage du serveur sur le port ${port}...`);
+
     server.listen({
       port,
       host: "0.0.0.0",
     }, () => {
-      log(`Serveur démarré avec succès sur le port ${port}`);
+      console.log(`✅ Serveur démarré avec succès sur le port ${port}`);
+      console.log('URL de l\'application:', `http://0.0.0.0:${port}`);
     });
 
     // Gestion des erreurs de serveur
     server.on('error', (error: any) => {
-      console.error('Erreur du serveur:', error);
+      console.error('❌ Erreur du serveur:', error);
       if (error.code === 'EADDRINUSE') {
         console.error(`Le port ${port} est déjà utilisé`);
         process.exit(1);
@@ -81,7 +85,7 @@ app.use((req, res, next) => {
     });
 
   } catch (error) {
-    console.error('Erreur lors du démarrage du serveur:', error);
+    console.error('❌ Erreur fatale lors du démarrage du serveur:', error);
     process.exit(1);
   }
 })();

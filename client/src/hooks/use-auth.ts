@@ -3,8 +3,16 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { createContext, useContext, ReactNode } from "react";
 
+type User = {
+  id: number;
+  email: string;
+  role: string;
+  currentRole?: string;
+  fullName?: string;
+};
+
 interface AuthContextType {
-  user: any;
+  user: User | null;
   isProjectOwner: boolean;
   isProjectSeeker: boolean;
   isAdmin: boolean;
@@ -14,19 +22,19 @@ interface AuthContextType {
   updateRoleMutation: any;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [, setLocation] = useLocation();
 
-  const { data: user } = useQuery({
+  const { data: user } = useQuery<User>({
     queryKey: ["/api/user"],
     retry: false,
     refetchOnWindowFocus: true,
   });
 
   const loginMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: { email: string; password: string }) => {
       const res = await apiRequest("POST", "/api/login", data);
       return res.json();
     },
@@ -67,33 +75,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
-  // Helper pour déterminer le rôle effectif
+  // Déterminer le rôle effectif
   const effectiveRole = user?.currentRole || user?.role;
   const isProjectOwner = effectiveRole === "project_owner";
   const isProjectSeeker = effectiveRole === "project_seeker";
   const isAdmin = user?.role === "admin";
 
-  return (
-    <AuthContext.Provider 
-      value={{
-        user,
-        isProjectOwner,
-        isProjectSeeker,
-        isAdmin,
-        loginMutation,
-        logoutMutation,
-        registerMutation,
-        updateRoleMutation,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value: AuthContextType = {
+    user,
+    isProjectOwner,
+    isProjectSeeker,
+    isAdmin,
+    loginMutation,
+    logoutMutation,
+    registerMutation,
+    updateRoleMutation,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
