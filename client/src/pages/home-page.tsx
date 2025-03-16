@@ -7,9 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProjectCard } from "@/components/project-card";
 import { UserCircle, SearchCode, Briefcase, Star, PlusCircle } from "lucide-react";
 import { AdvancedProfileFilters } from "@/components/advanced-profile-filters";
+import { AdvancedFilters } from "@/components/advanced-filters";
+import { useTranslation } from "react-i18next";
 
 export default function HomePage() {
   const { user, isPremium } = useAuth();
+  const { t } = useTranslation();
 
   const { data: matches = [], isLoading: isLoadingMatches } = useQuery<Match[]>({
     queryKey: ["/api/matches"],
@@ -19,15 +22,17 @@ export default function HomePage() {
     queryKey: ["/api/projects"],
   });
 
-  const { data: profiles } = useQuery<User[]>({
+  const { data: profiles = [] } = useQuery<User[]>({
     queryKey: ["/api/users/search"],
     enabled: user?.role === 'project_owner',
   });
 
-  const matchedProjects = projects?.filter(project =>
-    matches?.some(match => match.projectId === project.id && match.status === "accepted")
-  );
+  const handleFilterChange = (filters: any) => {
+    // Implémenter la logique de filtrage selon le rôle
+    console.log("Filtres appliqués:", filters);
+  };
 
+  // Vue pour les porteurs de projet
   if (user?.role === 'project_owner') {
     return (
       <div className="min-h-screen bg-gray-50 p-6">
@@ -47,7 +52,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <AdvancedProfileFilters onFilterChange={() => {}} isPremium={true} />
+          <AdvancedProfileFilters onFilterChange={handleFilterChange} isPremium={isPremium} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
@@ -154,6 +159,11 @@ export default function HomePage() {
           </div>
         </div>
 
+        <AdvancedFilters 
+          onFilterChange={handleFilterChange} 
+          projectCount={projects.length}
+        />
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -161,7 +171,7 @@ export default function HomePage() {
               <Star className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{matchedProjects?.length || 0}</div>
+              <div className="text-2xl font-bold">{matches?.length || 0}</div>
             </CardContent>
           </Card>
           <Card>
@@ -177,7 +187,7 @@ export default function HomePage() {
 
         <div className="space-y-4">
           <h2 className="text-2xl font-bold text-gray-900">Vos projets matchés</h2>
-          {matchedProjects?.length === 0 ? (
+          {matches?.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center text-gray-600">
                 <p>Pas encore de projets matchés. Commencez à swiper pour trouver votre prochaine opportunité !</p>
@@ -188,8 +198,8 @@ export default function HomePage() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {matchedProjects?.map(project => (
-                <ProjectCard key={project.id} project={project} />
+              {matches?.map(match => (
+                <ProjectCard key={match.projectId} project={projects.find(p => p.id === match.projectId)} />
               ))}
             </div>
           )}
