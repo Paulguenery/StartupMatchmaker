@@ -14,9 +14,8 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
   const [distance, setDistance] = useState(50);
   const [cityInput, setCityInput] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Soumission du filtre avec la ville:", cityInput);
+  const handleClick = () => {
+    console.log("Application des nouveaux filtres:", { distance, city: cityInput });
     onFilterChange({ 
       distance, 
       city: cityInput.trim() || undefined 
@@ -29,22 +28,30 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
         <CardTitle>Filtres de localisation</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label>Ville</Label>
-            <div className="flex items-center gap-2">
-              <Input 
-                type="text" 
-                placeholder="Entrez une ville"
-                value={cityInput}
-                onChange={(e) => setCityInput(e.target.value)}
-              />
-              <Button type="submit" size="icon">
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
+        <div className="space-y-2">
+          <Label>Ville</Label>
+          <div className="flex items-center gap-4">
+            <Input 
+              type="text" 
+              placeholder="Entrez une ville"
+              value={cityInput}
+              onChange={(e) => setCityInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleClick();
+                }
+              }}
+            />
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={handleClick}
+            >
+              <Search className="h-4 w-4" />
+            </Button>
           </div>
-        </form>
+        </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">

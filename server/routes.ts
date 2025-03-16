@@ -85,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const { latitude, longitude, distance, city } = req.query;
-      console.log('Paramètres reçus dans /api/projects/suggestions:', { latitude, longitude, distance, city });
+      console.log("Paramètres reçus dans /api/projects/suggestions:", { latitude, longitude, distance, city });
 
       if (!latitude || !longitude) {
         return res.status(400).json({ message: 'Coordonnées requises' });
@@ -141,6 +141,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
       console.log('Nombre final de projets:', projects.length);
+      console.log('Projets filtrés:', projects.map(p => ({ 
+        id: p.id, 
+        city: p.location?.city, 
+        distance: p.distance 
+      })));
+
       res.json(projects);
     } catch (error) {
       console.error('Erreur lors de la récupération des suggestions:', error);
