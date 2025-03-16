@@ -1,84 +1,95 @@
-import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Project } from "@shared/schema";
 import { ProjectCard } from "@/components/project-card";
-import { FiltersDialog } from "@/components/filters-dialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
-import { ThumbsUp, ThumbsDown } from "lucide-react";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { ThumbsUp, ThumbsDown, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { matchWithProject, getSuggestedProjects } from "@/lib/matching";
 
 export default function SwipePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [filters, setFilters] = useState({
-    category: "",
-    distance: 50,
-    duration: "",
-  });
+  const [userLocation, setUserLocation] = useState<{latitude: number; longitude: number} | null>(null);
   const { toast } = useToast();
 
-  const { data: projects = [] } = useQuery<Project[]>({
-    queryKey: ["/api/projects", filters],
+  // Get user's location
+  useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          });
+        },
+        (error) => {
+          console.error("Erreur de géolocalisation:", error);
+          toast({
+            title: "Erreur de localisation",
+            description: "Impossible d'obtenir votre position. Certaines fonctionnalités peuvent être limitées.",
+            variant: "destructive",
+          });
+        }
+      );
+    }
+  }, [toast]);
+
+  // Fetch suggested projects
+  const { data: projects = [], isLoading } = useQuery<Project[]>({
+    queryKey: ["/api/projects/suggestions", userLocation],
     queryFn: async () => {
-      const params = new URLSearchParams();
-      if (filters.category) params.append("category", filters.category);
-      if (filters.distance) params.append("distance", filters.distance.toString());
-      if (filters.duration) params.append("duration", filters.duration);
-
-      const res = await fetch(`/api/projects?${params.toString()}`);
-      if (!res.ok) throw new Error("Erreur lors du chargement des projets");
-      return res.json();
+      if (!userLocation) return [];
+      return getSuggestedProjects(userLocation.latitude, userLocation.longitude);
     },
+    enabled: !!userLocation,
   });
 
-  const matchMutation = useMutation({
-    mutationFn: async ({ projectId, status }: { projectId: number, status: "accepted" | "rejected" }) => {
-      await apiRequest("POST", "/api/matches", {
-        projectId,
-        status,
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/matches"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Erreur",
-        description: "Impossible de traiter votre réponse.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSwipe = async (projectId: number, status: "accepted" | "rejected") => {
+  const handleSwipe = async (projectId: number, action: 'like' | 'pass') => {
     try {
-      await matchMutation.mutateAsync({ projectId, status });
+      await matchWithProject(projectId, action);
       setCurrentIndex(prev => prev + 1);
 
-      if (status === "accepted") {
+      if (action === 'like') {
         toast({
-          title: "C'est un match !",
-          description: "Vous avez matché avec ce projet.",
+          title: "Super !",
+          description: "Vous avez liké ce projet. Vous serez notifié si c'est un match !",
         });
       }
     } catch (error) {
       console.error("Erreur lors du swipe:", error);
+      toast({
+        title: "Erreur",
+        description: "Impossible de traiter votre action.",
+        variant: "destructive",
+      });
     }
   };
 
   const currentProject = projects[currentIndex];
 
+  if (isLoading || !userLocation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
+          <p className="text-gray-600">Chargement des projets...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-2xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Trouver des projets</h1>
-            <p className="text-gray-600">Swipez à droite sur les projets qui vous intéressent</p>
-          </div>
-          <FiltersDialog filters={filters} onFiltersChange={setFilters} />
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Découvrir des projets</h1>
+          <p className="text-gray-600">
+            {userLocation 
+              ? "Swipez à droite pour les projets qui vous intéressent"
+              : "Activez la géolocalisation pour voir les projets près de chez vous"}
+          </p>
         </div>
 
         {currentProject ? (
@@ -100,14 +111,14 @@ export default function SwipePage() {
                 size="lg"
                 variant="outline"
                 className="rounded-full p-6"
-                onClick={() => handleSwipe(currentProject.id, "rejected")}
+                onClick={() => handleSwipe(currentProject.id, 'pass')}
               >
                 <ThumbsDown className="h-6 w-6" />
               </Button>
               <Button
                 size="lg"
                 className="rounded-full p-6"
-                onClick={() => handleSwipe(currentProject.id, "accepted")}
+                onClick={() => handleSwipe(currentProject.id, 'like')}
               >
                 <ThumbsUp className="h-6 w-6" />
               </Button>
@@ -115,7 +126,8 @@ export default function SwipePage() {
           </div>
         ) : (
           <Card className="p-6 text-center">
-            <p className="text-gray-600">Plus de projets à afficher. Revenez plus tard !</p>
+            <p className="text-gray-600">Plus de projets à afficher pour le moment !</p>
+            <p className="text-sm text-gray-500 mt-2">Revenez plus tard pour découvrir de nouveaux projets.</p>
           </Card>
         )}
       </div>
