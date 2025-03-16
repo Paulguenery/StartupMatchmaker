@@ -16,10 +16,9 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-// Helper function to filter projects by distance
 function filterProjectsByDistance(userLat: number, userLon: number, maxDistance: number, projects: any[]) {
-  return projects.filter((project) => {
-    if (!project.location) return false;
+  return projects.map(project => {
+    if (!project.location) return { ...project, distance: null };
 
     const distance = calculateDistance(
       userLat,
@@ -28,10 +27,13 @@ function filterProjectsByDistance(userLat: number, userLon: number, maxDistance:
       project.location.longitude
     );
 
-    // Add the distance to the project object for sorting later
-    project.distance = distance;
-    return distance <= maxDistance;
-  }).sort((a, b) => a.distance - b.distance);
+    return { ...project, distance };
+  }).filter(project => project.distance === null || project.distance <= maxDistance)
+    .sort((a, b) => {
+      if (a.distance === null) return 1;
+      if (b.distance === null) return -1;
+      return a.distance - b.distance;
+    });
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -97,7 +99,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Suggestions de projets basées sur la localisation
+  // Filter projects by distance and city
   app.get("/api/projects/suggestions", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
 
@@ -115,7 +117,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all projects
       let projects = await storage.getProjects();
 
-      // Filter by city if specified
+      // Filter out already matched projects
+      const userMatches = await storage.getMatchesByUserId(req.user!.id);
+      const matchedProjectIds = userMatches.map(m => m.projectId);
+      projects = projects.filter(p => !matchedProjectIds.includes(p.id));
+
+      // Apply distance filter first
+      projects = filterProjectsByDistance(userLat, userLon, maxDistance, projects);
+
+      // Then apply city filter if specified
       if (city && typeof city === 'string' && city.trim()) {
         const cityFilter = city.trim().toLowerCase();
         projects = projects.filter(project =>
@@ -123,15 +133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       }
 
-      // Filter out already matched projects
-      const userMatches = await storage.getMatchesByUserId(req.user!.id);
-      const matchedProjectIds = userMatches.map(m => m.projectId);
-      projects = projects.filter(p => !matchedProjectIds.includes(p.id));
-
-      // Apply distance filter
-      const filteredProjects = filterProjectsByDistance(userLat, userLon, maxDistance, projects);
-
-      res.json(filteredProjects);
+      res.json(projects);
     } catch (error) {
       console.error('Erreur lors de la récupération des suggestions:', error);
       res.status(500).json({ message: 'Erreur lors de la récupération des suggestions' });

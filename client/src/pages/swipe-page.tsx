@@ -42,28 +42,29 @@ export default function SwipePage() {
     }
   }, [toast]);
 
-  const { data: projects = [], isLoading, error, refetch } = useQuery<Project[]>({
+  const {
+    data: projects = [],
+    isLoading,
+    error,
+    refetch
+  } = useQuery<Project[]>({
     queryKey: ["/api/projects/suggestions", userLocation, filters],
     queryFn: async () => {
       if (!userLocation) return [];
-      console.log("Recherche de projets avec les filtres:", filters);
-      const results = await getSuggestedProjects(
+      return getSuggestedProjects(
         userLocation.latitude,
         userLocation.longitude,
         filters.distance,
         filters.city
       );
-      console.log("Projets trouvés:", results);
-      return results;
     },
     enabled: !!userLocation,
   });
 
   const handleFilterChange = (newFilters: Filters) => {
-    console.log("Nouveaux filtres appliqués:", newFilters);
     setCurrentIndex(0);
     setFilters(newFilters);
-    refetch(); // Force le rafraîchissement des données
+    refetch();
   };
 
   const handleSwipe = async (projectId: number, action: 'like' | 'pass') => {
@@ -113,7 +114,7 @@ export default function SwipePage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-2xl mx-auto space-y-6">
-        <div>
+        <div className="space-y-2">
           <h1 className="text-3xl font-bold text-gray-900">Découvrir des projets</h1>
           <p className="text-gray-600">
             {userLocation 

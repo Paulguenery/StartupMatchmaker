@@ -12,23 +12,27 @@ interface LocationFilterProps {
 
 export function LocationFilter({ onFilterChange }: LocationFilterProps) {
   const [distance, setDistance] = useState(50);
-  const [cityInput, setCityInput] = useState("");
+  const [city, setCity] = useState("");
 
-  // Mise à jour de la distance uniquement
+  // Appliquer les filtres de manière indépendante
   const handleDistanceChange = (values: number[]) => {
     const newDistance = values[0];
     setDistance(newDistance);
     onFilterChange({
       distance: newDistance,
-      city: cityInput.trim() || undefined
+      city: city.trim() || undefined
     });
   };
 
-  // Recherche par ville
-  const handleCitySearch = () => {
+  const handleCityChange = (value: string) => {
+    setCity(value);
+    // N'appliquer le filtre ville que lorsqu'on clique sur le bouton
+  };
+
+  const handleSearch = () => {
     onFilterChange({
       distance,
-      city: cityInput.trim() || undefined
+      city: city.trim() || undefined
     });
   };
 
@@ -47,7 +51,7 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
             </span>
           </div>
           <Slider
-            defaultValue={[distance]}
+            value={[distance]}
             max={150}
             step={10}
             onValueChange={handleDistanceChange}
@@ -62,18 +66,18 @@ export function LocationFilter({ onFilterChange }: LocationFilterProps) {
               <Input 
                 type="text" 
                 placeholder="Entrez une ville"
-                value={cityInput}
-                onChange={(e) => setCityInput(e.target.value)}
+                value={city}
+                onChange={(e) => handleCityChange(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    handleCitySearch();
+                    handleSearch();
                   }
                 }}
               />
             </div>
             <Button 
-              onClick={handleCitySearch}
+              onClick={handleSearch}
               className="px-6"
             >
               <Search className="h-4 w-4 mr-2" />
